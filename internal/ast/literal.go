@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"strconv"
 	"wildscript/internal/lexer"
 )
@@ -32,7 +33,7 @@ type StringLiteral struct {
 
 func (sl *StringLiteral) expressionNode() {}
 func (sl *StringLiteral) String() string {
-	return sl.Value
+	return fmt.Sprintf("\"%s\"", sl.Value)
 }
 
 type BooleanLiteral struct {

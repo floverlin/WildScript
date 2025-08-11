@@ -1,7 +1,10 @@
 package enviroment
 
 import (
+	"fmt"
 	"strconv"
+
+	"github.com/fatih/color"
 )
 
 type ObjectType string
@@ -25,7 +28,9 @@ type Num struct {
 
 func (f *Num) Type() ObjectType { return NUM_TYPE }
 func (f *Num) Inspect() string {
-	return strconv.FormatFloat(f.Value, 'g', -1, 64)
+	return color.GreenString(
+		strconv.FormatFloat(f.Value, 'g', -1, 64),
+	)
 }
 
 type Str struct {
@@ -34,7 +39,9 @@ type Str struct {
 
 func (s *Str) Type() ObjectType { return STR_TYPE }
 func (s *Str) Inspect() string {
-	return s.Value
+	return color.YellowString(
+		fmt.Sprintf("\"%s\"", s.Value),
+	)
 }
 
 type Bool struct {
@@ -43,14 +50,16 @@ type Bool struct {
 
 func (b *Bool) Type() ObjectType { return BOOL_TYPE }
 func (b *Bool) Inspect() string {
-	return strconv.FormatBool(b.Value)
+	return color.MagentaString(
+		strconv.FormatBool(b.Value),
+	)
 }
 
 type Nil struct{}
 
 func (n *Nil) Type() ObjectType { return NIL_TYPE }
 func (n *Nil) Inspect() string {
-	return "nil"
+	return color.BlueString("nil")
 }
 
 // TODO
@@ -60,5 +69,5 @@ type Func struct {
 
 func (f *Func) Type() ObjectType { return FUNC_TYPE }
 func (f *Func) Inspect() string {
-	return "func"
+	return color.CyanString("func")
 }
