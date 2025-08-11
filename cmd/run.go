@@ -1,7 +1,6 @@
-package wildscript
+package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -14,18 +13,10 @@ import (
 	"wildscript/pkg"
 )
 
-func Run() {
-	gs := settings.Global
-	flag.BoolVar(&gs.Debug, "debug", false, "enable debug mode")
-	flag.Parse()
-
-	args := flag.Args()
-	if len(flag.Args()) < 1 {
-		log.Fatal("no file")
-	}
-	fileName := args[0]
-
+func runFile(fileName string) {
 	start := time.Now()
+
+	gs := settings.Global
 	input, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Fatal("read file error: ", err)
@@ -84,7 +75,7 @@ func Run() {
 		fmt.Printf("%d >> %s\n", idx+1, obj.Inspect())
 	}
 
-	log.Printf(
+	fmt.Printf(
 		"[wild] program ends in %d us\n",
 		time.Since(start).Microseconds(),
 	)

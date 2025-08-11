@@ -1,9 +1,9 @@
 package main
 
 import (
-	"wildscript/cmd/wildscript"
+	"wildscript/cmd"
 )
 
 func main() {
-	wildscript.Run()
+	cmd.Execute()
 }
