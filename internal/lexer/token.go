@@ -87,6 +87,9 @@ var dual = map[string]TokenType{
 	"!=": NOT_EQUAL,
 	"<=": LESS_EQ,
 	">=": GREATER_EQ,
+
+	"&&": AND,
+	"||": OR,
 }
 
 var specialIdents = map[string]TokenType{
