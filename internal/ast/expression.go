@@ -14,7 +14,7 @@ type InfixExpression struct {
 
 func (ie *InfixExpression) expressionNode() {}
 func (ie *InfixExpression) String() string {
-	return joiner(ie.Left.String(), ie.Operator, ie.Right.String())
+	return joiner("(", ie.Left.String(), ie.Operator, ie.Right.String(), ")")
 }
 
 type PrefixExpression struct {
@@ -25,7 +25,7 @@ type PrefixExpression struct {
 
 func (pe *PrefixExpression) expressionNode() {}
 func (pe *PrefixExpression) String() string {
-	return joiner(pe.Operator, pe.Right.String())
+	return joiner("(", pe.Operator, pe.Right.String(), ")")
 }
 
 type CallExpression struct {
