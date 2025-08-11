@@ -19,7 +19,7 @@ func NewCollector(lexer *Lexer) *Collector {
 
 func (c *Collector) NextToken() Token {
 	if c.pos >= len(c.tokens) {
-		panic("tokenizer: no more tokens")
+		panic("collector: no tokens")
 	}
 	token := c.tokens[c.pos]
 	c.pos++
