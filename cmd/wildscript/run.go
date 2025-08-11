@@ -1,11 +1,13 @@
 package wildscript
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
 	"wildscript/internal/lexer"
 	"wildscript/internal/logger"
+	"wildscript/internal/parser"
 )
 
 func Run() {
@@ -31,7 +33,23 @@ func Run() {
 				illegal.Literal,
 			)
 		}
+		os.Exit(1)
 	}
+
+	p := parser.New(c)
+	program := p.ParseProgram()
+
+	if len(p.Errors()) != 0 {
+		for _, err := range p.Errors() {
+			fmt.Printf(
+				"[parser] error: %s",
+				err,
+			)
+		}
+		os.Exit(1)
+	}
+
+	fmt.Println(program)
 
 	log.Printf(
 		"[wild] program ends in %d us\n",

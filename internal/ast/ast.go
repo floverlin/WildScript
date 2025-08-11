@@ -22,9 +22,11 @@ type Program struct {
 
 func (p *Program) String() string {
 	var out strings.Builder
-	for _, stmt := range p.Statements {
+	for idx, stmt := range p.Statements {
 		out.WriteString(stmt.String())
-		out.WriteByte('\n')
+		if idx != len(p.Statements)-1 {
+			out.WriteByte('\n')
+		}
 	}
 	return out.String()
 }
