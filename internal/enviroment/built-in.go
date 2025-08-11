@@ -21,6 +21,13 @@ func (e *Environment) loadBuiltin() {
 		},
 	})
 
+	e.Set("type", &Func{
+		Fn: func(args ...Object) Object {
+			obj := args[0]
+			return &Str{Value: string(obj.Type())}
+		},
+	})
+
 	e.Set("len", &Func{Fn: func(args ...Object) Object {
 		switch obj := args[0].(type) {
 		case *Num:

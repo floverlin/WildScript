@@ -10,7 +10,7 @@ import (
 
 func (e *Evaluator) evalInfixExpression(
 	node *ast.InfixExpression,
-	) enviroment.Object {
+) enviroment.Object {
 	left := e.Eval(node.Left)
 	right := e.Eval(node.Right)
 
@@ -31,6 +31,8 @@ func (e *Evaluator) evalInfixExpression(
 		return e.evalFloatInfixExpression(left, right, node)
 	case enviroment.BOOL_TYPE:
 		return e.evalBooleanInfixExpression(left, right, node)
+	case enviroment.STR_TYPE:
+		return e.evalStringInfixExpression(left, right, node)
 	default:
 		panic(
 			logger.Slog(
@@ -46,7 +48,7 @@ func (e *Evaluator) evalInfixExpression(
 
 func (e *Evaluator) evalPrefixExpression(
 	node *ast.PrefixExpression,
-	) enviroment.Object {
+) enviroment.Object {
 	value := e.Eval(node.Right)
 
 	switch node.Operator {
@@ -101,7 +103,7 @@ func (e *Evaluator) evalPrefixExpression(
 
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
-	) enviroment.Object {
+) enviroment.Object {
 	function := e.Eval(node.Function)
 
 	if function.Type() != enviroment.FUNC_TYPE {
@@ -121,7 +123,7 @@ func (e *Evaluator) evalCallExpression(
 }
 
 func (e *Evaluator) evalFloatInfixExpression(
-	left, right enviroment.Object, 
+	left, right enviroment.Object,
 	node *ast.InfixExpression) enviroment.Object {
 	leftVal := left.(*enviroment.Num).Value
 	rightVal := right.(*enviroment.Num).Value
@@ -193,9 +195,9 @@ func (e *Evaluator) evalFloatInfixExpression(
 	}
 }
 
-func (e *Evaluator) evalBooleanInfixExpression(left, right enviroment.Object, 
+func (e *Evaluator) evalBooleanInfixExpression(left, right enviroment.Object,
 	node *ast.InfixExpression,
-	) enviroment.Object {
+) enviroment.Object {
 	leftVal := left.(*enviroment.Bool).Value
 	rightVal := right.(*enviroment.Bool).Value
 
@@ -208,6 +210,29 @@ func (e *Evaluator) evalBooleanInfixExpression(left, right enviroment.Object,
 		return &enviroment.Bool{Value: leftVal || rightVal}
 	case "&&":
 		return &enviroment.Bool{Value: leftVal && rightVal}
+	default:
+		panic(
+			logger.Slog(
+				node.Token.Line,
+				node.Token.Column,
+				"unsupported operator: %s",
+				node.Operator,
+			),
+		)
+	}
+}
+
+func (e *Evaluator) evalStringInfixExpression(left, right enviroment.Object,
+	node *ast.InfixExpression,
+) enviroment.Object {
+	leftVal := left.(*enviroment.Str).Value
+	rightVal := right.(*enviroment.Str).Value
+
+	switch node.Operator {
+	case "==":
+		return &enviroment.Bool{Value: leftVal == rightVal}
+	case "!=":
+		return &enviroment.Bool{Value: leftVal != rightVal}
 	default:
 		panic(
 			logger.Slog(
