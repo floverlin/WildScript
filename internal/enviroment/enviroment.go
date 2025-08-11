@@ -1,11 +1,27 @@
 package enviroment
 
+type Single struct {
+	Nil   Object
+	True  Object
+	False Object
+}
+
 type Environment struct {
-	store map[string]Object
+	store  map[string]Object
+	Single *Single
 }
 
 func New() *Environment {
-	return &Environment{store: make(map[string]Object)}
+	e := &Environment{
+		store: make(map[string]Object),
+		Single: &Single{
+			Nil:   &Nil{},
+			True:  &Bool{Value: true},
+			False: &Bool{Value: false},
+		},
+	}
+	e.loadBuiltin()
+	return e
 }
 
 func (e *Environment) Get(name string) (Object, bool) {
