@@ -1,0 +1,64 @@
+package enviroment
+
+import (
+	"strconv"
+)
+
+type ObjectType string
+
+const (
+	NUM_TYPE  ObjectType = "num"
+	STR_TYPE  ObjectType = "str"
+	BOOL_TYPE ObjectType = "bool"
+	NIL_TYPE  ObjectType = "nil"
+	FUNC_TYPE ObjectType = "func"
+)
+
+type Object interface {
+	Type() ObjectType
+	Inspect() string
+}
+
+type Num struct {
+	Value float64
+}
+
+func (f *Num) Type() ObjectType { return NUM_TYPE }
+func (f *Num) Inspect() string {
+	return strconv.FormatFloat(f.Value, 'g', -1, 64)
+}
+
+type Str struct {
+	Value string
+}
+
+func (s *Str) Type() ObjectType { return STR_TYPE }
+func (s *Str) Inspect() string {
+	return s.Value
+}
+
+type Bool struct {
+	Value bool
+}
+
+func (b *Bool) Type() ObjectType { return BOOL_TYPE }
+func (b *Bool) Inspect() string {
+	return strconv.FormatBool(b.Value)
+}
+
+type Nil struct{}
+
+func (n *Nil) Type() ObjectType { return NIL_TYPE }
+func (n *Nil) Inspect() string {
+	return "nil"
+}
+
+// TODO
+type Func struct {
+	Fn func(...Object) Object
+}
+
+func (f *Func) Type() ObjectType { return FUNC_TYPE }
+func (f *Func) Inspect() string {
+	return "func"
+}

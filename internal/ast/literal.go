@@ -42,7 +42,7 @@ type BooleanLiteral struct {
 
 func (bl *BooleanLiteral) expressionNode() {}
 func (bl *BooleanLiteral) String() string {
-	return bl.Token.Literal
+	return strconv.FormatBool(bl.Value)
 }
 
 type NilLiteral struct {
@@ -51,5 +51,5 @@ type NilLiteral struct {
 
 func (nl *NilLiteral) expressionNode() {}
 func (nl *NilLiteral) String() string {
-	return nl.Token.Literal
+	return "nil"
 }
