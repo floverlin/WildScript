@@ -1,6 +1,10 @@
 package pkg
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/fatih/color"
+)
 
 func Multiply(str string, num int) string {
 	var out string
@@ -12,8 +16,18 @@ func Multiply(str string, num int) string {
 
 func Cover(str, title string, cov string, num int) string {
 	var out string
-	out += fmt.Sprint(Multiply(cov, num) + title + Multiply(cov, num) + "\n")
+	out += color.RedString(
+		fmt.Sprint(
+			Multiply(cov, num) + title + Multiply(cov, num) + "\n",
+		),
+	)
+
 	out += fmt.Sprint(str + "\n")
-	out += fmt.Sprint(Multiply(cov, num*2+len(title)) + "\n")
+
+	out += color.RedString(
+		fmt.Sprint(
+			Multiply(cov, num*2+len(title)) + "\n",
+		),
+	)
 	return out
 }
