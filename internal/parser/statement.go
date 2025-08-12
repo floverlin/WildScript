@@ -16,19 +16,19 @@ func (p *Parser) parseVarStatement() *ast.VarStatement {
 
 	stmt.Value = p.parseExpression(LOWEST) // not include ;
 
-	if p.peekToken.Type != lexer.SEMICOLON {
+	if p.peekToken.Type != lexer.SEMICOLON &&
+		p.peekToken.Type != lexer.EOF {
 		p.errors = append(
 			p.errors,
 			logger.Slog(
 				p.peekToken.Line,
 				p.peekToken.Column,
-				"expected ;",
+				"expected ; or EOF",
 			),
 		)
 		return nil
 	}
 
-	p.nextToken()
 	return stmt
 }
 
@@ -38,18 +38,18 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 		Expression: p.parseExpression(LOWEST), // not include ;
 	}
 
-	if p.peekToken.Type != lexer.SEMICOLON {
+	if p.peekToken.Type != lexer.SEMICOLON &&
+		p.peekToken.Type != lexer.EOF {
 		p.errors = append(
 			p.errors,
 			logger.Slog(
 				p.peekToken.Line,
 				p.peekToken.Column,
-				"expected ;",
+				"expected ; or EOF",
 			),
 		)
 		return nil
 	}
 
-	p.nextToken() // to ;
 	return stmt
 }

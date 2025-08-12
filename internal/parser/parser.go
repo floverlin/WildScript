@@ -31,11 +31,14 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program.Statements = []ast.Statement{}
 
 	for p.curToken.Type != lexer.EOF {
-		stmt := p.parseStatement() // include ;
+		if p.curToken.Type == lexer.SEMICOLON {
+			p.nextToken() // to statement or EOF
+		}
+		stmt := p.parseStatement() // not include ;
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
 		}
-		p.nextToken() // to next statement or EOF
+		p.nextToken() // to ; or EOF
 	}
 	return program
 }
@@ -44,14 +47,22 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case lexer.IDENT:
 		if p.peekToken.Type == lexer.ASSIGN {
-			return p.parseVarStatement()
+			return p.parseVarStatement() // not include ;
 		} else {
-			return p.parseExpressionStatement()
+			return p.parseExpressionStatement() // not include ;
 		}
 	case lexer.SEMICOLON:
-		return nil
+		return &ast.ExpressionStatement{
+			Token:      p.curToken,
+			Expression: &ast.NilLiteral{Token: p.curToken},
+		}
+	case lexer.EOF:
+		return &ast.ExpressionStatement{
+			Token:      p.curToken,
+			Expression: &ast.NilLiteral{Token: p.curToken},
+		}
 	default:
-		return p.parseExpressionStatement()
+		return p.parseExpressionStatement() // not include ;
 	}
 }
 

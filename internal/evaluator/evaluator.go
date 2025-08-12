@@ -53,15 +53,16 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 }
 
 func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
+	var result enviroment.Object
 	for _, stmt := range program.Statements {
-		e.Eval(stmt)
+		result = e.Eval(stmt)
 	}
-	return e.env.Single.Nil
+	return result
 }
 
 func (e *Evaluator) evalExpressions(
 	exprs []ast.Expression,
-	) []enviroment.Object {
+) []enviroment.Object {
 	var result []enviroment.Object
 	for _, expr := range exprs {
 		evaluated := e.Eval(expr)
@@ -72,7 +73,7 @@ func (e *Evaluator) evalExpressions(
 
 func (e *Evaluator) evalIdentifier(
 	identifier *ast.Identifier,
-	) enviroment.Object {
+) enviroment.Object {
 	if val, ok := e.env.Get(identifier.Value); ok {
 		return val
 	}

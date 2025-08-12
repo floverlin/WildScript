@@ -5,12 +5,15 @@ import (
 	"log"
 	"os"
 	"time"
+	"wildscript/internal/enviroment"
 	"wildscript/internal/evaluator"
 	"wildscript/internal/lexer"
 	"wildscript/internal/logger"
 	"wildscript/internal/parser"
 	"wildscript/internal/settings"
 	"wildscript/pkg"
+
+	"github.com/fatih/color"
 )
 
 func runFile(fileName string) {
@@ -70,10 +73,17 @@ func runFile(fileName string) {
 		return
 	}
 
+	var result enviroment.Object
 	for idx, stmt := range program.Statements {
 		obj := e.Eval(stmt)
+		result = obj
 		fmt.Printf("%d >> %s\n", idx+1, obj.Inspect())
 	}
+	fmt.Printf(
+		"%s >> %s\n",
+		color.RedString("program result"),
+		result.Inspect(),
+	)
 
 	fmt.Printf(
 		"[wild] program ends in %d us\n",
