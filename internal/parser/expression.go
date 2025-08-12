@@ -142,21 +142,8 @@ func (p *Parser) parseConditionExpression(
 	}
 
 	p.nextToken() // to :
-	if p.peekToken.Type != lexer.LBRACE {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected {",
-			),
-		)
-		return nil
-	}
-
-	p.nextToken() // to {
-	p.nextToken() // to block
-	expr.Alternative = p.parseBlockExpression()
+	p.nextToken() // to expr
+	expr.Alternative = p.parseExpression(LOWEST)
 
 	return expr
 }
