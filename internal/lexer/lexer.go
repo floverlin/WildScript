@@ -15,10 +15,15 @@ type Lexer struct {
 	ch      byte
 	line    int
 	column  int
+	eof     bool
 }
 
 func New(input []byte) *Lexer {
-	l := &Lexer{input: input, line: 1, column: 0}
+	l := &Lexer{
+		input:  input,
+		line:   1,
+		column: 0,
+	}
 	l.readChar()
 	return l
 }
@@ -64,6 +69,10 @@ func (l *Lexer) skipComment() {
 }
 
 func (l *Lexer) NextToken() Token {
+	if l.eof {
+		panic("lexer: no tokens")
+	}
+
 	var token Token
 
 	l.skipWhitespace()
@@ -83,6 +92,7 @@ func (l *Lexer) NextToken() Token {
 	} else if isLetter(l.ch) {
 		return l.readIdentifier()
 	} else if l.ch == 0 {
+		l.eof = true
 		token = newToken(EOF, "", l.line, l.column)
 	} else {
 		token = newToken(ILLEGAL, string(l.ch), l.line, l.column)
