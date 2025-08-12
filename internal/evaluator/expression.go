@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"math"
 	"reflect"
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
@@ -28,11 +27,26 @@ func (e *Evaluator) evalInfixExpression(
 
 	switch left.Type() {
 	case enviroment.NUM_TYPE:
-		return e.evalFloatInfixExpression(left, right, node)
+		return evalBinary(
+			left.(*enviroment.Num).Value,
+			right.(*enviroment.Num).Value,
+			numOps,
+			node,
+		)
 	case enviroment.BOOL_TYPE:
-		return e.evalBooleanInfixExpression(left, right, node)
+		return evalBinary(
+			left.(*enviroment.Bool).Value,
+			right.(*enviroment.Bool).Value,
+			boolOps,
+			node,
+		)
 	case enviroment.STR_TYPE:
-		return e.evalStringInfixExpression(left, right, node)
+		return evalBinary(
+			left.(*enviroment.Str).Value,
+			right.(*enviroment.Str).Value,
+			strOps,
+			node,
+		)
 	default:
 		panic(
 			logger.Slog(
@@ -122,125 +136,33 @@ func (e *Evaluator) evalCallExpression(
 	return function.(*enviroment.Func).Fn(args...)
 }
 
-func (e *Evaluator) evalFloatInfixExpression(
-	left, right enviroment.Object,
-	node *ast.InfixExpression) enviroment.Object {
-	leftVal := left.(*enviroment.Num).Value
-	rightVal := right.(*enviroment.Num).Value
-
-	switch node.Operator {
-	case "+":
-		return &enviroment.Num{Value: leftVal + rightVal}
-	case "-":
-		return &enviroment.Num{Value: leftVal - rightVal}
-	case "*":
-		return &enviroment.Num{Value: leftVal * rightVal}
-	case "/":
-		if rightVal == 0 {
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"division by zero",
-				),
-			)
-		}
-		return &enviroment.Num{Value: leftVal / rightVal}
-	case "//":
-		if rightVal == 0 {
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"division by zero",
-				),
-			)
-		}
-		return &enviroment.Num{Value: math.Floor(leftVal / rightVal)}
-	case "%":
-		if rightVal == 0 {
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"modulo by zero",
-				),
-			)
-		}
-		return &enviroment.Num{Value: math.Mod(leftVal, rightVal)}
-	case "^":
-		return &enviroment.Num{Value: math.Pow(leftVal, rightVal)}
-
-	case "==":
-		return &enviroment.Bool{Value: leftVal == rightVal}
-	case "!=":
-		return &enviroment.Bool{Value: leftVal != rightVal}
-	case "<":
-		return &enviroment.Bool{Value: leftVal < rightVal}
-	case ">":
-		return &enviroment.Bool{Value: leftVal > rightVal}
-	case "<=":
-		return &enviroment.Bool{Value: leftVal <= rightVal}
-	case ">=":
-		return &enviroment.Bool{Value: leftVal >= rightVal}
-	default:
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"unsupported operator: %s",
-				node.Operator,
-			),
-		)
-	}
-}
-
-func (e *Evaluator) evalBooleanInfixExpression(left, right enviroment.Object,
+func evalBinary[T any](
+	left, right T,
+	ops map[string]func(T, T) (enviroment.Object, error),
 	node *ast.InfixExpression,
 ) enviroment.Object {
-	leftVal := left.(*enviroment.Bool).Value
-	rightVal := right.(*enviroment.Bool).Value
-
-	switch node.Operator {
-	case "==":
-		return &enviroment.Bool{Value: leftVal == rightVal}
-	case "!=":
-		return &enviroment.Bool{Value: leftVal != rightVal}
-	case "||":
-		return &enviroment.Bool{Value: leftVal || rightVal}
-	case "&&":
-		return &enviroment.Bool{Value: leftVal && rightVal}
-	default:
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"unsupported operator: %s",
-				node.Operator,
-			),
-		)
+	if f, ok := ops[node.Operator]; ok {
+		obj, err := f(left, right)
+		if err != nil {
+			panic(
+				logger.Slog(
+					node.Token.Line,
+					node.Token.Column,
+					"%s: %s",
+					err.Error(),
+					node.Operator,
+				),
+			)
+		}
+		return obj
 	}
-}
 
-func (e *Evaluator) evalStringInfixExpression(left, right enviroment.Object,
-	node *ast.InfixExpression,
-) enviroment.Object {
-	leftVal := left.(*enviroment.Str).Value
-	rightVal := right.(*enviroment.Str).Value
-
-	switch node.Operator {
-	case "==":
-		return &enviroment.Bool{Value: leftVal == rightVal}
-	case "!=":
-		return &enviroment.Bool{Value: leftVal != rightVal}
-	default:
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"unsupported operator: %s",
-				node.Operator,
-			),
-		)
-	}
+	panic(
+		logger.Slog(
+			node.Token.Line,
+			node.Token.Column,
+			"unsupported operator: %s",
+			node.Operator,
+		),
+	)
 }
