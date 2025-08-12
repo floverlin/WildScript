@@ -51,12 +51,17 @@ func (p *Parser) parseStatement() ast.Statement {
 		} else {
 			return p.parseExpressionStatement() // not include ;
 		}
-	case lexer.SEMICOLON:
+	case lexer.SEMICOLON: // empty statement
 		return &ast.ExpressionStatement{
 			Token:      p.curToken,
 			Expression: &ast.NilLiteral{Token: p.curToken},
 		}
-	case lexer.EOF:
+	case lexer.EOF: // end of program
+		return &ast.ExpressionStatement{
+			Token:      p.curToken,
+			Expression: &ast.NilLiteral{Token: p.curToken},
+		}
+	case lexer.RBRACE: // end of block
 		return &ast.ExpressionStatement{
 			Token:      p.curToken,
 			Expression: &ast.NilLiteral{Token: p.curToken},
