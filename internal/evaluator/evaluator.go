@@ -34,6 +34,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalCallExpression(node)
 	case *ast.ConditionExpression:
 		return e.evalConditionExpression(node)
+	case *ast.WhileExpression:
+		return e.evalWhileExpression(node)
 
 	case *ast.Identifier:
 		return e.evalIdentifier(node)

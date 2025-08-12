@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"strconv"
 	"wildscript/internal/ast"
 	"wildscript/internal/lexer"
@@ -103,6 +104,11 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 				expr = p.parseConditionExpression(expr)
 			} else {
 				expr = p.parseInfixExpression(expr)
+				fmt.Println(expr)
+			}
+			if p.peekToken.Type == lexer.LBRACE {
+				p.nextToken()
+				expr = p.parseWhileExpression(expr)
 			}
 		} else {
 			break
@@ -144,6 +150,20 @@ func (p *Parser) parseConditionExpression(
 	p.nextToken() // to :
 	p.nextToken() // to expr
 	expr.Alternative = p.parseExpression(LOWEST)
+
+	return expr
+}
+
+func (p *Parser) parseWhileExpression(
+	cond ast.Expression,
+) *ast.WhileExpression {
+	expr := &ast.WhileExpression{
+		Token:     p.curToken,
+		Condition: cond,
+	}
+
+	p.nextToken() // to block statement
+	expr.Body = p.parseBlockExpression()
 
 	return expr
 }

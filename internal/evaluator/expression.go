@@ -136,6 +136,28 @@ func (e *Evaluator) evalCallExpression(
 	return function.(*enviroment.Func).Fn(args...)
 }
 
+func (e *Evaluator) evalWhileExpression(
+	node *ast.WhileExpression,
+) enviroment.Object {
+	var result enviroment.Object = &e.env.Single().Nil
+
+	for {
+		cond := e.Eval(node.Condition)
+
+		if cond.Type() != enviroment.BOOL_TYPE {
+			panic("TODO")
+		}
+
+		if cond.(*enviroment.Bool).Value {
+			result = e.Eval(node.Body)
+		} else {
+			break
+		}
+	}
+
+	return result
+}
+
 func evalBinary[T any](
 	left, right T,
 	ops map[string]func(T, T) (enviroment.Object, error),
