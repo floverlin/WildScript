@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"wildscript/cmd/interpreter"
 	"wildscript/internal/settings"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ var rootCmd = &cobra.Command{
 			cmd.Usage()
 			return
 		}
-		runFile(args[0])
+		interpreter.RunFile(args[0])
 	},
 }
 

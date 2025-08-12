@@ -1,4 +1,4 @@
-package cmd
+package interpreter
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func runFile(fileName string) {
+func RunFile(fileName string) {
 	start := time.Now()
 
 	gs := settings.Global
