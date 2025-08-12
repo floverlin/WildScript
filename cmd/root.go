@@ -13,6 +13,7 @@ var rootCmd = &cobra.Command{
 	Use:   "wild",
 	Short: "WildScript interpreter",
 	Long:  `WildScript - GO, GO WILD!`,
+	Args:  cobra.ArbitraryArgs,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
