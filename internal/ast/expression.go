@@ -47,3 +47,20 @@ func (ce *CallExpression) String() string {
 	out.WriteByte(')')
 	return out.String()
 }
+
+type BlockExpression struct {
+	Token      lexer.Token
+	Statements []Statement
+}
+
+func (be *BlockExpression) expressionNode() {}
+func (be *BlockExpression) String() string {
+	var out strings.Builder
+	out.WriteString("{\n")
+	for _, stmt := range be.Statements {
+		out.WriteString("    " + stmt.String())
+		out.WriteByte('\n')
+	}
+	out.WriteString("}\n")
+	return out.String()
+}
