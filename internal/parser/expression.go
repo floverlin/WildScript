@@ -38,6 +38,28 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			p.nextToken() // to (
 			expr = p.parseCallExpression(expr)
 		}
+	case lexer.AMPER:
+		if p.peekToken.Type != lexer.IDENT {
+			p.errors = append(
+				p.errors,
+				logger.Slog(
+					p.peekToken.Line,
+					p.peekToken.Column,
+					"expected identifier",
+				),
+			)
+			return nil
+		}
+		p.nextToken() // to ident
+		expr = &ast.Identifier{
+			Token:   p.curToken,
+			Value:   p.curToken.Literal,
+			IsOuter: true,
+		}
+		if p.peekToken.Type == lexer.LPAREN {
+			p.nextToken() // to (
+			expr = p.parseCallExpression(expr)
+		}
 	case lexer.NUMBER:
 		value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 		if err != nil {

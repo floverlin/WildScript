@@ -12,13 +12,13 @@ func (es *ExpressionStatement) String() string {
 	return es.Expression.String()
 }
 
-type VarStatement struct {
+type AssignStatement struct {
 	Token lexer.Token
-	Name  *Identifier
-	Value Expression
+	Left  Expression
+	Right Expression
 }
 
-func (vs *VarStatement) statementNode() {}
-func (vs *VarStatement) String() string {
-	return joiner(vs.Name.String(), "=", vs.Value.String())
+func (as *AssignStatement) statementNode() {}
+func (as *AssignStatement) String() string {
+	return joiner(as.Left.String(), "=", as.Right.String())
 }

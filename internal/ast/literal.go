@@ -7,12 +7,16 @@ import (
 )
 
 type Identifier struct {
-	Token lexer.Token
-	Value string
+	Token   lexer.Token
+	Value   string
+	IsOuter bool
 }
 
 func (i *Identifier) expressionNode() {}
 func (i *Identifier) String() string {
+	if i.IsOuter {
+		return "&" + i.Value
+	}
 	return i.Value
 }
 

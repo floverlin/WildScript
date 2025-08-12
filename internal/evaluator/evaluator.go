@@ -21,9 +21,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	case *ast.BlockExpression:
 		return e.evalBlockExpression(node)
 
-	case *ast.VarStatement:
-		value := e.Eval(node.Value)
-		return e.env.Set(node.Name.Value, value)
+	case *ast.AssignStatement:
+		return e.evalAssignStatement(node)
 	case *ast.ExpressionStatement:
 		return e.Eval(node.Expression)
 
@@ -92,7 +91,16 @@ func (e *Evaluator) evalExpressions(
 func (e *Evaluator) evalIdentifier(
 	identifier *ast.Identifier,
 ) enviroment.Object {
-	if val, ok := e.env.Get(identifier.Value); ok {
+	var val enviroment.Object
+	var ok bool
+
+	if identifier.IsOuter {
+		val, ok = e.env.GetOuter(identifier.Value)
+	} else {
+		val, ok = e.env.Get(identifier.Value)
+	}
+
+	if ok {
 		return val
 	}
 	panic(
@@ -103,4 +111,44 @@ func (e *Evaluator) evalIdentifier(
 			identifier.Value,
 		),
 	)
+}
+
+func (e *Evaluator) evalAssignStatement(
+	stmt *ast.AssignStatement,
+) enviroment.Object {
+	ident, typeOk := stmt.Left.(*ast.Identifier)
+	if !typeOk {
+		panic(
+			logger.Slog(
+				stmt.Token.Line,
+				stmt.Token.Column,
+				"expected identifier",
+			),
+		)
+	}
+
+	right := e.Eval(stmt.Right)
+
+	var ok bool
+	var result enviroment.Object
+
+	if ident.IsOuter {
+		result, ok = e.env.SetOuter(ident.Value, right)
+	} else {
+		result = e.env.Set(ident.Value, right)
+		ok = true
+	}
+
+	if !ok {
+		panic(
+			logger.Slog(
+				ident.Token.Line,
+				ident.Token.Column,
+				"undefined variable: %s",
+				ident.Value,
+			),
+		)
+	}
+
+	return result
 }
