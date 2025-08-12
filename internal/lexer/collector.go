@@ -11,7 +11,7 @@ func NewCollector(lexer *Lexer) *Collector {
 	c := &Collector{
 		lexer:  lexer,
 		tokens: []Token{},
-		pos: 0,
+		pos:    0,
 	}
 	c.collect()
 	return c
@@ -19,7 +19,7 @@ func NewCollector(lexer *Lexer) *Collector {
 
 func (c *Collector) NextToken() Token {
 	if c.pos >= len(c.tokens) {
-		panic("collector: no tokens")
+		return c.tokens[len(c.tokens)-1]
 	}
 	token := c.tokens[c.pos]
 	c.pos++
