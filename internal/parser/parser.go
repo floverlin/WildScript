@@ -4,7 +4,6 @@ import (
 	"slices"
 	"wildscript/internal/ast"
 	"wildscript/internal/lexer"
-	"wildscript/internal/logger"
 )
 
 type Parser struct {
@@ -74,22 +73,7 @@ func (p *Parser) parseStatement() ast.Statement {
 		}
 	}
 
-	if p.peekToken.Type != lexer.SEMICOLON &&
-		p.peekToken.Type != lexer.EOF &&
-		p.peekToken.Type != lexer.RBRACE {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected ; or EOF or }",
-			),
-		)
-		return nil
-	}
-
 	return stmt
-
 }
 
 func (p *Parser) peekPrecedence() int {

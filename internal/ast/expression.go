@@ -69,3 +69,33 @@ func (be *BlockExpression) String() string {
 	out.WriteString(" }")
 	return out.String()
 }
+
+type ConditionExpression struct {
+	Token       lexer.Token
+	Condition   Expression
+	Consequence *BlockExpression
+	Alternative Expression
+}
+
+func (ce *ConditionExpression) expressionNode() {}
+func (ce *ConditionExpression) String() string {
+	return joiner(
+		ce.Condition.String(), "?",
+		ce.Consequence.String(), ":",
+		ce.Alternative.String(),
+	)
+}
+
+type WhileExpression struct {
+	Token     lexer.Token
+	Condition Expression
+	Body      *BlockExpression
+}
+
+func (we *WhileExpression) expressionNode() {}
+func (we *WhileExpression) String() string {
+	return joiner(
+		we.Condition.String(),
+		we.Body.String(),
+	)
+}

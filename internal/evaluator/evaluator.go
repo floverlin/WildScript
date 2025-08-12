@@ -32,6 +32,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalPrefixExpression(node)
 	case *ast.CallExpression:
 		return e.evalCallExpression(node)
+	case *ast.ConditionExpression:
+		return e.evalConditionExpression(node)
 
 	case *ast.Identifier:
 		return e.evalIdentifier(node)
@@ -49,7 +51,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	case *ast.NilLiteral:
 		return &e.env.Single().Nil
 	default:
-		panic("unknown node type")
+		panic("unknown node type\n")
 	}
 }
 
@@ -111,6 +113,22 @@ func (e *Evaluator) evalIdentifier(
 			identifier.Value,
 		),
 	)
+}
+
+func (e *Evaluator) evalConditionExpression(
+	node *ast.ConditionExpression,
+) enviroment.Object {
+	cond := e.Eval(node.Condition)
+
+	if cond.Type() != enviroment.BOOL_TYPE {
+		panic("TODO")
+	}
+
+	if cond.(*enviroment.Bool).Value {
+		return e.Eval(node.Consequence)
+	} else {
+		return e.Eval(node.Alternative)
+	}
 }
 
 func (e *Evaluator) evalAssignStatement(

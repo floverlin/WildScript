@@ -99,13 +99,80 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	for p.peekToken.Type != lexer.SEMICOLON {
 		if precedence < p.peekPrecedence() {
 			p.nextToken() // to operator
-			expr = p.parseInfixExpression(expr)
+			if p.curToken.Type == lexer.QUESTION {
+				expr = p.parseConditionExpression(expr)
+			} else {
+				expr = p.parseInfixExpression(expr)
+			}
 		} else {
 			break
 		}
 	}
 
 	return expr
+}
+
+func (p *Parser) parseConditionExpression(
+	cond ast.Expression,
+) *ast.ConditionExpression {
+	expr := &ast.ConditionExpression{
+		Condition: cond,
+	}
+
+	if p.peekToken.Type != lexer.LBRACE {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected {",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to {
+	p.nextToken() // to block statement
+
+	expr.Consequence = p.parseBlockExpression()
+
+	if p.peekToken.Type != lexer.COLON {
+		expr.Alternative = nilBlock(p.curToken)
+		return expr
+	}
+
+	p.nextToken() // to :
+	if p.peekToken.Type != lexer.LBRACE {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected {",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to {
+	p.nextToken() // to block
+	expr.Alternative = p.parseBlockExpression()
+
+	return expr
+}
+
+func nilBlock(token lexer.Token) *ast.BlockExpression {
+	return &ast.BlockExpression{
+		Token: token,
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{
+				Token: token,
+				Expression: &ast.NilLiteral{
+					Token: token,
+				},
+			},
+		},
+	}
 }
 
 func (p *Parser) parsePrefixExpression() *ast.PrefixExpression {
