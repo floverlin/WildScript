@@ -1,35 +1,46 @@
 package enviroment
 
 type Single struct {
-	Nil   Object
-	True  Object
-	False Object
+	Nil   Nil
+	True  Bool
+	False Bool
 }
 
-type Environment struct {
+type Enviroment struct {
 	store  map[string]Object
-	Single *Single
+	single *Single
+	outer  *Enviroment
 }
 
-func New() *Environment {
-	e := &Environment{
+func New() *Enviroment {
+	e := &Enviroment{
 		store: make(map[string]Object),
-		Single: &Single{
-			Nil:   &Nil{},
-			True:  &Bool{Value: true},
-			False: &Bool{Value: false},
+		single: &Single{
+			Nil:   Nil{},
+			True:  Bool{Value: true},
+			False: Bool{Value: false},
 		},
 	}
-	e.loadBuiltin()
+	loadBuiltin(e)
 	return e
 }
 
-func (e *Environment) Get(name string) (Object, bool) {
+func (e *Enviroment) Get(name string) (Object, bool) {
 	obj, ok := e.store[name]
 	return obj, ok
 }
 
-func (e *Environment) Set(name string, val Object) Object {
+func (e *Enviroment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
+}
+
+func (e *Enviroment) Single() *Single {
+	if e.single != nil {
+		return e.single
+	}
+	if e.outer != nil {
+		return e.outer.Single()
+	}
+	panic("no single and outer")
 }

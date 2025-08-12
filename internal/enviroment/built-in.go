@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-func (e *Environment) loadBuiltin() {
+func loadBuiltin(e *Enviroment) {
 	e.Set("print", &Func{
 		Fn: func(args ...Object) Object {
 			for i, arg := range args {
@@ -17,7 +17,7 @@ func (e *Environment) loadBuiltin() {
 
 			}
 			fmt.Println()
-			return e.Single.Nil
+			return &e.Single().Nil
 		},
 	})
 

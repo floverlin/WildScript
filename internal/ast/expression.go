@@ -56,11 +56,16 @@ type BlockExpression struct {
 func (be *BlockExpression) expressionNode() {}
 func (be *BlockExpression) String() string {
 	var out strings.Builder
-	out.WriteString("{\n")
-	for _, stmt := range be.Statements {
-		out.WriteString("    " + stmt.String())
-		out.WriteByte('\n')
+	out.WriteByte('{')
+	for idx, stmt := range be.Statements {
+		if idx != 0 {
+			out.WriteString("    ")
+		}
+		out.WriteString(stmt.String())
+		if idx != len(be.Statements)-1 {
+			out.WriteByte('\n')
+		}
 	}
-	out.WriteString("}\n")
+	out.WriteByte('}')
 	return out.String()
 }

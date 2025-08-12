@@ -7,7 +7,7 @@ import (
 )
 
 type Evaluator struct {
-	env *enviroment.Environment
+	env *enviroment.Enviroment
 }
 
 func New() *Evaluator {
@@ -18,6 +18,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	switch node := node.(type) {
 	case *ast.Program:
 		return e.evalProgram(node)
+	case *ast.BlockExpression:
+		return e.evalBlockExpression(node)
 
 	case *ast.VarStatement:
 		value := e.Eval(node.Value)
@@ -41,12 +43,12 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return &enviroment.Str{Value: node.Value}
 	case *ast.BooleanLiteral:
 		if node.Value {
-			return e.env.Single.True
+			return &e.env.Single().True
 		} else {
-			return e.env.Single.False
+			return &e.env.Single().False
 		}
 	case *ast.NilLiteral:
-		return e.env.Single.Nil
+		return &e.env.Single().Nil
 	default:
 		panic("unknown node type")
 	}
@@ -57,6 +59,22 @@ func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 	for _, stmt := range program.Statements {
 		result = e.Eval(stmt)
 	}
+	return result
+}
+
+func (e *Evaluator) evalBlockExpression(
+	block *ast.BlockExpression,
+) enviroment.Object {
+	outerEnv := e.env
+	e.env = enviroment.NewBlockEnviroment(outerEnv)
+
+	var result enviroment.Object
+	for _, stmt := range block.Statements {
+		result = e.Eval(stmt)
+	}
+
+	e.env = outerEnv
+
 	return result
 }
 

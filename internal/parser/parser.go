@@ -35,9 +35,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 			p.nextToken() // to statement or EOF
 		}
 		stmt := p.parseStatement() // not include ;
-		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
-		}
+		program.Statements = append(program.Statements, stmt)
 		p.nextToken() // to ; or EOF
 	}
 	return program

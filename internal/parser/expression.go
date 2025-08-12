@@ -16,8 +16,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		expr = p.parsePrefixExpression()
 	case lexer.LBRACE:
 		p.nextToken()                   // to block statement
-		expr = p.parseBlockExpression() // not include }
-		p.nextToken()                   // to }
+		expr = p.parseBlockExpression() // include }
 	case lexer.LPAREN:
 		p.nextToken() // to expr
 		expr = p.parseExpression(LOWEST)
@@ -154,13 +153,20 @@ func (p *Parser) parseBlockExpression() *ast.BlockExpression {
 	block := &ast.BlockExpression{Token: p.curToken}
 	block.Statements = []ast.Statement{}
 
+	if p.curToken.Type == lexer.RBRACE {
+		stmt := p.parseStatement()
+		block.Statements = append(block.Statements, stmt)
+		return block
+	}
+
 	for p.curToken.Type != lexer.RBRACE {
 		if p.curToken.Type == lexer.SEMICOLON {
-			p.nextToken() // to statement or EOF
+			p.nextToken() // to statement or RBRACE
 		}
 		stmt := p.parseStatement() // not include ;
-		if stmt != nil {
-			block.Statements = append(block.Statements, stmt)
+		block.Statements = append(block.Statements, stmt)
+		if p.curToken.Type == lexer.RBRACE {
+			break
 		}
 		p.nextToken() // to ; or RBRACE
 	}
