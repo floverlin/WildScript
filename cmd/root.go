@@ -32,10 +32,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolVarP(
+	rootCmd.Flags().BoolVar(
 		&settings.Global.Debug,
 		"debug",
-		"d",
 		false,
 		"enable debug mode",
 	)
