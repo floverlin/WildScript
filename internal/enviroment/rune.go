@@ -7,7 +7,8 @@ import (
 )
 
 var runeCounter uint64 = 0
-var runeMap = map[uint64]Object{}
+var runeMap = map[string]*Rune{}
+var runeObject = map[uint64]Object{}
 
 type Rune struct {
 	id uint64
@@ -23,23 +24,31 @@ func (r *Rune) Inspect() string {
 	)
 }
 
-func NewRune() *Rune {
+func NewRune(name string) *Rune {
 	r := &Rune{
 		id: runeCounter,
 	}
+	runeMap[name] = r
+	runeObject[runeCounter] = &Nil{}
+
 	runeCounter++
-	runeMap[r.id] = &Nil{}
 	return r
 }
 
 func (r *Rune) Get() Object {
-	obj, ok := runeMap[r.id]
+	obj, ok := runeObject[r.id]
 	if !ok {
 		panic("rune value is empty")
 	}
 	return obj
 }
 
-func (r *Rune) Set(obj Object) {
-	runeMap[r.id] = obj
+func (r *Rune) Set(obj Object) Object {
+	runeObject[r.id] = obj
+	return obj
+}
+
+func FindRune(name string) (*Rune, bool) {
+	r, ok := runeMap[name]
+	return r, ok
 }

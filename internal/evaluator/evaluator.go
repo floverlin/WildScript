@@ -109,15 +109,14 @@ func (e *Evaluator) evalIdentifier(
 	var val enviroment.Object
 	var ok bool
 
-	if identifier.IsOuter ||
-		identifier.IsRune {
+	if identifier.IsRune {
+		r, runeOk := enviroment.FindRune(identifier.Value)
+		val = r.Get()
+		ok = runeOk
+	} else if identifier.IsOuter {
 		val, ok = e.env.GetOuter(identifier.Value)
 	} else {
 		val, ok = e.env.Get(identifier.Value)
-	}
-
-	if identifier.IsRune {
-		val = val.(*enviroment.Rune).Get()
 	}
 
 	if ok {
@@ -168,7 +167,11 @@ func (e *Evaluator) evalAssignStatement(
 	var ok bool
 	var result enviroment.Object
 
-	if ident.IsOuter {
+	if ident.IsRune {
+		r, runeOk := enviroment.FindRune(ident.Value)
+		result = r.Set(right)
+		ok = runeOk
+	} else if ident.IsOuter {
 		result, ok = e.env.SetOuter(ident.Value, right)
 	} else {
 		result = e.env.Set(ident.Value, right)

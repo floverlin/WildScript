@@ -31,8 +31,7 @@ func loadBuiltin(e *Enviroment) {
 		Builtin: func(args ...Object) Object {
 			obj := args[0]
 			name := obj.(*Str).Value // MAY PANIC
-			r := NewRune()
-			e.Set(name, r)
+			NewRune(name)
 			return &e.Single().Nil
 		},
 	})

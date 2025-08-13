@@ -203,17 +203,18 @@ func (e *Evaluator) evalForExpression(
 			panic("TODO")
 		}
 
-		r := enviroment.NewRune()
+		idxRune := enviroment.NewRune("idx")
+		keyRune := enviroment.NewRune("key")
+		valRune := enviroment.NewRune("val")
+
 		for idx := range iters {
-			r.Set(&enviroment.Num{Value: float64(idx)})
+			idxRune.Set(&enviroment.Num{Value: float64(idx)})
+			keyRune.Set(&enviroment.Num{Value: float64(idx)})
+			valRune.Set(&enviroment.Num{Value: float64(idx)})
+
 			result = e.evalBlockExpression(
 				node.Body,
-				[]blockArgument{
-					{
-						Name:  "idx",
-						Value: r,
-					},
-				},
+				nil,
 			)
 		}
 	}

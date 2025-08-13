@@ -153,6 +153,14 @@ a > b ? {
 | **bool**  | until true |
 | **other** | len(other) |
 
+- содержит руны
+
+|  rune   |          value          |
+| :-----: | :---------------------: |
+| **idx** |   number of iteration   |
+| **key** | key of iteration object |
+| **val** |     value under key     |
+
 ```wildscript
 true {
     print("eternity");
@@ -168,6 +176,10 @@ result = i < 10 {
 i = 0;
 5 + (5 { &i = &i + 1; &i });  # 10
 5 + ("wild" { &i = &i + 1; &i });  # 14
+
+5 {
+    [@idx, @key, @val]
+};  # [4, 4, 4]
 ```
 
 ## Математика
@@ -239,7 +251,7 @@ print(1, "2", true);  выведет 1 "2" true
 | **func** | (a, b) {} |    length of args     |   2    |
 | **obj**  |  {a: 1}   |    number of keys     |   1    |
 | **list** | [1, 2, 3] |  number of elements   |   3    |
-| **rune** |    ...    |           0           |   0    |
+| **rune** |     -     |           -           |   -    |
 
 ```wildscript
 len(3.14);  # 3
@@ -260,7 +272,7 @@ len(3.14);  # 3
 | **func** | (a, b) {} | "func" |
 | **obj**  |  {a: 1}   | "obj"  |
 | **list** | [1, 2, 3] | "list" |
-| **rune** |    ...    | "rune" |
+| **rune** |     -     |   -    |
 
 ```wildscript
 type(3.14);  # "num"
@@ -274,5 +286,6 @@ type(3.14);  # "num"
 
 ```wildscript
 rune("r");
-type(@r);  # "rune"
+type(@r);  # "nil"
+# type(@rune); -> panic
 ```
