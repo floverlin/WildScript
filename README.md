@@ -5,15 +5,16 @@
 
 ## Типы
 
-| WildScript |   Go    |   JavaScript   | Python |
-| :--------: | :-----: | :------------: | :----: |
-|  **num**   | float64 |     number     | float  |
-|  **str**   | string  |     string     |  str   |
-|  **nil**   |   nil   | null/undefined |  none  |
-|  **bool**  |  bool   |    boolean     |  bool  |
-|  **func**  |  func   |    function    |  def   |
-|  **obj**   |   map   |     object     |  dict  |
-|  **list**  |  slice  |     array      |  list  |
+| WildScript |   Go    |   JavaScript   |     Python     |
+| :--------: | :-----: | :------------: | :------------: |
+|  **num**   | float64 |     number     |     float      |
+|  **str**   | string  |     string     |      str       |
+|  **nil**   |   nil   | null/undefined |      none      |
+|  **bool**  |  bool   |    boolean     |      bool      |
+|  **func**  |  func   |    function    |      def       |
+|  **obj**   |   map   |     object     |      dict      |
+|  **list**  |  slice  |     array      |      list      |
+|  **rune**  |    -    |     symbol     | \_\_method\_\_ |
 
 ## Переменные
 
@@ -43,6 +44,7 @@ a  # "another"
 - результат пустой инструкции = nil
 - основная программа - тоже блок кода, но без {}
 - обращение к внешним переменным через &
+- <- value подобно return value
 
 ```
 { 1 + 2 };  # 3
@@ -143,6 +145,8 @@ a > b ? {
 
 - состоит из условия и блока
 - условие любого типа
+- <- value подобно break value
+- -> подобно continue
 
 |   type    | iterations |
 | :-------: | :--------: |
@@ -155,27 +159,20 @@ true {
 };
 
 i = 1;
-i < 10 {
-    print(i);
-    i = i + 1;
-};
+result = i < 10 {
+    print(&i);
+    &i > 5 { <- &i };
+    &i = &i + 1;
+};  # 6
 
-i = 0
-5 + (5 { &i = &i + 1; &i })  # 10
-5 + ("wild" { &i = &i + 1; &i })  # 14
+i = 0;
+5 + (5 { &i = &i + 1; &i });  # 10
+5 + ("wild" { &i = &i + 1; &i });  # 14
 ```
 
 ## Математика
 
-- только с num типом
-
-- \+
-- \-
-- \*
-- /
-- //
-- %
-- ^
+### num
 
 ```wildscript
 2.2 + 4.4;  # 6.6
@@ -191,6 +188,12 @@ i = 0
 # 1 / 0 -> panic: division by zero
 # 1 // 0 -> panic: division by zero
 # 1 % 0 -> panic: modulo by zero
+```
+
+### str
+
+```wildscript
+"abc" + "xyz";  # "abcxyz"
 ```
 
 ## Логика
@@ -236,6 +239,7 @@ print(1, "2", true);  выведет 1 "2" true
 | **func** | (a, b) {} |    length of args     |   2    |
 | **obj**  |  {a: 1}   |    number of keys     |   1    |
 | **list** | [1, 2, 3] |  number of elements   |   3    |
+| **rune** |    ...    |           0           |   0    |
 
 ```wildscript
 len(3.14);  # 3
@@ -256,7 +260,19 @@ len(3.14);  # 3
 | **func** | (a, b) {} | "func" |
 | **obj**  |  {a: 1}   | "obj"  |
 | **list** | [1, 2, 3] | "list" |
+| **rune** |    ...    | "rune" |
 
 ```wildscript
 type(3.14);  # "num"
+```
+
+### rune
+
+Создает новую руну
+
+- return nil
+
+```wildscript
+rune("r");
+type(@r);  # "rune"
 ```
