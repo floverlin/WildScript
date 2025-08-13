@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"reflect"
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
 	"wildscript/internal/logger"
@@ -87,8 +86,8 @@ func (e *Evaluator) evalPrefixExpression(
 				return &e.env.Single().False
 			}
 		case *enviroment.Func:
-			args := reflect.ValueOf(v.Fn).Type().NumIn()
-			if args == 0 {
+			params := v.LenOfParameters()
+			if params == 0 {
 				return &e.env.Single().True
 			} else {
 				return &e.env.Single().False
@@ -118,22 +117,50 @@ func (e *Evaluator) evalPrefixExpression(
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
 ) enviroment.Object {
-	function := e.Eval(node.Function)
+	callable := e.Eval(node.Function)
 
-	if function.Type() != enviroment.FUNC_TYPE {
+	if callable.Type() != enviroment.FUNC_TYPE {
 		panic(
 			logger.Slog(
 				node.Token.Line,
 				node.Token.Column,
-				"not a function: %s",
-				function.Type(),
+				"not callable %s",
+				callable.Type(),
 			),
 		)
 	}
 
 	args := e.evalExpressions(node.Arguments)
+	function := callable.(*enviroment.Func)
 
-	return function.(*enviroment.Func).Fn(args...)
+	if function.Builtin != nil {
+		return function.Builtin(args...)
+	}
+
+	if len(args) != function.LenOfParameters() {
+		panic(
+			logger.Slog(
+				node.Token.Line,
+				node.Token.Column,
+				"function want %d argument(s) got %d",
+				len(args),
+				function.LenOfParameters(),
+			),
+		)
+	}
+
+	outerEnv := e.env
+	closure := enviroment.New()
+	for idx, arg := range args {
+		closure.Set(function.Parameters[idx].Value, arg)
+	}
+	e.env = closure
+
+	result := e.evalBlockExpression(function.Body, closure)
+
+	e.env = outerEnv
+
+	return result
 }
 
 func (e *Evaluator) evalForExpression(
@@ -162,7 +189,7 @@ func (e *Evaluator) evalForExpression(
 		case *enviroment.Nil:
 			iters = 0
 		case *enviroment.Func:
-			iters = reflect.ValueOf(c.Fn).Type().NumIn()
+			iters = c.LenOfParameters()
 		default:
 			panic("TODO")
 		}

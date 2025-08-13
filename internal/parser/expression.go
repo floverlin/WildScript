@@ -49,6 +49,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.nextToken() // to identifier
 		expr = p.parseIdentifier(true)
 
+	case lexer.FN:
+		expr = p.parseFuncLiteral()
 	case lexer.NUMBER:
 		value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 		if err != nil {
@@ -85,54 +87,40 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 
-	for {
+	for p.peekToken.Type != lexer.SEMICOLON &&
+		p.peekToken.Type != lexer.EOF &&
+		precedence < p.peekPrecedence() {
 
-		if p.peekToken.Type == lexer.SEMICOLON ||
-			p.peekToken.Type == lexer.EOF {
-			break
-		}
+		p.nextToken() // to op
 
-		nextPrec := p.peekPrecedence()
-		if p.peekToken.Type == lexer.LBRACE {
-			nextPrec = TERNARY_LOOP
-		} else if p.peekToken.Type == lexer.QUESTION {
-			nextPrec = TERNARY_LOOP
-		}
-
-		if precedence >= nextPrec {
-			break
-		}
-
-		if p.peekToken.Type == lexer.QUESTION {
-			p.nextToken() // to ?
-			expr = p.parseConditionExpression(expr)
-			continue
-		}
-
-		if p.peekToken.Type == lexer.LBRACE {
-			p.nextToken() // to {
+		switch p.curToken.Type {
+		case lexer.LPAREN:
+			expr = p.parseCallExpression(expr)
+		case lexer.LBRACE:
 			expr = p.parseForExpression(expr)
-			continue
+		case lexer.QUESTION:
+			expr = p.parseConditionExpression(expr)
+		default:
+			expr = p.parseInfixExpression(expr)
 		}
-
-		p.nextToken() // to operator
-		expr = p.parseInfixExpression(expr)
 	}
 
 	return expr
 }
 
 // CONTAINS FUNC // TODO REMOVE FUNC CALL
-func (p *Parser) parseIdentifier(isOuter bool) ast.Expression {
-	var expr ast.Expression = &ast.Identifier{
+func (p *Parser) parseIdentifier(isOuter bool) *ast.Identifier {
+	expr := &ast.Identifier{
 		Token:   p.curToken,
 		Value:   p.curToken.Literal,
 		IsOuter: isOuter,
 	}
-	if p.peekToken.Type == lexer.LPAREN { // TODO AFTER FUNCS
-		p.nextToken() // to (
-		expr = p.parseCallExpression(expr)
-	}
+
+	// if p.peekToken.Type == lexer.LPAREN { // TODO AFTER FUNCS
+	// 	p.nextToken() // to (
+	// 	expr = p.parseCallExpression(expr)
+	// }
+
 	return expr
 }
 
@@ -252,6 +240,80 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 
 	p.nextToken() // to )
 	return args
+}
+
+func (p *Parser) parseFuncLiteral() *ast.FuncLiteral {
+	function := &ast.FuncLiteral{
+		Token: p.curToken,
+	}
+
+	if p.peekToken.Type != lexer.LPAREN {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected (",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken()                                 // to (
+	function.Parameters = p.parseFuncParameters() // include )
+
+	if p.peekToken.Type != lexer.LBRACE {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected {",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to {
+	function.Body = p.parseBlockExpression()
+
+	return function
+}
+
+func (p *Parser) parseFuncParameters() []*ast.Identifier {
+	params := []*ast.Identifier{}
+
+	if p.peekToken.Type == lexer.RPAREN {
+		p.nextToken() // to )
+		return params
+	}
+
+	p.nextToken() // to ident
+	params = append(params, p.parseIdentifier(false))
+
+	for {
+		if p.peekToken.Type != lexer.COMMA {
+			break
+		}
+		p.nextToken() // to ,
+		p.nextToken() // to ident
+		params = append(params, p.parseIdentifier(false))
+	}
+
+	if p.peekToken.Type != lexer.RPAREN {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected )",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to )
+	return params
 }
 
 // include {}

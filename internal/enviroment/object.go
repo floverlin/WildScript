@@ -2,7 +2,9 @@ package enviroment
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
+	"wildscript/internal/ast"
 
 	"github.com/fatih/color"
 )
@@ -64,10 +66,20 @@ func (n *Nil) Inspect() string {
 
 // TODO
 type Func struct {
-	Fn func(...Object) Object
+	Builtin func(...Object) Object
+
+	Parameters []*ast.Identifier
+	Body       *ast.BlockExpression
+	Enviroment *Enviroment
 }
 
 func (f *Func) Type() ObjectType { return FUNC_TYPE }
 func (f *Func) Inspect() string {
 	return color.CyanString("func")
+}
+func (f *Func) LenOfParameters() int {
+	if f.Builtin != nil {
+		return reflect.ValueOf(f.Builtin).Type().NumIn()
+	}
+	return len(f.Parameters)
 }

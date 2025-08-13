@@ -3,12 +3,11 @@ package enviroment
 import (
 	"fmt"
 	"math"
-	"reflect"
 )
 
 func loadBuiltin(e *Enviroment) {
 	e.Set("print", &Func{
-		Fn: func(args ...Object) Object {
+		Builtin: func(args ...Object) Object {
 			for i, arg := range args {
 				if i > 0 {
 					fmt.Print(" ")
@@ -22,13 +21,13 @@ func loadBuiltin(e *Enviroment) {
 	})
 
 	e.Set("type", &Func{
-		Fn: func(args ...Object) Object {
+		Builtin: func(args ...Object) Object {
 			obj := args[0]
 			return &Str{Value: string(obj.Type())}
 		},
 	})
 
-	e.Set("len", &Func{Fn: func(args ...Object) Object {
+	e.Set("len", &Func{Builtin: func(args ...Object) Object {
 		switch obj := args[0].(type) {
 		case *Num:
 			return &Num{Value: math.Floor(obj.Value)}
@@ -47,8 +46,8 @@ func loadBuiltin(e *Enviroment) {
 			return &Num{Value: 0}
 
 		case *Func:
-			args := reflect.ValueOf(obj.Fn).Type().NumIn()
-			return &Num{Value: float64(args)}
+			params := obj.LenOfParameters()
+			return &Num{Value: float64(params)}
 		default:
 			panic(
 				fmt.Sprintf(

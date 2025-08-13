@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"wildscript/internal/lexer"
 )
 
@@ -57,4 +58,24 @@ type NilLiteral struct {
 func (nl *NilLiteral) expressionNode() {}
 func (nl *NilLiteral) String() string {
 	return "nil"
+}
+
+type FuncLiteral struct {
+	Token      lexer.Token
+	Parameters []*Identifier
+	Body       *BlockExpression
+}
+
+func (fl *FuncLiteral) expressionNode() {}
+func (fl *FuncLiteral) String() string {
+	var out strings.Builder
+	out.WriteString("fn(")
+	for idx, param := range fl.Parameters {
+		out.WriteString(param.String())
+		if idx != len(fl.Parameters)-1 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteString(") " + fl.Body.String())
+	return out.String()
 }

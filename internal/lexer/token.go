@@ -12,6 +12,7 @@ const (
 	TRUE   TokenType = "TRUE"
 	FALSE  TokenType = "FALSE"
 	NIL    TokenType = "NIL"
+	FN     TokenType = "FN"
 
 	AMPER     TokenType = "&"
 	ASSIGN    TokenType = "="
@@ -96,4 +97,5 @@ var specialIdents = map[string]TokenType{
 	"true":  TRUE,
 	"false": FALSE,
 	"nil":   NIL,
+	"fn":    FN,
 }
