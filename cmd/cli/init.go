@@ -1,9 +1,14 @@
 package cli
 
-import "os"
+import (
+	_ "embed"
+	"os"
+)
+
+//go:embed assets/main.ws
+var file []byte
 
 func InitProject() {
 	fileName := "main.ws"
-	program := "print(\"hello, world!\")"
-	os.WriteFile(fileName, []byte(program), 0644)
+	os.WriteFile(fileName, file, 0644)
 }

@@ -86,16 +86,16 @@ func (ce *ConditionExpression) String() string {
 	)
 }
 
-type WhileExpression struct {
+type ForExpression struct {
 	Token     lexer.Token
 	Condition Expression
 	Body      *BlockExpression
 }
 
-func (we *WhileExpression) expressionNode() {}
-func (we *WhileExpression) String() string {
+func (fe *ForExpression) expressionNode() {}
+func (fe *ForExpression) String() string {
 	return joiner(
-		we.Condition.String(),
-		we.Body.String(),
+		fe.Condition.String(),
+		fe.Body.String(),
 	)
 }

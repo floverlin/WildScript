@@ -136,22 +136,39 @@ func (e *Evaluator) evalCallExpression(
 	return function.(*enviroment.Func).Fn(args...)
 }
 
-func (e *Evaluator) evalWhileExpression(
-	node *ast.WhileExpression,
+func (e *Evaluator) evalForExpression(
+	node *ast.ForExpression,
 ) enviroment.Object {
 	var result enviroment.Object = &e.env.Single().Nil
 
-	for {
-		cond := e.Eval(node.Condition)
+	cond := e.Eval(node.Condition)
 
-		if cond.Type() != enviroment.BOOL_TYPE {
+	if cond.Type() == enviroment.BOOL_TYPE {
+		for {
+			result = e.Eval(node.Body)
+			cond = e.Eval(node.Condition)
+			if !cond.(*enviroment.Bool).Value {
+				break
+			}
+		}
+
+	} else {
+		var iters int
+		switch c := cond.(type) {
+		case *enviroment.Num:
+			iters = int(c.Value)
+		case *enviroment.Str:
+			iters = len(c.Value)
+		case *enviroment.Nil:
+			iters = 0
+		case *enviroment.Func:
+			iters = reflect.ValueOf(c.Fn).Type().NumIn()
+		default:
 			panic("TODO")
 		}
 
-		if cond.(*enviroment.Bool).Value {
+		for range iters {
 			result = e.Eval(node.Body)
-		} else {
-			break
 		}
 	}
 

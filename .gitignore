@@ -1,1 +1,2 @@
 *.ws
+!cmd/cli/assets/*

@@ -5,7 +5,7 @@ import "wildscript/internal/lexer"
 const (
 	LOWEST = iota
 
-	TERNARY // ? :
+	TERNARY_LOOP // ? : {loop}
 
 	LOGICAL_OR  // ||
 	LOGICAL_AND // &&
@@ -21,9 +21,6 @@ const (
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.QUESTION: TERNARY,
-	lexer.COLON:    TERNARY,
-
 	lexer.EQUAL:      COMPARISON,
 	lexer.NOT_EQUAL:  COMPARISON,
 	lexer.LESS:       COMPARISON,

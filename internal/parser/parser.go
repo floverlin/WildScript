@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"slices"
 	"wildscript/internal/ast"
 	"wildscript/internal/lexer"
+	"wildscript/internal/logger"
 )
 
 type Parser struct {
@@ -15,64 +15,78 @@ type Parser struct {
 
 func New(lexer lexer.Tokenizer) *Parser {
 	p := &Parser{lexer: lexer}
-	p.nextToken()
-	p.nextToken()
+	p.nextToken() // fill peek
+	p.nextToken() // fill cur
 	return p
 }
 
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
-	if p.curToken.Type != lexer.EOF {
-		p.peekToken = p.lexer.NextToken()
-	}
+	p.peekToken = p.lexer.NextToken()
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
-	for p.curToken.Type != lexer.EOF {
-		if p.curToken.Type == lexer.SEMICOLON {
-			p.nextToken() // to statement or EOF
-		}
-		stmt := p.parseStatement() // not include ;
+	for {
+		stmt := p.parseStatement() // include ; or EOF
 		program.Statements = append(program.Statements, stmt)
-		p.nextToken() // to ; or EOF
+
+		if p.curToken.Type == lexer.EOF {
+			break
+		}
+
+		p.nextToken() // to statement
 	}
+
 	return program
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	if slices.Contains(
-		[]lexer.TokenType{lexer.SEMICOLON, lexer.EOF, lexer.RBRACE},
-		p.curToken.Type,
-	) {
-		return &ast.ExpressionStatement{
-			Token:      p.curToken,
-			Expression: &ast.NilLiteral{Token: p.curToken},
-		}
+	if p.curToken.Type == lexer.SEMICOLON ||
+		p.curToken.Type == lexer.EOF ||
+		p.curToken.Type == lexer.RBRACE {
+		return newNilStatement(p.curToken)
 	}
 
 	var stmt ast.Statement
-	expr := p.parseExpression(LOWEST)
+	token := p.curToken
+	expr := p.parseExpression(LOWEST) // not include ; or EOF
 
 	if p.peekToken.Type == lexer.ASSIGN {
-		p.nextToken() // to ==
-		p.nextToken() // to right expr
+		p.nextToken() // to =
 		assign := &ast.AssignStatement{
-			Token: p.curToken,
+			Token: token,
 			Left:  expr,
 		}
-		right := p.parseExpression(LOWEST)
+
+		p.nextToken()                      // to right expr
+		right := p.parseExpression(LOWEST) // not include ; or EOF
 		assign.Right = right
+
 		stmt = assign
 	} else {
 		stmt = &ast.ExpressionStatement{
-			Token:      p.curToken,
+			Token:      token,
 			Expression: expr,
 		}
 	}
 
+	if p.peekToken.Type != lexer.SEMICOLON &&
+		p.peekToken.Type != lexer.EOF &&
+		p.peekToken.Type != lexer.RBRACE {
+		p.errors = append(p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected ;",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to ; or EOF
 	return stmt
 }
 
@@ -92,4 +106,22 @@ func (p *Parser) curPrecedence() int {
 
 func (p *Parser) Errors() []string {
 	return p.errors
+}
+
+func newNilBlockExpression(token lexer.Token) *ast.BlockExpression {
+	return &ast.BlockExpression{
+		Token: token,
+		Statements: []ast.Statement{
+			newNilStatement(token),
+		},
+	}
+}
+
+func newNilStatement(token lexer.Token) ast.Statement {
+	return &ast.ExpressionStatement{
+		Token: token,
+		Expression: &ast.NilLiteral{
+			Token: token,
+		},
+	}
 }
