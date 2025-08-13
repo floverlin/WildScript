@@ -74,6 +74,10 @@ var boolOps = map[string]func(left, right bool) (enviroment.Object, error){
 }
 
 var strOps = map[string]func(left, right string) (enviroment.Object, error){
+	"+": func(left, right string) (enviroment.Object, error) {
+		return &enviroment.Str{Value: left + right}, nil
+	},
+
 	"==": func(left, right string) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left == right}, nil
 	},
