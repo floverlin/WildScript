@@ -27,6 +27,16 @@ func loadBuiltin(e *Enviroment) {
 		},
 	})
 
+	e.Set("rune", &Func{
+		Builtin: func(args ...Object) Object {
+			obj := args[0]
+			name := obj.(*Str).Value // MAY PANIC
+			r := NewRune()
+			e.Set(name, r)
+			return &e.Single().Nil
+		},
+	})
+
 	e.Set("len", &Func{Builtin: func(args ...Object) Object {
 		switch obj := args[0].(type) {
 		case *Num:

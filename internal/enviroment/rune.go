@@ -1,7 +1,7 @@
 package enviroment
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/fatih/color"
 )
@@ -15,18 +15,14 @@ type Rune struct {
 
 func (r *Rune) Type() ObjectType { return RUNE_TYPE }
 func (r *Rune) Inspect() string {
-	return color.CyanString("rune " + strconv.FormatUint(r.id, 10))
+	return color.CyanString(
+		fmt.Sprintf(
+			"rune<%d>",
+			r.id,
+		),
+	)
 }
-func (r *Rune) Set(obj Object) {
-	runeMap[r.id] = obj
-}
-func (r *Rune) Get() Object {
-	obj, ok := runeMap[r.id]
-	if !ok {
-		panic("rune value is empty")
-	}
-	return obj
-}
+
 func NewRune() *Rune {
 	r := &Rune{
 		id: runeCounter,
@@ -34,4 +30,16 @@ func NewRune() *Rune {
 	runeCounter++
 	runeMap[r.id] = &Nil{}
 	return r
+}
+
+func (r *Rune) Get() Object {
+	obj, ok := runeMap[r.id]
+	if !ok {
+		panic("rune value is empty")
+	}
+	return obj
+}
+
+func (r *Rune) Set(obj Object) {
+	runeMap[r.id] = obj
 }
