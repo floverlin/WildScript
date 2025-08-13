@@ -149,18 +149,27 @@ func (e *Evaluator) evalCallExpression(
 		)
 	}
 
-	outerEnv := e.env
-	closure := enviroment.New()
+	outerEnv := e.env            // save init env
+	funcArgs := []funcArgument{} // env for args
 	for idx, arg := range args {
-		closure.Set(function.Parameters[idx].Value, arg)
+		funcArgs = append(funcArgs, funcArgument{
+			Name:  function.Parameters[idx].Value,
+			Value: arg,
+		})
 	}
-	e.env = closure
 
-	result := e.evalBlockExpression(function.Body, closure)
+	e.env = function.Enviroment // closure
+
+	result := e.evalBlockExpression(function.Body, funcArgs)
 
 	e.env = outerEnv
 
 	return result
+}
+
+type funcArgument struct {
+	Name  string
+	Value enviroment.Object
 }
 
 func (e *Evaluator) evalForExpression(

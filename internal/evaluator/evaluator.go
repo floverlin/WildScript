@@ -44,6 +44,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return &enviroment.Func{
 			Parameters: node.Parameters,
 			Body:       node.Body,
+			Enviroment: e.env,
 		}
 	case *ast.FloatLiteral:
 		return &enviroment.Num{Value: node.Value}
@@ -72,13 +73,13 @@ func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 
 func (e *Evaluator) evalBlockExpression(
 	block *ast.BlockExpression,
-	closure *enviroment.Enviroment,
+	args []funcArgument,
 ) enviroment.Object {
 	outerEnv := e.env
-	if closure == nil {
-		e.env = enviroment.NewBlockEnviroment(outerEnv)
-	} else {
-		e.env = closure
+	e.env = enviroment.NewBlockEnviroment(outerEnv)
+
+	for _, arg := range args {
+		e.env.Set(arg.Name, arg.Value)
 	}
 
 	var result enviroment.Object
