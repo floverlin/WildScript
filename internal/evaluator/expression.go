@@ -149,10 +149,10 @@ func (e *Evaluator) evalCallExpression(
 		)
 	}
 
-	outerEnv := e.env            // save init env
-	funcArgs := []funcArgument{} // env for args
+	outerEnv := e.env             // save init env
+	funcArgs := []blockArgument{} // env for args
 	for idx, arg := range args {
-		funcArgs = append(funcArgs, funcArgument{
+		funcArgs = append(funcArgs, blockArgument{
 			Name:  function.Parameters[idx].Value,
 			Value: arg,
 		})
@@ -167,7 +167,7 @@ func (e *Evaluator) evalCallExpression(
 	return result
 }
 
-type funcArgument struct {
+type blockArgument struct {
 	Name  string
 	Value enviroment.Object
 }
@@ -203,8 +203,18 @@ func (e *Evaluator) evalForExpression(
 			panic("TODO")
 		}
 
-		for range iters {
-			result = e.Eval(node.Body)
+		r := enviroment.NewRune()
+		for idx := range iters {
+			r.Set(&enviroment.Num{Value: float64(idx)})
+			result = e.evalBlockExpression(
+				node.Body,
+				[]blockArgument{
+					{
+						Name:  "idx",
+						Value: r,
+					},
+				},
+			)
 		}
 	}
 

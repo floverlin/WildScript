@@ -14,6 +14,7 @@ const (
 	NIL    TokenType = "NIL"
 	FN     TokenType = "FN"
 
+	DOG       TokenType = "@"
 	AMPER     TokenType = "&"
 	ASSIGN    TokenType = "="
 	SEMICOLON TokenType = ";"
@@ -57,6 +58,7 @@ func newToken(t TokenType, lit string, line, column int) Token {
 }
 
 var mono = map[byte]TokenType{
+	'@': DOG,
 	'&': AMPER,
 	'=': ASSIGN,
 	';': SEMICOLON,

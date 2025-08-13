@@ -11,12 +11,15 @@ type Identifier struct {
 	Token   lexer.Token
 	Value   string
 	IsOuter bool
+	IsRune  bool
 }
 
 func (i *Identifier) expressionNode() {}
 func (i *Identifier) String() string {
 	if i.IsOuter {
 		return "&" + i.Value
+	} else if i.IsRune {
+		return "@" + i.Value
 	}
 	return i.Value
 }

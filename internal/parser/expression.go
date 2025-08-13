@@ -7,6 +7,12 @@ import (
 	"wildscript/internal/logger"
 )
 
+const (
+	NONE  = "none"
+	RUNE  = "rune"
+	OUTER = "outer"
+)
+
 // not include ; or EOF
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	var expr ast.Expression
@@ -33,7 +39,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.nextToken() // to )
 
 	case lexer.IDENT:
-		expr = p.parseIdentifier(false)
+		expr = p.parseIdentifier(NONE)
 	case lexer.AMPER:
 		if p.peekToken.Type != lexer.IDENT {
 			p.errors = append(
@@ -41,13 +47,27 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 				logger.Slog(
 					p.peekToken.Line,
 					p.peekToken.Column,
-					"expected identifier",
+					"expected identifier after &",
 				),
 			)
 			return nil
 		}
 		p.nextToken() // to identifier
-		expr = p.parseIdentifier(true)
+		expr = p.parseIdentifier(OUTER)
+	case lexer.DOG:
+		if p.peekToken.Type != lexer.IDENT {
+			p.errors = append(
+				p.errors,
+				logger.Slog(
+					p.peekToken.Line,
+					p.peekToken.Column,
+					"expected identifier after @",
+				),
+			)
+			return nil
+		}
+		p.nextToken() // to identifier
+		expr = p.parseIdentifier(RUNE)
 
 	case lexer.FN:
 		expr = p.parseFuncLiteral()
@@ -108,18 +128,22 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return expr
 }
 
-// CONTAINS FUNC // TODO REMOVE FUNC CALL
-func (p *Parser) parseIdentifier(isOuter bool) *ast.Identifier {
+func (p *Parser) parseIdentifier(identType string) *ast.Identifier {
+	var isOuter, isRune bool
+
+	switch identType {
+	case "rune":
+		isRune = true
+	case "outer":
+		isOuter = true
+	}
+
 	expr := &ast.Identifier{
 		Token:   p.curToken,
 		Value:   p.curToken.Literal,
 		IsOuter: isOuter,
+		IsRune:  isRune,
 	}
-
-	// if p.peekToken.Type == lexer.LPAREN { // TODO AFTER FUNCS
-	// 	p.nextToken() // to (
-	// 	expr = p.parseCallExpression(expr)
-	// }
 
 	return expr
 }
@@ -289,7 +313,7 @@ func (p *Parser) parseFuncParameters() []*ast.Identifier {
 	}
 
 	p.nextToken() // to ident
-	params = append(params, p.parseIdentifier(false))
+	params = append(params, p.parseIdentifier(NONE))
 
 	for {
 		if p.peekToken.Type != lexer.COMMA {
@@ -297,7 +321,7 @@ func (p *Parser) parseFuncParameters() []*ast.Identifier {
 		}
 		p.nextToken() // to ,
 		p.nextToken() // to ident
-		params = append(params, p.parseIdentifier(false))
+		params = append(params, p.parseIdentifier(NONE))
 	}
 
 	if p.peekToken.Type != lexer.RPAREN {

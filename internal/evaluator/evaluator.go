@@ -73,7 +73,7 @@ func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 
 func (e *Evaluator) evalBlockExpression(
 	block *ast.BlockExpression,
-	args []funcArgument,
+	args []blockArgument,
 ) enviroment.Object {
 	outerEnv := e.env
 	e.env = enviroment.NewBlockEnviroment(outerEnv)
@@ -109,10 +109,15 @@ func (e *Evaluator) evalIdentifier(
 	var val enviroment.Object
 	var ok bool
 
-	if identifier.IsOuter {
+	if identifier.IsOuter ||
+		identifier.IsRune {
 		val, ok = e.env.GetOuter(identifier.Value)
 	} else {
 		val, ok = e.env.Get(identifier.Value)
+	}
+
+	if identifier.IsRune {
+		val = val.(*enviroment.Rune).Get()
 	}
 
 	if ok {

@@ -17,6 +17,7 @@ const (
 	BOOL_TYPE ObjectType = "bool"
 	NIL_TYPE  ObjectType = "nil"
 	FUNC_TYPE ObjectType = "func"
+	RUNE_TYPE ObjectType = "rune"
 )
 
 type Object interface {
@@ -64,7 +65,6 @@ func (n *Nil) Inspect() string {
 	return color.BlueString("nil")
 }
 
-// TODO
 type Func struct {
 	Builtin func(...Object) Object
 
@@ -83,3 +83,5 @@ func (f *Func) LenOfParameters() int {
 	}
 	return len(f.Parameters)
 }
+
+
