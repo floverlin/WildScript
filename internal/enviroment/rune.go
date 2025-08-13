@@ -25,6 +25,10 @@ func (r *Rune) Inspect() string {
 }
 
 func NewRune(name string) *Rune {
+	if r, ok := runeMap[name]; ok {
+		return r
+	}
+	
 	r := &Rune{
 		id: runeCounter,
 	}
