@@ -32,7 +32,7 @@ a = true;
 a = "another";
 a  # "another"
 
-# b; -> panic: undefined variable 'b'
+# b; -> panic: undefined variable b
 ```
 
 ## Блоки
@@ -51,7 +51,7 @@ a  # "another"
 a = 1;
 b = 1;
 {
-    # a = a + 1; -> panic: undefined variable 'a'
+    # a = a + 1; -> panic: undefined variable a
     a = &a + 1;
     &b = a;
 };
@@ -86,7 +86,7 @@ obj.c();  # выведет "hello, world!"
 
 obj.d = "d";  # or obj.set("d", "d")
 
-# obj.d; -> panic: undefined obj field 'd'
+# obj.d; -> panic: undefined obj field d
 obj.get("d");  # nil
 
 print(obj);  # выведет {a: 1, b: "b", c: func, d: "d"}
@@ -121,6 +121,7 @@ print(list);  # выведет [10, 20, [nil, true]]
 ## Ветвления
 
 - состоит из условия, операторов и блоков
+- условие только bool типа
 
 ```wildscript
 a > b
@@ -134,11 +135,19 @@ a > b ? {
 } : {
     print("a <= b && a <= c");
 };
+
+5 + (true ? { 5 })  # 10
 ```
 
 ## Циклы
 
 - состоит из условия и блока
+- условие любого типа
+
+|   type    | iterations |
+| :-------: | :--------: |
+| **bool**  | until true |
+| **other** | len(other) |
 
 ```wildscript
 true {
@@ -150,6 +159,10 @@ i < 10 {
     print(i);
     i = i + 1;
 };
+
+i = 0
+5 + (5 { &i = &i + 1; &i })  # 10
+5 + ("wild" { &i = &i + 1; &i })  # 14
 ```
 
 ## Математика
@@ -179,6 +192,21 @@ i < 10 {
 # 1 // 0 -> panic: division by zero
 # 1 % 0 -> panic: modulo by zero
 ```
+
+## Логика
+
+- &&
+- ||
+
+- ==
+- !=
+
+- <
+- \>
+
+- <=
+- \>=
+
 
 ## Стандартные функции
 
