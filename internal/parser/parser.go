@@ -73,6 +73,17 @@ func (p *Parser) parseStatement() ast.Statement {
 		stmt = &ast.ContinueStatement{
 			Token: token,
 		}
+
+	} else if p.curToken.Type == lexer.FN &&
+		p.peekToken.Type == lexer.IDENT {
+		p.nextToken() // to ident
+		funcStmt := &ast.FuncStatement{
+			Token: p.curToken,
+		}
+		funcStmt.Identifier = p.parseIdentifier(NONE)
+		p.nextToken() // to (
+		funcStmt.Function = p.parseFuncLiteral()
+		stmt = funcStmt
 	} else {
 		expr := p.parseExpression(LOWEST) // not include ; or EOF
 

@@ -25,6 +25,14 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalAssignStatement(node)
 	case *ast.ExpressionStatement:
 		return e.Eval(node.Expression)
+	case *ast.FuncStatement:
+		return e.evalAssignStatement(
+			&ast.AssignStatement{
+				Token: node.Token,
+				Left:  node.Identifier,
+				Right: node.Function,
+			},
+		)
 	case *ast.ReturnStatement:
 		return &enviroment.Return{Value: e.Eval(node.Value)}
 	case *ast.ContinueStatement:

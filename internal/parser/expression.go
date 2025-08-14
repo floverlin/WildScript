@@ -68,6 +68,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		expr = p.parseIdentifier(RUNE)
 
 	case lexer.FN:
+		p.nextToken() // to (
 		expr = p.parseFuncLiteral()
 	case lexer.LBRACKET:
 		expr = p.parseListLiteral()
@@ -359,24 +360,24 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	return args
 }
 
+// from (
 func (p *Parser) parseFuncLiteral() *ast.FuncLiteral {
 	function := &ast.FuncLiteral{
 		Token: p.curToken,
 	}
 
-	if p.peekToken.Type != lexer.LPAREN {
+	if p.curToken.Type != lexer.LPAREN {
 		p.errors = append(
 			p.errors,
 			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
+				p.curToken.Line,
+				p.curToken.Column,
 				"expected (",
 			),
 		)
 		return nil
 	}
 
-	p.nextToken()                                 // to (
 	function.Parameters = p.parseFuncParameters() // include )
 
 	if p.peekToken.Type != lexer.LBRACE {
@@ -504,7 +505,7 @@ func (p *Parser) parseObjectLiteral() *ast.ObjectLiteral {
 		lit.Fields = fields
 		return lit
 	}
-	
+
 	p.nextToken() // to field
 
 	fields = append(fields, p.parseObjectField())
@@ -526,7 +527,7 @@ func (p *Parser) parseObjectLiteral() *ast.ObjectLiteral {
 		)
 		return nil
 	}
-	
+
 	p.nextToken() // to }
 	lit.Fields = fields
 	return lit
@@ -546,7 +547,7 @@ func (p *Parser) parseObjectField() *ast.ObjectField {
 	}
 
 	key := p.parseIdentifier(NONE)
-	
+
 	if p.peekToken.Type != lexer.COLON {
 		p.errors = append(
 			p.errors,
@@ -558,10 +559,10 @@ func (p *Parser) parseObjectField() *ast.ObjectField {
 		)
 		return nil
 	}
-	
+
 	p.nextToken() // to :
 	p.nextToken() // to value
-	
+
 	value := p.parseExpression(LOWEST)
 
 	return &ast.ObjectField{

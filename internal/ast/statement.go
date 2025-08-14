@@ -1,6 +1,9 @@
 package ast
 
-import "wildscript/internal/lexer"
+import (
+	"fmt"
+	"wildscript/internal/lexer"
+)
 
 type ExpressionStatement struct {
 	Token      lexer.Token
@@ -21,6 +24,21 @@ type AssignStatement struct {
 func (as *AssignStatement) statementNode() {}
 func (as *AssignStatement) String() string {
 	return joiner(as.Left.String(), "=", as.Right.String())
+}
+
+type FuncStatement struct {
+	Token      lexer.Token
+	Identifier *Identifier
+	Function   *FuncLiteral
+}
+
+func (fs *FuncStatement) statementNode() {}
+func (fs *FuncStatement) String() string {
+	return fmt.Sprintf(
+		"%s => %s",
+		fs.Identifier.String(),
+		fs.Function.String(),
+	)
 }
 
 type ReturnStatement struct {
