@@ -20,8 +20,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	switch p.curToken.Type {
 	case lexer.NOT:
 		expr = p.parsePrefixExpression()
-	case lexer.LBRACE:
-		expr = p.parseBlockExpression() // include }
 	case lexer.LPAREN:
 		p.nextToken() // to expr
 		expr = p.parseExpression(LOWEST)
@@ -73,6 +71,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		expr = p.parseFuncLiteral()
 	case lexer.LBRACKET:
 		expr = p.parseListLiteral()
+	case lexer.LBRACE:
+		expr = p.parseObjectLiteral()
 	case lexer.NUMBER:
 		value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 		if err != nil {
@@ -491,4 +491,81 @@ func (p *Parser) parseListLiteral() *ast.ListLiteral {
 	p.nextToken() // to ]
 	lit.Elements = elems
 	return lit
+}
+
+func (p *Parser) parseObjectLiteral() *ast.ObjectLiteral {
+	lit := &ast.ObjectLiteral{
+		Token: p.curToken,
+	}
+	fields := []*ast.ObjectField{}
+
+	if p.peekToken.Type == lexer.RBRACE {
+		p.nextToken() // to }
+		lit.Fields = fields
+		return lit
+	}
+	
+	p.nextToken() // to field
+
+	fields = append(fields, p.parseObjectField())
+
+	for p.peekToken.Type == lexer.COMMA {
+		p.nextToken() // to ,
+		p.nextToken() // to field
+		fields = append(fields, p.parseObjectField())
+	}
+
+	if p.peekToken.Type != lexer.RBRACE {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected }",
+			),
+		)
+		return nil
+	}
+	
+	p.nextToken() // to }
+	lit.Fields = fields
+	return lit
+}
+
+func (p *Parser) parseObjectField() *ast.ObjectField {
+	if p.curToken.Type != lexer.IDENT {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.curToken.Line,
+				p.curToken.Column,
+				"expected idetifier",
+			),
+		)
+		return nil
+	}
+
+	key := p.parseIdentifier(NONE)
+	
+	if p.peekToken.Type != lexer.COLON {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected :",
+			),
+		)
+		return nil
+	}
+	
+	p.nextToken() // to :
+	p.nextToken() // to value
+	
+	value := p.parseExpression(LOWEST)
+
+	return &ast.ObjectField{
+		Key:   key,
+		Value: value,
+	}
 }

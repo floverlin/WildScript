@@ -58,6 +58,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		}
 	case *ast.ListLiteral:
 		return e.evalListLiteral(node)
+	case *ast.ObjectLiteral:
+		return e.evalObjectLiteral(node)
 	case *ast.FloatLiteral:
 		return &enviroment.Num{Value: node.Value}
 	case *ast.StringLiteral:
@@ -160,11 +162,31 @@ func (e *Evaluator) evalListLiteral(
 	return &enviroment.List{Elements: elems}
 }
 
+func (e *Evaluator) evalObjectLiteral(
+	node *ast.ObjectLiteral,
+) enviroment.Object {
+	fields := map[string]enviroment.Object{}
+
+	for _, field := range node.Fields {
+		value := e.Eval(field.Value)
+		fields[field.Key.Value] = value
+	}
+
+	return &enviroment.Obj{Fields: fields}
+}
+
 func (e *Evaluator) evalPropertyAccessExpression(
 	node *ast.PropertyAccessExpression,
 ) enviroment.Object {
 	obj := e.Eval(node.Object)
 	propIdent := node.Property.Value
+
+	if obj.Type() == enviroment.OBJ_TYPE {
+		obj := obj.(*enviroment.Obj)
+		if prop, ok := obj.Fields[propIdent]; ok {
+			return prop
+		}
+	}
 
 	method := enviroment.FindMethod(obj, propIdent)
 	// if not built-in set self

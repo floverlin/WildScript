@@ -20,6 +20,7 @@ const (
 	FUNC_TYPE ObjectType = "func"
 	RUNE_TYPE ObjectType = "rune"
 	LIST_TYPE ObjectType = "list"
+	OBJ_TYPE  ObjectType = "obj"
 
 	CONTROL_TYPE ObjectType = "CONTROL"
 )
@@ -103,6 +104,32 @@ func (l *List) Inspect() string {
 		}
 	}
 	out.WriteByte(']')
+	return out.String()
+}
+
+type Obj struct {
+	Fields map[string]Object
+}
+
+func (o *Obj) Type() ObjectType { return OBJ_TYPE }
+func (o *Obj) Inspect() string {
+	var out strings.Builder
+	out.WriteString("{")
+	idx := 0
+	for key, value := range o.Fields {
+		out.WriteString(
+			fmt.Sprintf(
+				"%s: %s",
+				key,
+				value.Inspect(),
+			),
+		)
+		if idx != len(o.Fields)-1 {
+			out.WriteString(", ")
+		}
+		idx++
+	}
+	out.WriteString("}")
 	return out.String()
 }
 

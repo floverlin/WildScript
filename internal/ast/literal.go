@@ -101,3 +101,36 @@ func (ll *ListLiteral) String() string {
 	out.WriteByte(']')
 	return out.String()
 }
+
+type ObjectField struct {
+	Key   *Identifier
+	Value Expression
+}
+
+type ObjectLiteral struct {
+	Token  lexer.Token
+	Fields []*ObjectField
+}
+
+func (ol *ObjectLiteral) expressionNode() {}
+func (ol *ObjectLiteral) String() string {
+	var out strings.Builder
+	out.WriteString("{ ")
+	for idx, field := range ol.Fields {
+		if idx != 0 {
+			out.WriteString("    ")
+		}
+		out.WriteString(
+			fmt.Sprintf(
+				"%s: %s",
+				field.Key.String(),
+				field.Value.String(),
+			),
+		)
+		if idx != len(ol.Fields)-1 {
+			out.WriteString(",\n")
+		}
+	}
+	out.WriteString(" }")
+	return out.String()
+}
