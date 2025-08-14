@@ -68,7 +68,7 @@ func (n *Nil) Inspect() string {
 }
 
 type Func struct {
-	Builtin func(...Object) Object
+	Builtin func(args ...Object) Object
 
 	Parameters []*ast.Identifier
 	Body       *ast.BlockExpression

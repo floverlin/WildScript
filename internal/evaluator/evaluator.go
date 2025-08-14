@@ -152,7 +152,8 @@ func (e *Evaluator) evalPropertyAccessExpression(
 	obj := e.Eval(node.Object)
 	propIdent := node.Property.Value
 
-	method := enviroment.FindMethod(obj.Type(), propIdent)
+	method := enviroment.FindMethod(obj, propIdent)
+	// if not built-in set self
 	if method == nil {
 		panic("TODO METHOD NOT FOUND")
 	}

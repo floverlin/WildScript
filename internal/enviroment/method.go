@@ -2,22 +2,24 @@ package enviroment
 
 import "fmt"
 
-type methodMap = map[string]*Func
+type method = func(self Object, args ...Object) Object
+
+type methodMap = map[string]method
 
 var typeMethodMap = map[ObjectType]methodMap{
 	STR_TYPE: {
-		"pr": &Func{
-			Builtin: func(o ...Object) Object {
-				fmt.Println("pr-pr")
-				return &Nil{}
-			},
+		"wow": func(self Object, args ...Object) Object {
+			selfStr := self.(*Str)
+
+			fmt.Printf("WOW! %s :P\n", selfStr.Value)
+			return &Nil{}
 		},
 	},
 }
 
 // TODO ERROR RETURN
-func FindMethod(objType ObjectType, name string) *Func {
-	m, ok := typeMethodMap[objType]
+func FindMethod(obj Object, name string) *Func {
+	m, ok := typeMethodMap[obj.Type()]
 	if !ok {
 		return nil
 	}
@@ -25,5 +27,10 @@ func FindMethod(objType ObjectType, name string) *Func {
 	if !ok {
 		return nil
 	}
-	return f
+
+	return &Func{
+		Builtin: func(args ...Object) Object {
+			return f(obj, args...)
+		},
+	}
 }
