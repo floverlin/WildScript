@@ -175,11 +175,6 @@ func (e *Evaluator) evalCallExpression(
 	return result
 }
 
-type blockArgument struct {
-	Name  string
-	Value enviroment.Object
-}
-
 func (e *Evaluator) evalForExpression(
 	node *ast.ForExpression,
 ) enviroment.Object {
@@ -268,4 +263,20 @@ func evalBinary[T any](
 			node.Operator,
 		),
 	)
+}
+
+func (e *Evaluator) evalConditionExpression(
+	node *ast.ConditionExpression,
+) enviroment.Object {
+	cond := e.Eval(node.Condition)
+
+	if cond.Type() != enviroment.BOOL_TYPE {
+		panic("TODO")
+	}
+
+	if cond.(*enviroment.Bool).Value {
+		return e.Eval(node.Consequence)
+	} else {
+		return e.Eval(node.Alternative)
+	}
 }
