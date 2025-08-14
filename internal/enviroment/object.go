@@ -47,9 +47,7 @@ type Str struct {
 
 func (s *Str) Type() ObjectType { return STR_TYPE }
 func (s *Str) Inspect() string {
-	return color.YellowString(
-		fmt.Sprintf("\"%s\"", s.Value),
-	)
+	return color.YellowString(s.Value)
 }
 
 type Bool struct {
@@ -70,8 +68,12 @@ func (n *Nil) Inspect() string {
 	return color.BlueString("nil")
 }
 
+type Evaluator interface {
+	Eval(ast.Node, map[string]Object) Object
+}
+
 type Func struct {
-	Builtin func(args ...Object) Object
+	Builtin func(e Evaluator, args ...Object) Object
 
 	Parameters []*ast.Identifier
 	Body       *ast.BlockExpression

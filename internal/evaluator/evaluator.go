@@ -6,6 +6,8 @@ import (
 	"wildscript/internal/logger"
 )
 
+type Arguments = map[string]enviroment.Object
+
 type Evaluator struct {
 	env *enviroment.Enviroment
 }
@@ -14,17 +16,17 @@ func New() *Evaluator {
 	return &Evaluator{env: enviroment.New()}
 }
 
-func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
+func (e *Evaluator) Eval(node ast.Node, args Arguments) enviroment.Object {
 	switch node := node.(type) {
 	case *ast.Program:
 		return e.evalProgram(node)
 	case *ast.BlockExpression:
-		return e.evalBlockExpression(node, nil)
+		return e.evalBlockExpression(node, args)
 
 	case *ast.AssignStatement:
 		return e.evalAssignStatement(node)
 	case *ast.ExpressionStatement:
-		return e.Eval(node.Expression)
+		return e.Eval(node.Expression, nil)
 	case *ast.FuncStatement:
 		return e.evalAssignStatement(
 			&ast.AssignStatement{
@@ -34,7 +36,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 			},
 		)
 	case *ast.ReturnStatement:
-		return &enviroment.Return{Value: e.Eval(node.Value)}
+		return &enviroment.Return{Value: e.Eval(node.Value, nil)}
 	case *ast.ContinueStatement:
 		return &enviroment.Continue{}
 
@@ -88,30 +90,25 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 	var result enviroment.Object
 	for _, stmt := range program.Statements {
-		result = e.Eval(stmt)
+		result = e.Eval(stmt, nil)
 	}
 	return result
 }
 
-type blockArgument struct {
-	Name  string
-	Value enviroment.Object
-}
-
 func (e *Evaluator) evalBlockExpression(
 	block *ast.BlockExpression,
-	args []blockArgument,
+	args Arguments,
 ) enviroment.Object {
 	outerEnv := e.env
 	e.env = enviroment.NewBlockEnviroment(outerEnv)
 
-	for _, arg := range args {
-		e.env.Set(arg.Name, arg.Value)
+	for name, obj := range args {
+		e.env.Set(name, obj)
 	}
 
 	var result enviroment.Object
 	for _, stmt := range block.Statements {
-		result = e.Eval(stmt)
+		result = e.Eval(stmt, nil)
 
 		if result.Type() == enviroment.CONTROL_TYPE {
 			break
@@ -128,7 +125,7 @@ func (e *Evaluator) evalExpressions(
 ) []enviroment.Object {
 	var result []enviroment.Object
 	for _, expr := range exprs {
-		evaluated := e.Eval(expr)
+		evaluated := e.Eval(expr, nil)
 		result = append(result, evaluated)
 	}
 	return result
@@ -169,7 +166,7 @@ func (e *Evaluator) evalListLiteral(
 	elems := []enviroment.Object{}
 
 	for _, nodeElem := range node.Elements {
-		elems = append(elems, e.Eval(nodeElem))
+		elems = append(elems, e.Eval(nodeElem, nil))
 	}
 
 	return &enviroment.List{Elements: elems}
@@ -181,7 +178,7 @@ func (e *Evaluator) evalObjectLiteral(
 	fields := map[string]enviroment.Object{}
 
 	for _, field := range node.Fields {
-		value := e.Eval(field.Value)
+		value := e.Eval(field.Value, nil)
 		fields[field.Key.Value] = value
 	}
 

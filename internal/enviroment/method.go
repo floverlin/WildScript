@@ -1,17 +1,51 @@
 package enviroment
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+)
 
-type method = func(self Object, args ...Object) Object
+type method = func(self Object, e Evaluator, args ...Object) Object
 
 type methodMap = map[string]method
 
 var typeMethodMap = map[ObjectType]methodMap{
 	STR_TYPE: {
-		"wow": func(self Object, args ...Object) Object {
+		"wow": func(self Object, _ Evaluator, args ...Object) Object {
 			selfStr := self.(*Str)
 
 			fmt.Printf("WOW! %s :P\n", selfStr.Value)
+			return &Nil{}
+		},
+	},
+
+	LIST_TYPE: {
+		"map": func(self Object, e Evaluator, args ...Object) Object {
+			selfList := self.(*List)
+			f := args[0].(*Func)
+
+			newList := &List{
+				Elements: []Object{},
+			}
+
+			paramName := f.Parameters[0].Value
+
+			for _, elem := range selfList.Elements {
+				newElem := e.Eval(f.Body, map[string]Object{paramName: elem})
+				newList.Elements = append(newList.Elements, newElem)
+			}
+
+			return newList
+		},
+	},
+
+	OBJ_TYPE: {
+		"merge": func(self Object, e Evaluator, args ...Object) Object {
+			selfObj := self.(*Obj)
+			otherObj := args[0].(*Obj)
+
+			maps.Copy(selfObj.Fields, otherObj.Fields)
+
 			return &Nil{}
 		},
 	},
@@ -29,8 +63,8 @@ func FindMethod(obj Object, name string) *Func {
 	}
 
 	return &Func{
-		Builtin: func(args ...Object) Object {
-			return f(obj, args...)
+		Builtin: func(e Evaluator, args ...Object) Object {
+			return f(obj, e, args...)
 		},
 	}
 }

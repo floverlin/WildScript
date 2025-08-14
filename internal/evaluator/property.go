@@ -9,7 +9,7 @@ import (
 func (e *Evaluator) evalPropertyAccessExpression(
 	node *ast.PropertyAccessExpression,
 ) enviroment.Object {
-	object := e.Eval(node.Object)
+	object := e.Eval(node.Object, nil)
 	propIdent := node.Property.Value
 
 	// find field in obj
@@ -45,8 +45,8 @@ func (e *Evaluator) evalPropertyAccessExpression(
 func (e *Evaluator) evalIndexExpression(
 	node *ast.IndexExpression,
 ) enviroment.Object {
-	left := e.Eval(node.Left)
-	index := e.Eval(node.Index)
+	left := e.Eval(node.Left, nil)
+	index := e.Eval(node.Index, nil)
 
 	if index.Type() != enviroment.NUM_TYPE {
 		panic("TODO")
@@ -74,9 +74,9 @@ func (e *Evaluator) evalIndexExpression(
 func (e *Evaluator) evalSliceExpression(
 	node *ast.SliceExpression,
 ) enviroment.Object {
-	left := e.Eval(node.Left)
-	start := e.Eval(node.Start)
-	end := e.Eval(node.End)
+	left := e.Eval(node.Left, nil)
+	start := e.Eval(node.Start, nil)
+	end := e.Eval(node.End, nil)
 
 	if start.Type() != enviroment.NUM_TYPE ||
 		end.Type() != enviroment.NUM_TYPE {

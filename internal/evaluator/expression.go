@@ -9,8 +9,8 @@ import (
 func (e *Evaluator) evalInfixExpression(
 	node *ast.InfixExpression,
 ) enviroment.Object {
-	left := e.Eval(node.Left)
-	right := e.Eval(node.Right)
+	left := e.Eval(node.Left, nil)
+	right := e.Eval(node.Right, nil)
 
 	if left.Type() != right.Type() {
 		panic(
@@ -62,7 +62,7 @@ func (e *Evaluator) evalInfixExpression(
 func (e *Evaluator) evalPrefixExpression(
 	node *ast.PrefixExpression,
 ) enviroment.Object {
-	value := e.Eval(node.Right)
+	value := e.Eval(node.Right, nil)
 
 	switch node.Operator {
 	case "!":
@@ -117,7 +117,7 @@ func (e *Evaluator) evalPrefixExpression(
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
 ) enviroment.Object {
-	callable := e.Eval(node.Function)
+	callable := e.Eval(node.Function, nil)
 
 	if callable.Type() != enviroment.FUNC_TYPE {
 		panic(
@@ -134,7 +134,7 @@ func (e *Evaluator) evalCallExpression(
 	function := callable.(*enviroment.Func)
 
 	if function.Builtin != nil {
-		return function.Builtin(args...)
+		return function.Builtin(e, args...)
 	}
 
 	if len(args) != function.LenOfParameters() {
@@ -151,12 +151,9 @@ func (e *Evaluator) evalCallExpression(
 
 	outerEnv := e.env // save init env
 
-	funcArgs := []blockArgument{} // args
+	funcArgs := Arguments{} // args
 	for idx, arg := range args {
-		funcArgs = append(funcArgs, blockArgument{
-			Name:  function.Parameters[idx].Value,
-			Value: arg,
-		})
+		funcArgs[function.Parameters[idx].Value] = arg
 	}
 
 	e.env = function.Enviroment // closure
@@ -187,12 +184,12 @@ func (e *Evaluator) evalForExpression(
 ) enviroment.Object {
 	var result enviroment.Object = &e.env.Single().Nil
 
-	cond := e.Eval(node.Condition)
+	cond := e.Eval(node.Condition, nil)
 
 	if cond.Type() == enviroment.BOOL_TYPE {
 		for {
-			result = e.Eval(node.Body)
-			cond = e.Eval(node.Condition)
+			result = e.Eval(node.Body, nil)
+			cond = e.Eval(node.Condition, nil)
 			if !cond.(*enviroment.Bool).Value {
 				break
 			}
@@ -244,15 +241,15 @@ func (e *Evaluator) evalForExpression(
 func (e *Evaluator) evalConditionExpression(
 	node *ast.ConditionExpression,
 ) enviroment.Object {
-	cond := e.Eval(node.Condition)
+	cond := e.Eval(node.Condition, nil)
 
 	if cond.Type() != enviroment.BOOL_TYPE {
 		panic("TODO")
 	}
 
 	if cond.(*enviroment.Bool).Value {
-		return e.Eval(node.Consequence)
+		return e.Eval(node.Consequence, nil)
 	} else {
-		return e.Eval(node.Alternative)
+		return e.Eval(node.Alternative, nil)
 	}
 }
