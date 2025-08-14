@@ -248,7 +248,7 @@ print(1, "2", true);  выведет 1 "2" true
 | **str**  | "flower"  |        length         |   6    |
 | **nil**  |    nil    |           0           |   0    |
 | **bool** |   true    | true -> 1; false -> 0 |   1    |
-| **func** | (a, b) {} |    length of args     |   2    |
+| **func** | (a, b) {} |   number of params    |   2    |
 | **obj**  |  {a: 1}   |    number of keys     |   1    |
 | **list** | [1, 2, 3] |  number of elements   |   3    |
 | **rune** |     -     |           -           |   -    |

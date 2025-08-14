@@ -5,7 +5,6 @@ import "wildscript/internal/lexer"
 const (
 	LOWEST = iota
 
-	INDEX        // []
 	TERNARY_LOOP // ? {loop}
 
 	LOGICAL_OR  // ||
@@ -20,11 +19,11 @@ const (
 
 	POW // ^
 
-	CALL // (call)
+	CALL // (call) [index]
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.LBRACKET: INDEX,
+	lexer.LBRACKET: CALL,
 	lexer.LBRACE:   TERNARY_LOOP,
 	lexer.QUESTION: TERNARY_LOOP,
 
