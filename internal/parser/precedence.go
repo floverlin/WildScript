@@ -19,11 +19,10 @@ const (
 
 	POW // ^
 
-	CALL // (call) [index]
+	CALL // (call) [index] .
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.LBRACKET: CALL,
 	lexer.LBRACE:   TERNARY_LOOP,
 	lexer.QUESTION: TERNARY_LOOP,
 
@@ -48,5 +47,7 @@ var precedences = map[lexer.TokenType]int{
 	lexer.AND: LOGICAL_AND,
 	lexer.OR:  LOGICAL_OR,
 
-	lexer.LPAREN: CALL,
+	lexer.LPAREN:   CALL,
+	lexer.DOT:      CALL,
+	lexer.LBRACKET: CALL,
 }

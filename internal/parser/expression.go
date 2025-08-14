@@ -114,6 +114,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.nextToken() // to op
 
 		switch p.curToken.Type {
+		case lexer.DOT:
+			expr = p.parsePropertyAccessExpression(expr)
 		case lexer.LBRACKET:
 			expr = p.parseBracketExpression(expr)
 		case lexer.LPAREN:
@@ -195,6 +197,49 @@ func (p *Parser) parseForExpression(
 
 	expr.Body = p.parseBlockExpression() // include }
 
+	return expr
+}
+
+func (p *Parser) parsePropertyAccessExpression(
+	left ast.Expression,
+) *ast.PropertyAccessExpression {
+	expr := &ast.PropertyAccessExpression{
+		Token:  p.curToken,
+		Object: left,
+	}
+	p.nextToken() // to prop
+
+	var prop *ast.Identifier
+	switch p.curToken.Type {
+	case lexer.IDENT:
+		prop = p.parseIdentifier(NONE)
+	case lexer.DOG:
+		if p.peekToken.Type != lexer.IDENT {
+			p.errors = append(
+				p.errors,
+				logger.Slog(
+					p.peekToken.Line,
+					p.peekToken.Column,
+					"expected identifier after @",
+				),
+			)
+			return nil
+		}
+		p.nextToken() // to identifier
+		prop = p.parseIdentifier(RUNE)
+	default:
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected identifier after .",
+			),
+		)
+		return nil
+	}
+
+	expr.Property = prop
 	return expr
 }
 

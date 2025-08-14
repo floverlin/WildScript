@@ -132,3 +132,18 @@ func (se *SliceExpression) String() string {
 		se.End.String(),
 	)
 }
+
+type PropertyAccessExpression struct {
+	Token lexer.Token
+	Object   Expression
+	Property *Identifier
+}
+
+func (pae *PropertyAccessExpression) expressionNode() {}
+func (pae *PropertyAccessExpression) String() string {
+	return fmt.Sprintf(
+		"%s.%s",
+		pae.Object.String(),
+		pae.Property.String(),
+	)
+}

@@ -44,6 +44,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalIndexExpression(node)
 	case *ast.SliceExpression:
 		return e.evalSliceExpression(node)
+	case *ast.PropertyAccessExpression:
+		return e.evalPropertyAccessExpression(node)
 
 	case *ast.Identifier:
 		return e.evalIdentifier(node)
@@ -142,6 +144,20 @@ func (e *Evaluator) evalIdentifier(
 			identifier.Value,
 		),
 	)
+}
+
+func (e *Evaluator) evalPropertyAccessExpression(
+	node *ast.PropertyAccessExpression,
+) enviroment.Object {
+	obj := e.Eval(node.Object)
+	propIdent := node.Property.Value
+
+	method := enviroment.FindMethod(obj.Type(), propIdent)
+	if method == nil {
+		panic("TODO METHOD NOT FOUND")
+	}
+
+	return method
 }
 
 func (e *Evaluator) evalIndexExpression(
