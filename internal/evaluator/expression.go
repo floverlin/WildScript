@@ -162,6 +162,14 @@ func (e *Evaluator) evalCallExpression(
 
 	result := e.evalBlockExpression(function.Body, funcArgs)
 
+	if result.Type() == enviroment.CONTROL_TYPE {
+		if ret, ok := result.(*enviroment.Return); ok {
+			result = ret.Value
+		} else {
+			panic("TODO NO CONTINUE IN FUNC")
+		}
+	}
+
 	e.env = outerEnv
 
 	return result
@@ -216,6 +224,15 @@ func (e *Evaluator) evalForExpression(
 				node.Body,
 				nil,
 			)
+			if result.Type() == enviroment.CONTROL_TYPE {
+				switch res := result.(type) {
+				case *enviroment.Continue:
+					continue
+				case *enviroment.Return:
+					result = res.Value
+				}
+				break
+			}
 		}
 	}
 

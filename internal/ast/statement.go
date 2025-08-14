@@ -22,3 +22,22 @@ func (as *AssignStatement) statementNode() {}
 func (as *AssignStatement) String() string {
 	return joiner(as.Left.String(), "=", as.Right.String())
 }
+
+type ReturnStatement struct {
+	Token lexer.Token
+	Value Expression
+}
+
+func (rs *ReturnStatement) statementNode() {}
+func (rs *ReturnStatement) String() string {
+	return joiner("<-", rs.Value.String())
+}
+
+type ContinueStatement struct {
+	Token lexer.Token
+}
+
+func (cs *ContinueStatement) statementNode() {}
+func (cs *ContinueStatement) String() string {
+	return "->"
+}

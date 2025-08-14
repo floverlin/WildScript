@@ -52,25 +52,49 @@ func (p *Parser) parseStatement() ast.Statement {
 
 	var stmt ast.Statement
 	token := p.curToken
-	expr := p.parseExpression(LOWEST) // not include ; or EOF
 
-	if p.peekToken.Type == lexer.ASSIGN {
-		p.nextToken() // to =
-		assign := &ast.AssignStatement{
+	if p.curToken.Type == lexer.RETURN {
+		if p.peekToken.Type == lexer.SEMICOLON ||
+			p.peekToken.Type == lexer.EOF {
+			stmt = &ast.ReturnStatement{
+				Token: token,
+				Value: &ast.NilLiteral{
+					Token: token,
+				},
+			}
+		} else {
+			p.nextToken() // to expr
+			stmt = &ast.ReturnStatement{
+				Token: token,
+				Value: p.parseExpression(LOWEST),
+			}
+		}
+	} else if p.curToken.Type == lexer.CONTINUE {
+		stmt = &ast.ContinueStatement{
 			Token: token,
-			Left:  expr,
 		}
-
-		p.nextToken()                      // to right expr
-		right := p.parseExpression(LOWEST) // not include ; or EOF
-		assign.Right = right
-
-		stmt = assign
 	} else {
-		stmt = &ast.ExpressionStatement{
-			Token:      token,
-			Expression: expr,
+		expr := p.parseExpression(LOWEST) // not include ; or EOF
+
+		if p.peekToken.Type == lexer.ASSIGN {
+			p.nextToken() // to =
+			assign := &ast.AssignStatement{
+				Token: token,
+				Left:  expr,
+			}
+
+			p.nextToken()                      // to right expr
+			right := p.parseExpression(LOWEST) // not include ; or EOF
+			assign.Right = right
+
+			stmt = assign
+		} else {
+			stmt = &ast.ExpressionStatement{
+				Token:      token,
+				Expression: expr,
+			}
 		}
+
 	}
 
 	if p.peekToken.Type != lexer.SEMICOLON &&

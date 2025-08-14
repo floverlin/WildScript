@@ -46,6 +46,9 @@ const (
 	AND TokenType = "&&"
 	OR  TokenType = "||"
 	NOT TokenType = "!"
+
+	RETURN   TokenType = "<-"
+	CONTINUE TokenType = "->"
 )
 
 type Token struct {
@@ -97,6 +100,9 @@ var dual = map[string]TokenType{
 
 	"&&": AND,
 	"||": OR,
+
+	"<-": RETURN,
+	"->": CONTINUE,
 }
 
 var specialIdents = map[string]TokenType{

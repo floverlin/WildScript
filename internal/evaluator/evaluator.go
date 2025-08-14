@@ -25,6 +25,10 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalAssignStatement(node)
 	case *ast.ExpressionStatement:
 		return e.Eval(node.Expression)
+	case *ast.ReturnStatement:
+		return &enviroment.Return{Value: e.Eval(node.Value)}
+	case *ast.ContinueStatement:
+		return &enviroment.Continue{}
 
 	case *ast.InfixExpression:
 		return e.evalInfixExpression(node)
@@ -89,6 +93,10 @@ func (e *Evaluator) evalBlockExpression(
 	var result enviroment.Object
 	for _, stmt := range block.Statements {
 		result = e.Eval(stmt)
+
+		if result.Type() == enviroment.CONTROL_TYPE {
+			break
+		}
 	}
 
 	e.env = outerEnv

@@ -18,6 +18,8 @@ const (
 	NIL_TYPE  ObjectType = "nil"
 	FUNC_TYPE ObjectType = "func"
 	RUNE_TYPE ObjectType = "rune"
+
+	CONTROL_TYPE ObjectType = "CONTROL"
 )
 
 type Object interface {
@@ -84,4 +86,16 @@ func (f *Func) LenOfParameters() int {
 	return len(f.Parameters)
 }
 
+// ------------------------------  CONTROL  ------------------------------ //
 
+type Return struct {
+	Value Object
+}
+
+func (r *Return) Type() ObjectType { return CONTROL_TYPE }
+func (r *Return) Inspect() string  { return "return" }
+
+type Continue struct{}
+
+func (c *Continue) Type() ObjectType { return CONTROL_TYPE }
+func (c *Continue) Inspect() string  { return "continue" }
