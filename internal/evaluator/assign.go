@@ -69,7 +69,7 @@ func (e *Evaluator) evalPropertyAssign(
 		return nil, errors.New("assign property to non obj type")
 	}
 	obj.(*enviroment.Obj).Fields[prop] = value
-	return value, nil
+	return obj, nil
 }
 
 func (e *Evaluator) evalIndexAssign(
@@ -86,5 +86,5 @@ func (e *Evaluator) evalIndexAssign(
 		return nil, errors.New("assign index to non list type")
 	}
 	list.(*enviroment.List).Elements[idx] = value
-	return value, nil
+	return list, nil
 }
