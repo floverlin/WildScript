@@ -3,8 +3,41 @@ package evaluator
 import (
 	"errors"
 	"math"
+	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
+	"wildscript/internal/logger"
 )
+
+func evalBinary[T any](
+	left, right T,
+	ops map[string]func(T, T) (enviroment.Object, error),
+	node *ast.InfixExpression,
+) enviroment.Object {
+	if f, ok := ops[node.Operator]; ok {
+		obj, err := f(left, right)
+		if err != nil {
+			panic(
+				logger.Slog(
+					node.Token.Line,
+					node.Token.Column,
+					"%s: %s",
+					err.Error(),
+					node.Operator,
+				),
+			)
+		}
+		return obj
+	}
+
+	panic(
+		logger.Slog(
+			node.Token.Line,
+			node.Token.Column,
+			"unsupported operator: %s",
+			node.Operator,
+		),
+	)
+}
 
 var numOps = map[string]func(left, right float64) (enviroment.Object, error){
 	"+": func(left, right float64) (enviroment.Object, error) {

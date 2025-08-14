@@ -149,8 +149,9 @@ func (e *Evaluator) evalCallExpression(
 		)
 	}
 
-	outerEnv := e.env             // save init env
-	funcArgs := []blockArgument{} // env for args
+	outerEnv := e.env // save init env
+
+	funcArgs := []blockArgument{} // args
 	for idx, arg := range args {
 		funcArgs = append(funcArgs, blockArgument{
 			Name:  function.Parameters[idx].Value,
@@ -166,7 +167,13 @@ func (e *Evaluator) evalCallExpression(
 		if ret, ok := result.(*enviroment.Return); ok {
 			result = ret.Value
 		} else {
-			panic("TODO NO CONTINUE IN FUNC")
+			panic(
+				logger.Slog(
+					node.Token.Line,
+					node.Token.Column,
+					"continue in non for block",
+				),
+			)
 		}
 	}
 
@@ -232,37 +239,6 @@ func (e *Evaluator) evalForExpression(
 	}
 
 	return result
-}
-
-func evalBinary[T any](
-	left, right T,
-	ops map[string]func(T, T) (enviroment.Object, error),
-	node *ast.InfixExpression,
-) enviroment.Object {
-	if f, ok := ops[node.Operator]; ok {
-		obj, err := f(left, right)
-		if err != nil {
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"%s: %s",
-					err.Error(),
-					node.Operator,
-				),
-			)
-		}
-		return obj
-	}
-
-	panic(
-		logger.Slog(
-			node.Token.Line,
-			node.Token.Column,
-			"unsupported operator: %s",
-			node.Operator,
-		),
-	)
 }
 
 func (e *Evaluator) evalConditionExpression(

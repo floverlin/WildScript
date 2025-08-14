@@ -3,25 +3,40 @@ package evaluator
 import (
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
+	"wildscript/internal/logger"
 )
 
 func (e *Evaluator) evalPropertyAccessExpression(
 	node *ast.PropertyAccessExpression,
 ) enviroment.Object {
-	obj := e.Eval(node.Object)
+	object := e.Eval(node.Object)
 	propIdent := node.Property.Value
-	
-	if obj.Type() == enviroment.OBJ_TYPE {
-		obj := obj.(*enviroment.Obj)
+
+	// find field in obj
+	if object.Type() == enviroment.OBJ_TYPE {
+		obj := object.(*enviroment.Obj)
 		if prop, ok := obj.Fields[propIdent]; ok {
+			if prop.Type() == enviroment.FUNC_TYPE {
+				self := enviroment.NewRune("self")
+				self.Set(obj)
+			}
 			return prop
 		}
 	}
 
-	method := enviroment.FindMethod(obj, propIdent)
-	// if not built-in set self
+	// find base type method
+	method := enviroment.FindMethod(object, propIdent)
+
 	if method == nil {
-		panic("TODO METHOD NOT FOUND")
+		panic(
+			logger.Slog(
+				node.Token.Line,
+				node.Token.Column,
+				"property %s not exists in %s",
+				propIdent,
+				object.Type(),
+			),
+		)
 	}
 
 	return method
