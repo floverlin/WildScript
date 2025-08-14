@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"strings"
 	"wildscript/internal/lexer"
 )
@@ -97,5 +98,37 @@ func (fe *ForExpression) String() string {
 	return joiner(
 		fe.Condition.String(),
 		fe.Body.String(),
+	)
+}
+
+type IndexExpression struct {
+	Token lexer.Token
+	Left  Expression
+	Index Expression
+}
+
+func (is *IndexExpression) expressionNode() {}
+func (is *IndexExpression) String() string {
+	return fmt.Sprintf(
+		"%s[%s]",
+		is.Left.String(),
+		is.Index.String(),
+	)
+}
+
+type SliceExpression struct {
+	Token lexer.Token
+	Left  Expression
+	Start Expression
+	End   Expression
+}
+
+func (se *SliceExpression) expressionNode() {}
+func (se *SliceExpression) String() string {
+	return fmt.Sprintf(
+		"%s[%s:%s]",
+		se.Left.String(),
+		se.Start.String(),
+		se.End.String(),
 	)
 }

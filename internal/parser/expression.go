@@ -114,6 +114,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.nextToken() // to op
 
 		switch p.curToken.Type {
+		case lexer.LBRACKET:
+			expr = p.parseBracketExpression(expr)
 		case lexer.LPAREN:
 			expr = p.parseCallExpression(expr)
 		case lexer.LBRACE:
@@ -193,6 +195,50 @@ func (p *Parser) parseForExpression(
 
 	expr.Body = p.parseBlockExpression() // include }
 
+	return expr
+}
+
+func (p *Parser) parseBracketExpression(
+	left ast.Expression,
+) ast.Expression {
+	var expr ast.Expression
+	token := p.curToken
+
+	p.nextToken() // to index
+	firstIndex := p.parseExpression(LOWEST)
+
+	if p.peekToken.Type == lexer.COLON {
+		p.nextToken() // to :
+		p.nextToken() // to index
+
+		secondIndex := p.parseExpression(LOWEST)
+		expr = &ast.SliceExpression{
+			Token: token,
+			Left:  left,
+			Start: firstIndex,
+			End:   secondIndex,
+		}
+	} else {
+		expr = &ast.IndexExpression{
+			Token: token,
+			Left:  left,
+			Index: firstIndex,
+		}
+	}
+
+	if p.peekToken.Type != lexer.RBRACKET {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected ]",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to ]
 	return expr
 }
 

@@ -39,4 +39,10 @@ func init() {
 		false,
 		"enable debug mode",
 	)
+		rootCmd.Flags().BoolVar(
+		&settings.Global.Tokens,
+		"tokens",
+		false,
+		"show lexer tokens",
+	)
 }

@@ -36,6 +36,10 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalConditionExpression(node)
 	case *ast.ForExpression:
 		return e.evalForExpression(node)
+	case *ast.IndexExpression:
+		return e.evalIndexExpression(node)
+	case *ast.SliceExpression:
+		return e.evalSliceExpression(node)
 
 	case *ast.Identifier:
 		return e.evalIdentifier(node)
@@ -130,6 +134,63 @@ func (e *Evaluator) evalIdentifier(
 			identifier.Value,
 		),
 	)
+}
+
+func (e *Evaluator) evalIndexExpression(
+	node *ast.IndexExpression,
+) enviroment.Object {
+	left := e.Eval(node.Left)
+	index := e.Eval(node.Index)
+
+	if index.Type() != enviroment.NUM_TYPE {
+		panic("TODO")
+	}
+	idx := index.(*enviroment.Num).Value
+
+	var result enviroment.Object
+
+	switch v := left.(type) {
+	case *enviroment.Str:
+		sl := []rune(v.Value)
+		symbol := sl[int(idx)]
+		result = &enviroment.Str{
+			Value: string(symbol),
+		}
+	default:
+		panic("TODO")
+	}
+
+	return result
+}
+
+func (e *Evaluator) evalSliceExpression(
+	node *ast.SliceExpression,
+) enviroment.Object {
+	left := e.Eval(node.Left)
+	start := e.Eval(node.Start)
+	end := e.Eval(node.End)
+
+	if start.Type() != enviroment.NUM_TYPE ||
+		end.Type() != enviroment.NUM_TYPE {
+		panic("TODO")
+	}
+	startVal := start.(*enviroment.Num).Value
+	endVal := end.(*enviroment.Num).Value
+
+	var result enviroment.Object
+
+	switch v := left.(type) {
+	case *enviroment.Str:
+		sl := []rune(v.Value)
+		symbols := sl[int(startVal):int(endVal)]
+		result = &enviroment.Str{
+			Value: string(symbols),
+		}
+	default:
+		panic("TODO")
+	}
+
+	return result
 }
 
 func (e *Evaluator) evalConditionExpression(

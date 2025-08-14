@@ -28,6 +28,26 @@ func RunFile(fileName string) {
 	l := lexer.New(input)
 	c := lexer.NewCollector(l)
 
+	if gs.Debug && gs.Tokens {
+		length := len(c.Tokens())
+		for idx, token := range c.Tokens() {
+			fmt.Print(token)
+			if idx != length-1 {
+				if (idx+1)%4 != 0 {
+					fmt.Print(
+						color.RedString(
+							" | ",
+						),
+					)
+				} else {
+					fmt.Println()
+				}
+
+			}
+		}
+		fmt.Println()
+	}
+
 	if len(c.Illegals()) != 0 {
 		for _, illegal := range c.Illegals() {
 			logger.Log(
@@ -59,7 +79,7 @@ func RunFile(fileName string) {
 				program.String(),
 				"program",
 				"-",
-				20,
+				32,
 			),
 		)
 	}

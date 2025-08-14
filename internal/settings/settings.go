@@ -3,7 +3,8 @@ package settings
 var Global *Settings
 
 type Settings struct {
-	Debug bool
+	Debug  bool
+	Tokens bool
 }
 
 func init() {

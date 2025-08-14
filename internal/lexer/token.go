@@ -25,6 +25,8 @@ const (
 	RPAREN    TokenType = ")"
 	LBRACE    TokenType = "{"
 	RBRACE    TokenType = "}"
+	LBRACKET  TokenType = "["
+	RBRACKET  TokenType = "]"
 
 	PLUS       TokenType = "+"
 	MINUS      TokenType = "-"
@@ -69,6 +71,8 @@ var mono = map[byte]TokenType{
 	')': RPAREN,
 	'{': LBRACE,
 	'}': RBRACE,
+	'[': LBRACKET,
+	']': RBRACKET,
 
 	'+': PLUS,
 	'-': MINUS,
