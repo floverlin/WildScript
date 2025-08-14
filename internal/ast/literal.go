@@ -82,3 +82,22 @@ func (fl *FuncLiteral) String() string {
 	out.WriteString(") " + fl.Body.String())
 	return out.String()
 }
+
+type ListLiteral struct {
+	Token    lexer.Token
+	Elements []Expression
+}
+
+func (ll *ListLiteral) expressionNode() {}
+func (ll *ListLiteral) String() string {
+	var out strings.Builder
+	out.WriteByte('[')
+	for idx, elem := range ll.Elements {
+		out.WriteString(elem.String())
+		if idx != len(ll.Elements)-1 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteByte(']')
+	return out.String()
+}

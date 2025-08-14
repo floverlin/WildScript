@@ -56,6 +56,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 			Body:       node.Body,
 			Enviroment: e.env,
 		}
+	case *ast.ListLiteral:
+		return e.evalListLiteral(node)
 	case *ast.FloatLiteral:
 		return &enviroment.Num{Value: node.Value}
 	case *ast.StringLiteral:
@@ -146,6 +148,18 @@ func (e *Evaluator) evalIdentifier(
 	)
 }
 
+func (e *Evaluator) evalListLiteral(
+	node *ast.ListLiteral,
+) *enviroment.List {
+	elems := []enviroment.Object{}
+
+	for _, nodeElem := range node.Elements {
+		elems = append(elems, e.Eval(nodeElem))
+	}
+
+	return &enviroment.List{Elements: elems}
+}
+
 func (e *Evaluator) evalPropertyAccessExpression(
 	node *ast.PropertyAccessExpression,
 ) enviroment.Object {
@@ -170,17 +184,19 @@ func (e *Evaluator) evalIndexExpression(
 	if index.Type() != enviroment.NUM_TYPE {
 		panic("TODO")
 	}
-	idx := index.(*enviroment.Num).Value
+	idx := int(index.(*enviroment.Num).Value)
 
 	var result enviroment.Object
 
 	switch v := left.(type) {
 	case *enviroment.Str:
 		sl := []rune(v.Value)
-		symbol := sl[int(idx)]
+		symbol := sl[idx]
 		result = &enviroment.Str{
 			Value: string(symbol),
 		}
+	case *enviroment.List:
+		result = v.Elements[idx]
 	default:
 		panic("TODO")
 	}
@@ -199,17 +215,21 @@ func (e *Evaluator) evalSliceExpression(
 		end.Type() != enviroment.NUM_TYPE {
 		panic("TODO")
 	}
-	startVal := start.(*enviroment.Num).Value
-	endVal := end.(*enviroment.Num).Value
+	startVal := int(start.(*enviroment.Num).Value)
+	endVal := int(end.(*enviroment.Num).Value)
 
 	var result enviroment.Object
 
 	switch v := left.(type) {
 	case *enviroment.Str:
 		sl := []rune(v.Value)
-		symbols := sl[int(startVal):int(endVal)]
+		symbols := sl[startVal:endVal]
 		result = &enviroment.Str{
 			Value: string(symbols),
+		}
+	case *enviroment.List:
+		return &enviroment.List{
+			Elements: v.Elements[startVal:endVal],
 		}
 	default:
 		panic("TODO")

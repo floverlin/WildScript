@@ -71,6 +71,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	case lexer.FN:
 		expr = p.parseFuncLiteral()
+	case lexer.LBRACKET:
+		expr = p.parseListLiteral()
 	case lexer.NUMBER:
 		value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 		if err != nil {
@@ -450,4 +452,43 @@ func (p *Parser) parseBlockExpression() *ast.BlockExpression {
 	}
 
 	return block
+}
+
+func (p *Parser) parseListLiteral() *ast.ListLiteral {
+	lit := &ast.ListLiteral{
+		Token: p.curToken,
+	}
+	elems := []ast.Expression{}
+
+	if p.peekToken.Type == lexer.RBRACKET {
+		p.nextToken() // to ]
+		lit.Elements = elems
+		return lit
+	}
+
+	p.nextToken() // to elem
+	elems = append(elems, p.parseExpression(LOWEST))
+
+	for p.peekToken.Type == lexer.COMMA {
+		p.nextToken() // to ,
+		p.nextToken() // to elem
+
+		elems = append(elems, p.parseExpression(LOWEST))
+	}
+
+	if p.peekToken.Type != lexer.RBRACKET {
+		p.errors = append(
+			p.errors,
+			logger.Slog(
+				p.peekToken.Line,
+				p.peekToken.Column,
+				"expected ]",
+			),
+		)
+		return nil
+	}
+
+	p.nextToken() // to ]
+	lit.Elements = elems
+	return lit
 }

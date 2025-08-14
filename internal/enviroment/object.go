@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"wildscript/internal/ast"
 
 	"github.com/fatih/color"
@@ -18,6 +19,7 @@ const (
 	NIL_TYPE  ObjectType = "nil"
 	FUNC_TYPE ObjectType = "func"
 	RUNE_TYPE ObjectType = "rune"
+	LIST_TYPE ObjectType = "list"
 
 	CONTROL_TYPE ObjectType = "CONTROL"
 )
@@ -84,6 +86,24 @@ func (f *Func) LenOfParameters() int {
 		return reflect.ValueOf(f.Builtin).Type().NumIn()
 	}
 	return len(f.Parameters)
+}
+
+type List struct {
+	Elements []Object
+}
+
+func (l *List) Type() ObjectType { return LIST_TYPE }
+func (l *List) Inspect() string {
+	var out strings.Builder
+	out.WriteByte('[')
+	for idx, elem := range l.Elements {
+		out.WriteString(elem.Inspect())
+		if idx != len(l.Elements)-1 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteByte(']')
+	return out.String()
 }
 
 // ------------------------------  CONTROL  ------------------------------ //
