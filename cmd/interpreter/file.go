@@ -64,12 +64,10 @@ func RunFile(fileName string) {
 	program := p.ParseProgram()
 
 	if len(p.Errors()) != 0 {
-		for _, err := range p.Errors() {
-			fmt.Printf(
-				"[parser] error: %s",
-				err,
-			)
-		}
+		fmt.Printf(
+			"[parser] error: %s",
+			p.Errors()[0],
+		)
 		os.Exit(1)
 	}
 

@@ -48,6 +48,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 			otherObj := args[0].(*Obj)
 
 			maps.Copy(selfObj.Fields, otherObj.Fields)
+			maps.Copy(selfObj.Runes, otherObj.Runes)
 
 			return &Nil{}
 		},
