@@ -1,6 +1,6 @@
 package parser
 
-import "wildscript/internal/lexer"
+import "arc/internal/lexer"
 
 const (
 	LOWEST = iota

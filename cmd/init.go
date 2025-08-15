@@ -2,19 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"wildscript/cmd/cli"
+	"arc/cmd/cli"
 
 	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initial",
-	Long:  `Initial your project`,
+	Short: "Initialize project",
+	Long:  `Initialize project.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("creating wildscript project...")
+		fmt.Println("creating arc project...")
 		cli.InitProject()
-		fmt.Println("file main.ws created")
+		fmt.Println("file main.arc created")
 	},
 }
 

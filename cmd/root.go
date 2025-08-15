@@ -1,18 +1,19 @@
 package cmd
 
 import (
+	"arc/cmd/interpreter"
+	"arc/internal/settings"
 	"fmt"
 	"os"
-	"wildscript/cmd/interpreter"
-	"wildscript/internal/settings"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "wild",
-	Short: "WildScript interpreter",
-	Long:  `WildScript - GO, GO WILD!`,
+	Use:   "arc",
+	Short: "Arc interpreter",
+	Long:  `Arc is a minimalist programming language.`,
 	Args:  cobra.ArbitraryArgs,
 
 	Run: func(cmd *cobra.Command, args []string) {
@@ -21,7 +22,23 @@ var rootCmd = &cobra.Command{
 			cmd.Usage()
 			return
 		}
-		interpreter.RunFile(args[0])
+		
+		var file string
+		ext := filepath.Ext(args[0])
+		if ext == "" {
+			file = args[0] + ".arc"
+		} else if ext != ".arc" {
+			fmt.Printf(
+				"wrong file type %s\n",
+				ext,
+			)
+			cmd.Usage()
+			return
+		} else {
+			file = args[0]
+		}
+
+		interpreter.RunFile(file)
 	},
 }
 
@@ -39,7 +56,7 @@ func init() {
 		false,
 		"enable debug mode",
 	)
-		rootCmd.Flags().BoolVar(
+	rootCmd.Flags().BoolVar(
 		&settings.Global.Tokens,
 		"tokens",
 		false,

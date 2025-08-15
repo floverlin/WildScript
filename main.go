@@ -1,7 +1,7 @@
 package main
 
 import (
-	"wildscript/cmd"
+	"arc/cmd"
 )
 
 func main() {

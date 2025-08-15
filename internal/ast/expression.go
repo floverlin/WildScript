@@ -3,7 +3,7 @@ package ast
 import (
 	"fmt"
 	"strings"
-	"wildscript/internal/lexer"
+	"arc/internal/lexer"
 )
 
 type InfixExpression struct {

@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"wildscript/internal/lexer"
+	"arc/internal/lexer"
 )
 
 type ExpressionStatement struct {

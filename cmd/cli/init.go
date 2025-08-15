@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-//go:embed assets/main.ws
+//go:embed assets/main.arc
 var file []byte
 
 func InitProject() {
-	fileName := "main.ws"
+	fileName := "main.arc"
 	os.WriteFile(fileName, file, 0644)
 }

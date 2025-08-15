@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"wildscript/internal/lexer"
+	"arc/internal/lexer"
 )
 
 type Identifier struct {

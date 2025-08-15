@@ -1,9 +1,9 @@
 package evaluator
 
 import (
-	"wildscript/internal/ast"
-	"wildscript/internal/enviroment"
-	"wildscript/internal/logger"
+	"arc/internal/ast"
+	"arc/internal/enviroment"
+	"arc/internal/logger"
 )
 
 func (e *Evaluator) evalInfixExpression(

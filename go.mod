@@ -1,4 +1,4 @@
-module wildscript
+module arc
 
 go 1.24.2
 

@@ -3,9 +3,9 @@ package evaluator
 import (
 	"errors"
 	"math"
-	"wildscript/internal/ast"
-	"wildscript/internal/enviroment"
-	"wildscript/internal/logger"
+	"arc/internal/ast"
+	"arc/internal/enviroment"
+	"arc/internal/logger"
 )
 
 func evalBinary[T any](

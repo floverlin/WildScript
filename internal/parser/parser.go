@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"wildscript/internal/ast"
-	"wildscript/internal/lexer"
-	"wildscript/internal/logger"
+	"arc/internal/ast"
+	"arc/internal/lexer"
+	"arc/internal/logger"
 )
 
 type Parser struct {
