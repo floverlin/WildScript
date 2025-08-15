@@ -175,12 +175,12 @@ func (e *Evaluator) evalListLiteral(
 func (e *Evaluator) evalObjectLiteral(
 	node *ast.ObjectLiteral,
 ) enviroment.Object {
-	fields := map[string]enviroment.Object{}
+	newObj := enviroment.NewObj()
 
 	for _, field := range node.Fields {
 		value := e.Eval(field.Value, nil)
-		fields[field.Key.Value] = value
+		newObj.Fields[field.Key.Value] = value
 	}
 
-	return &enviroment.Obj{Fields: fields}
+	return newObj
 }

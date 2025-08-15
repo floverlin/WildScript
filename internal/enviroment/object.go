@@ -111,6 +111,14 @@ func (l *List) Inspect() string {
 
 type Obj struct {
 	Fields map[string]Object
+	Runes  map[uint64]Object
+}
+
+func NewObj() *Obj {
+	return &Obj{
+		Fields: map[string]Object{},
+		Runes:  map[uint64]Object{},
+	}
 }
 
 func (o *Obj) Type() ObjectType { return OBJ_TYPE }

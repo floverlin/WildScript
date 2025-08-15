@@ -12,10 +12,30 @@ func (e *Evaluator) evalPropertyAccessExpression(
 	object := e.Eval(node.Object, nil)
 	propIdent := node.Property.Value
 
+	if node.Property.IsOuter {
+		panic(
+			logger.Slog(
+				node.Token.Line,
+				node.Token.Column,
+				"outer property not exists",
+			),
+		)
+	}
+
 	// find field in obj
 	if object.Type() == enviroment.OBJ_TYPE {
 		obj := object.(*enviroment.Obj)
-		if prop, ok := obj.Fields[propIdent]; ok {
+		var prop enviroment.Object
+		var ok bool
+
+		if node.Property.IsRune {
+			r := enviroment.NewRune(propIdent)
+			prop, ok = obj.Runes[r.ID]
+		} else {
+			prop, ok = obj.Fields[propIdent]
+		}
+
+		if ok {
 			if prop.Type() == enviroment.FUNC_TYPE {
 				self := enviroment.NewRune("self")
 				self.Set(obj)

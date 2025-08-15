@@ -68,7 +68,24 @@ func (e *Evaluator) evalPropertyAssign(
 	if obj.Type() != enviroment.OBJ_TYPE {
 		return nil, errors.New("assign property to non obj type")
 	}
-	obj.(*enviroment.Obj).Fields[prop] = value
+
+	if left.Property.IsOuter {
+		panic(
+			logger.Slog(
+				left.Token.Line,
+				left.Token.Column,
+				"outer property not exists",
+			),
+		)
+	}
+
+	if left.Property.IsRune {
+		r := enviroment.NewRune(prop)
+		obj.(*enviroment.Obj).Runes[r.ID] = value
+	} else {
+		obj.(*enviroment.Obj).Fields[prop] = value
+	}
+
 	return obj, nil
 }
 

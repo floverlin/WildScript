@@ -7,13 +7,21 @@ import (
 
 func loadBuiltin(e *Enviroment) {
 	e.Set("print", &Func{
-		Builtin: func(_ Evaluator, args ...Object) Object {
+		Builtin: func(ev Evaluator, args ...Object) Object {
 			for i, arg := range args {
-				if i > 0 {
-					fmt.Print(" ")
+				if arg.Type() == OBJ_TYPE {
+					obj := arg.(*Obj)
+					r := NewRune("str")
+					f, ok := obj.Runes[r.ID]
+					if ok {
+						NewRune("self").Set(arg)
+						arg = ev.Eval(f.(*Func).Body, nil)
+					}
 				}
 				fmt.Print(arg.Inspect())
-
+				if i != len(args)-1 {
+					fmt.Print(" ")
+				}
 			}
 			fmt.Println()
 			return &e.Single().Nil

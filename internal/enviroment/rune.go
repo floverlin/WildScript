@@ -11,7 +11,7 @@ var runeMap = map[string]*Rune{}
 var runeObject = map[uint64]Object{}
 
 type Rune struct {
-	id uint64
+	ID uint64
 }
 
 func (r *Rune) Type() ObjectType { return RUNE_TYPE }
@@ -19,7 +19,7 @@ func (r *Rune) Inspect() string {
 	return color.CyanString(
 		fmt.Sprintf(
 			"rune<%d>",
-			r.id,
+			r.ID,
 		),
 	)
 }
@@ -28,9 +28,9 @@ func NewRune(name string) *Rune {
 	if r, ok := runeMap[name]; ok {
 		return r
 	}
-	
+
 	r := &Rune{
-		id: runeCounter,
+		ID: runeCounter,
 	}
 	runeMap[name] = r
 	runeObject[runeCounter] = &Nil{}
@@ -40,7 +40,7 @@ func NewRune(name string) *Rune {
 }
 
 func (r *Rune) Get() Object {
-	obj, ok := runeObject[r.id]
+	obj, ok := runeObject[r.ID]
 	if !ok {
 		panic("rune value is empty")
 	}
@@ -48,7 +48,7 @@ func (r *Rune) Get() Object {
 }
 
 func (r *Rune) Set(obj Object) Object {
-	runeObject[r.id] = obj
+	runeObject[r.ID] = obj
 	return obj
 }
 
