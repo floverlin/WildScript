@@ -8,6 +8,7 @@ import (
 
 const (
 	SELF_RUNE = "self"
+	PROTO_RUNE = "proto"
 
 	STR_RUNE = "str"
 

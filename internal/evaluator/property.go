@@ -6,6 +6,31 @@ import (
 	"wildscript/internal/logger"
 )
 
+func findObjectPropertry(object enviroment.Object, prop *ast.Identifier) enviroment.Object {
+	if object.Type() != enviroment.OBJ_TYPE {
+		return nil
+	}
+	obj := object.(*enviroment.Obj)
+
+	if prop.IsRune {
+		r := enviroment.TakeRune(prop.Value)
+		if prop, ok := obj.Runes[r.ID]; ok {
+			return prop
+		}
+	} else {
+		if prop, ok := obj.Fields[prop.Value]; ok {
+			return prop
+		}
+	}
+
+	protoRune := enviroment.TakeRune(enviroment.PROTO_RUNE)
+	if proto, ok := obj.Runes[protoRune.ID]; ok {
+		return findObjectPropertry(proto, prop)
+	}
+
+	return nil
+}
+
 func (e *Evaluator) evalPropertyAccessExpression(
 	node *ast.PropertyAccessExpression,
 ) enviroment.Object {
@@ -23,25 +48,9 @@ func (e *Evaluator) evalPropertyAccessExpression(
 	}
 
 	// find field in obj
-	if object.Type() == enviroment.OBJ_TYPE {
-		obj := object.(*enviroment.Obj)
-		var prop enviroment.Object
-		var ok bool
-
-		if node.Property.IsRune {
-			r := enviroment.TakeRune(propIdent)
-			prop, ok = obj.Runes[r.ID]
-		} else {
-			prop, ok = obj.Fields[propIdent]
-		}
-
-		if ok {
-			if prop.Type() == enviroment.FUNC_TYPE {
-				self := enviroment.TakeRune(enviroment.SELF_RUNE)
-				self.Set(obj)
-			}
-			return prop
-		}
+	prop := findObjectPropertry(object, node.Property)
+	if prop != nil {
+		return prop
 	}
 
 	// find base type method
