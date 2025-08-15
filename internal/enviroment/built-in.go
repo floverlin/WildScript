@@ -7,7 +7,7 @@ import (
 
 func loadBuiltin(e *Enviroment) {
 	e.Set("print", &Func{
-		Builtin: func(ev Evaluator, args ...Object) Object {
+		Builtin: func(be blockEvaluator, args ...Object) Object {
 			for i, arg := range args {
 				if arg.Type() == OBJ_TYPE {
 					obj := arg.(*Obj)
@@ -15,7 +15,7 @@ func loadBuiltin(e *Enviroment) {
 					f, ok := obj.Runes[r.ID]
 					if ok {
 						TakeRune(SELF_RUNE).Set(arg)
-						arg = ev.Eval(f.(*Func).Body, nil)
+						arg = be.EvalBlock(f.(*Func).Body, nil)
 					}
 				}
 				fmt.Print(arg.Inspect())
@@ -29,14 +29,14 @@ func loadBuiltin(e *Enviroment) {
 	})
 
 	e.Set("type", &Func{
-		Builtin: func(_ Evaluator, args ...Object) Object {
+		Builtin: func(_ blockEvaluator, args ...Object) Object {
 			obj := args[0]
 			return &Str{Value: string(obj.Type())}
 		},
 	})
 
 	e.Set("rune", &Func{
-		Builtin: func(_ Evaluator, args ...Object) Object {
+		Builtin: func(_ blockEvaluator, args ...Object) Object {
 			obj := args[0]
 			name := obj.(*Str).Value // MAY PANIC
 			TakeRune(name)
@@ -44,7 +44,7 @@ func loadBuiltin(e *Enviroment) {
 		},
 	})
 
-	e.Set("len", &Func{Builtin: func(_ Evaluator, args ...Object) Object {
+	e.Set("len", &Func{Builtin: func(_ blockEvaluator, args ...Object) Object {
 		switch obj := args[0].(type) {
 		case *Num:
 			return &Num{Value: math.Floor(obj.Value)}

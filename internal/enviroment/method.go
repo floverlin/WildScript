@@ -5,13 +5,13 @@ import (
 	"maps"
 )
 
-type method = func(self Object, e Evaluator, args ...Object) Object
+type method = func(self Object, be blockEvaluator, args ...Object) Object
 
 type methodMap = map[string]method
 
 var typeMethodMap = map[ObjectType]methodMap{
 	STR_TYPE: {
-		"wow": func(self Object, _ Evaluator, args ...Object) Object {
+		"wow": func(self Object, _ blockEvaluator, args ...Object) Object {
 			selfStr := self.(*Str)
 
 			fmt.Printf("WOW! %s :P\n", selfStr.Value)
@@ -20,7 +20,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 	},
 
 	LIST_TYPE: {
-		"map": func(self Object, e Evaluator, args ...Object) Object {
+		"map": func(self Object, be blockEvaluator, args ...Object) Object {
 			selfList := self.(*List)
 			f := args[0].(*Func)
 
@@ -31,7 +31,10 @@ var typeMethodMap = map[ObjectType]methodMap{
 			paramName := f.Parameters[0].Value
 
 			for _, elem := range selfList.Elements {
-				newElem := e.Eval(f.Body, map[string]Object{paramName: elem})
+				newElem := be.EvalBlock(
+					f.Body,
+					map[string]Object{paramName: elem},
+				)
 				newList.Elements = append(newList.Elements, newElem)
 			}
 
@@ -40,7 +43,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 	},
 
 	OBJ_TYPE: {
-		"merge": func(self Object, e Evaluator, args ...Object) Object {
+		"merge": func(self Object, _ blockEvaluator, args ...Object) Object {
 			selfObj := self.(*Obj)
 			otherObj := args[0].(*Obj)
 
@@ -63,8 +66,8 @@ func FindMethod(obj Object, name string) *Func {
 	}
 
 	return &Func{
-		Builtin: func(e Evaluator, args ...Object) Object {
-			return f(obj, e, args...)
+		Builtin: func(be blockEvaluator, args ...Object) Object {
+			return f(obj, be, args...)
 		},
 	}
 }

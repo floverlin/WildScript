@@ -68,12 +68,12 @@ func (n *Nil) Inspect() string {
 	return color.BlueString("nil")
 }
 
-type Evaluator interface {
-	Eval(ast.Node, map[string]Object) Object
+type blockEvaluator interface {
+	EvalBlock(*ast.BlockExpression, map[string]Object) Object
 }
 
 type Func struct {
-	Builtin func(e Evaluator, args ...Object) Object
+	Builtin func(e blockEvaluator, args ...Object) Object
 
 	Parameters []*ast.Identifier
 	Body       *ast.BlockExpression

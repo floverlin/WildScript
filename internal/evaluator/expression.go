@@ -9,8 +9,8 @@ import (
 func (e *Evaluator) evalInfixExpression(
 	node *ast.InfixExpression,
 ) enviroment.Object {
-	left := e.Eval(node.Left, nil)
-	right := e.Eval(node.Right, nil)
+	left := e.Eval(node.Left)
+	right := e.Eval(node.Right)
 
 	if left.Type() != right.Type() {
 		panic(
@@ -62,7 +62,7 @@ func (e *Evaluator) evalInfixExpression(
 func (e *Evaluator) evalPrefixExpression(
 	node *ast.PrefixExpression,
 ) enviroment.Object {
-	value := e.Eval(node.Right, nil)
+	value := e.Eval(node.Right)
 
 	switch node.Operator {
 	case "!":
@@ -117,7 +117,7 @@ func (e *Evaluator) evalPrefixExpression(
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
 ) enviroment.Object {
-	callable := e.Eval(node.Function, nil)
+	callable := e.Eval(node.Function)
 
 	if callable.Type() != enviroment.FUNC_TYPE {
 		panic(
@@ -149,16 +149,14 @@ func (e *Evaluator) evalCallExpression(
 		)
 	}
 
-	outerEnv := e.env // save init env
-
 	funcArgs := Arguments{} // args
 	for idx, arg := range args {
 		funcArgs[function.Parameters[idx].Value] = arg
 	}
 
-	e.env = function.Enviroment // closure
+	callEval := New(function.Enviroment, nil) // closure
 
-	result := e.evalBlockExpression(function.Body, funcArgs)
+	result := callEval.EvalBlock(function.Body, funcArgs)
 
 	if result.Type() == enviroment.CONTROL_TYPE {
 		if ret, ok := result.(*enviroment.Return); ok {
@@ -174,8 +172,6 @@ func (e *Evaluator) evalCallExpression(
 		}
 	}
 
-	e.env = outerEnv
-
 	return result
 }
 
@@ -184,12 +180,12 @@ func (e *Evaluator) evalForExpression(
 ) enviroment.Object {
 	var result enviroment.Object = &e.env.Single().Nil
 
-	cond := e.Eval(node.Condition, nil)
+	cond := e.Eval(node.Condition)
 
 	if cond.Type() == enviroment.BOOL_TYPE {
 		for {
-			result = e.Eval(node.Body, nil)
-			cond = e.Eval(node.Condition, nil)
+			result = e.Eval(node.Body)
+			cond = e.Eval(node.Condition)
 			if !cond.(*enviroment.Bool).Value {
 				break
 			}
@@ -219,10 +215,8 @@ func (e *Evaluator) evalForExpression(
 			keyRune.Set(&enviroment.Num{Value: float64(idx)})
 			valRune.Set(&enviroment.Num{Value: float64(idx)})
 
-			result = e.evalBlockExpression(
-				node.Body,
-				nil,
-			)
+			result = e.EvalBlock(node.Body, nil)
+
 			if result.Type() == enviroment.CONTROL_TYPE {
 				switch res := result.(type) {
 				case *enviroment.Continue:
@@ -241,15 +235,15 @@ func (e *Evaluator) evalForExpression(
 func (e *Evaluator) evalConditionExpression(
 	node *ast.ConditionExpression,
 ) enviroment.Object {
-	cond := e.Eval(node.Condition, nil)
+	cond := e.Eval(node.Condition)
 
 	if cond.Type() != enviroment.BOOL_TYPE {
 		panic("TODO")
 	}
 
 	if cond.(*enviroment.Bool).Value {
-		return e.Eval(node.Consequence, nil)
+		return e.Eval(node.Consequence)
 	} else {
-		return e.Eval(node.Alternative, nil)
+		return e.Eval(node.Alternative)
 	}
 }

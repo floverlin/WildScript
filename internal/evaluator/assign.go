@@ -13,7 +13,7 @@ func (e *Evaluator) evalAssignStatement(
 	var err error
 	var result enviroment.Object
 
-	right := e.Eval(stmt.Right, nil)
+	right := e.Eval(stmt.Right)
 	switch left := stmt.Left.(type) {
 	case *ast.Identifier:
 		result, err = e.evalIdentifierAssign(left, right)
@@ -63,7 +63,7 @@ func (e *Evaluator) evalPropertyAssign(
 	left *ast.PropertyAccessExpression,
 	value enviroment.Object,
 ) (enviroment.Object, error) {
-	obj := e.Eval(left.Object, nil)
+	obj := e.Eval(left.Object)
 	prop := left.Property.Value
 	if obj.Type() != enviroment.OBJ_TYPE {
 		return nil, errors.New("assign property to non obj type")
@@ -93,8 +93,8 @@ func (e *Evaluator) evalIndexAssign(
 	left *ast.IndexExpression,
 	value enviroment.Object,
 ) (enviroment.Object, error) {
-	list := e.Eval(left.Left, nil)
-	indexObj := e.Eval(left.Index, nil)
+	list := e.Eval(left.Left)
+	indexObj := e.Eval(left.Index)
 	if indexObj.Type() != enviroment.NUM_TYPE {
 		return nil, errors.New("non num index type")
 	}

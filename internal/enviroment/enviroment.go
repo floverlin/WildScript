@@ -12,15 +12,24 @@ type Enviroment struct {
 	outer  *Enviroment
 }
 
-func New() *Enviroment {
-	e := &Enviroment{
-		store: make(map[string]Object),
-		single: &Single{
-			Nil:   Nil{},
-			True:  Bool{Value: true},
-			False: Bool{Value: false},
-		},
+func New(outer *Enviroment) *Enviroment {
+	var e *Enviroment
+	if outer != nil {
+		e = &Enviroment{
+			store: make(map[string]Object),
+			outer: outer,
+		}
+	} else {
+		e = &Enviroment{
+			store: make(map[string]Object),
+			single: &Single{
+				Nil:   Nil{},
+				True:  Bool{Value: true},
+				False: Bool{Value: false},
+			},
+		}
 	}
+	
 	loadBuiltin(e)
 	return e
 }

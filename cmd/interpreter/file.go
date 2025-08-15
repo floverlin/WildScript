@@ -84,18 +84,18 @@ func RunFile(fileName string) {
 		)
 	}
 
-	e := evaluator.New()
+	e := evaluator.New(nil, nil)
 
 	defer wrapPanic()
 
 	if !gs.Debug {
-		e.Eval(program, nil)
+		e.Eval(program)
 		return
 	}
 
 	var result enviroment.Object
 	for idx, stmt := range program.Statements {
-		obj := e.Eval(stmt, nil)
+		obj := e.Eval(stmt)
 		result = obj
 		fmt.Printf("%d >> %s\n", idx+1, obj.Inspect())
 	}

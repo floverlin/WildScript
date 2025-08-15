@@ -12,21 +12,25 @@ type Evaluator struct {
 	env *enviroment.Enviroment
 }
 
-func New() *Evaluator {
-	return &Evaluator{env: enviroment.New()}
+func New(env *enviroment.Enviroment, args Arguments) *Evaluator {
+	e := &Evaluator{env: enviroment.New(env)}
+	for key, val := range args {
+		e.env.Set(key, val)
+	}
+	return e
 }
 
-func (e *Evaluator) Eval(node ast.Node, args Arguments) enviroment.Object {
+func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	switch node := node.(type) {
 	case *ast.Program:
 		return e.evalProgram(node)
 	case *ast.BlockExpression:
-		return e.evalBlockExpression(node, args)
+		return e.EvalBlock(node, nil)
 
 	case *ast.AssignStatement:
 		return e.evalAssignStatement(node)
 	case *ast.ExpressionStatement:
-		return e.Eval(node.Expression, nil)
+		return e.Eval(node.Expression)
 	case *ast.FuncStatement:
 		return e.evalAssignStatement(
 			&ast.AssignStatement{
@@ -36,7 +40,7 @@ func (e *Evaluator) Eval(node ast.Node, args Arguments) enviroment.Object {
 			},
 		)
 	case *ast.ReturnStatement:
-		return &enviroment.Return{Value: e.Eval(node.Value, nil)}
+		return &enviroment.Return{Value: e.Eval(node.Value)}
 	case *ast.ContinueStatement:
 		return &enviroment.Continue{}
 
@@ -90,32 +94,26 @@ func (e *Evaluator) Eval(node ast.Node, args Arguments) enviroment.Object {
 func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 	var result enviroment.Object
 	for _, stmt := range program.Statements {
-		result = e.Eval(stmt, nil)
+		result = e.Eval(stmt)
 	}
 	return result
 }
 
-func (e *Evaluator) evalBlockExpression(
+func (e *Evaluator) EvalBlock(
 	block *ast.BlockExpression,
 	args Arguments,
 ) enviroment.Object {
-	outerEnv := e.env
-	e.env = enviroment.NewBlockEnviroment(outerEnv)
-
-	for name, obj := range args {
-		e.env.Set(name, obj)
-	}
-
 	var result enviroment.Object
+
+	blockEval := New(e.env, args)
+
 	for _, stmt := range block.Statements {
-		result = e.Eval(stmt, nil)
+		result = blockEval.Eval(stmt)
 
 		if result.Type() == enviroment.CONTROL_TYPE {
 			break
 		}
 	}
-
-	e.env = outerEnv
 
 	return result
 }
@@ -125,7 +123,7 @@ func (e *Evaluator) evalExpressions(
 ) []enviroment.Object {
 	var result []enviroment.Object
 	for _, expr := range exprs {
-		evaluated := e.Eval(expr, nil)
+		evaluated := e.Eval(expr)
 		result = append(result, evaluated)
 	}
 	return result
@@ -166,7 +164,7 @@ func (e *Evaluator) evalListLiteral(
 	elems := []enviroment.Object{}
 
 	for _, nodeElem := range node.Elements {
-		elems = append(elems, e.Eval(nodeElem, nil))
+		elems = append(elems, e.Eval(nodeElem))
 	}
 
 	return &enviroment.List{Elements: elems}
@@ -178,7 +176,7 @@ func (e *Evaluator) evalObjectLiteral(
 	newObj := enviroment.NewObj()
 
 	for _, field := range node.Fields {
-		value := e.Eval(field.Value, nil)
+		value := e.Eval(field.Value)
 		newObj.Fields[field.Key.Value] = value
 	}
 
