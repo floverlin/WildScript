@@ -6,6 +6,16 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	SELF_RUNE = "self"
+
+	STR_RUNE = "str"
+
+	IDX_RUNE = "idx"
+	KEY_RUNE = "key"
+	VAL_RUNE = "val"
+)
+
 var runeCounter uint64 = 0
 var runeMap = map[string]*Rune{}
 var runeObject = map[uint64]Object{}
@@ -24,7 +34,7 @@ func (r *Rune) Inspect() string {
 	)
 }
 
-func NewRune(name string) *Rune {
+func TakeRune(name string) *Rune {
 	if r, ok := runeMap[name]; ok {
 		return r
 	}

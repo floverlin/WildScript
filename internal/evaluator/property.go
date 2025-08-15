@@ -29,7 +29,7 @@ func (e *Evaluator) evalPropertyAccessExpression(
 		var ok bool
 
 		if node.Property.IsRune {
-			r := enviroment.NewRune(propIdent)
+			r := enviroment.TakeRune(propIdent)
 			prop, ok = obj.Runes[r.ID]
 		} else {
 			prop, ok = obj.Fields[propIdent]
@@ -37,7 +37,7 @@ func (e *Evaluator) evalPropertyAccessExpression(
 
 		if ok {
 			if prop.Type() == enviroment.FUNC_TYPE {
-				self := enviroment.NewRune("self")
+				self := enviroment.TakeRune(enviroment.SELF_RUNE)
 				self.Set(obj)
 			}
 			return prop

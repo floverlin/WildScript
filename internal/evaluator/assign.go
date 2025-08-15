@@ -80,7 +80,7 @@ func (e *Evaluator) evalPropertyAssign(
 	}
 
 	if left.Property.IsRune {
-		r := enviroment.NewRune(prop)
+		r := enviroment.TakeRune(prop)
 		obj.(*enviroment.Obj).Runes[r.ID] = value
 	} else {
 		obj.(*enviroment.Obj).Fields[prop] = value

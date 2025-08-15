@@ -210,9 +210,9 @@ func (e *Evaluator) evalForExpression(
 			panic("TODO")
 		}
 
-		idxRune := enviroment.NewRune("idx")
-		keyRune := enviroment.NewRune("key")
-		valRune := enviroment.NewRune("val")
+		idxRune := enviroment.TakeRune(enviroment.IDX_RUNE)
+		keyRune := enviroment.TakeRune(enviroment.KEY_RUNE)
+		valRune := enviroment.TakeRune(enviroment.VAL_RUNE)
 
 		for idx := range iters {
 			idxRune.Set(&enviroment.Num{Value: float64(idx)})

@@ -11,10 +11,10 @@ func loadBuiltin(e *Enviroment) {
 			for i, arg := range args {
 				if arg.Type() == OBJ_TYPE {
 					obj := arg.(*Obj)
-					r := NewRune("str")
+					r := TakeRune(STR_RUNE)
 					f, ok := obj.Runes[r.ID]
 					if ok {
-						NewRune("self").Set(arg)
+						TakeRune(SELF_RUNE).Set(arg)
 						arg = ev.Eval(f.(*Func).Body, nil)
 					}
 				}
@@ -39,7 +39,7 @@ func loadBuiltin(e *Enviroment) {
 		Builtin: func(_ Evaluator, args ...Object) Object {
 			obj := args[0]
 			name := obj.(*Str).Value // MAY PANIC
-			NewRune(name)
+			TakeRune(name)
 			return &e.Single().Nil
 		},
 	})
