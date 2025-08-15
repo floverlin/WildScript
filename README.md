@@ -68,22 +68,35 @@ b;  # 2
 
 ```wildscript
 f = fn(a, b) { a * b };
+fn add(a, b) {
+    type(a) == "num" && type(b) == "num" ? {
+        <- a + b
+    }
+};
+
 f(2, 2);  # 4
+add(4, 6);  # 10
+add(4, "6");  # nil
 
 fn(a, b) { a * b }(2, 2)  # 4
 ```
 
 ## Объекты
 
+- доступ к обьекту из метода через руну `@self`
+
 ```wildscript
 obj = {
     a: 1,
-    b: "b",
-    c: () { print("hello, world!"); },
+    b: "world!",
+    c: () {
+        self = @self;
+        print("hello, " + self.b);
+    },
 };
 
 obj.a;  # 1
-obj.b;  # "b"
+obj.b;  # "world!"
 obj.c();  # выведет "hello, world!"
 
 obj.d = "d";  # or obj.set("d", "d")
@@ -91,7 +104,7 @@ obj.d = "d";  # or obj.set("d", "d")
 # obj.d; -> panic: undefined obj field d
 obj.get("d");  # nil
 
-print(obj);  # выведет {a: 1, b: "b", c: func, d: "d"}
+print(obj);  # выведет {a: 1, b: "world!", c: func, d: "d"}
 ```
 
 ## Списки
@@ -101,11 +114,20 @@ list = [10, "10", [nil, true]];
 
 l[2][1];  # true
 
-list.[1] = 20;
+list[1] = 20;
+
+list.map(
+    fn(elem) {
+        type(elem) == "num" ? {
+            <- elem * 2
+        };
+        elem
+    }
+);
 
 # list[4]; -> panic: index out of range
 
-print(list);  # выведет [10, 20, [nil, true]]
+print(list);  # выведет [20, 40, [nil, true]]
 ```
 
 ## Преобразование в логический тип
