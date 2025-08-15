@@ -9,8 +9,8 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initial",
-	Long:  `Initial your project`,
+	Short: "Initialize",
+	Long:  `Initialize new project.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("creating wildscript project...")
 		cli.InitProject()

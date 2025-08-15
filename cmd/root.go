@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"wildscript/cmd/interpreter"
 	"wildscript/internal/settings"
 
@@ -21,7 +22,13 @@ var rootCmd = &cobra.Command{
 			cmd.Usage()
 			return
 		}
-		interpreter.RunFile(args[0])
+
+		var file string
+		if ext := filepath.Ext(args[0]); ext == "" {
+			file = args[0] + ".ws"
+		}
+
+		interpreter.RunFile(file)
 	},
 }
 
@@ -39,7 +46,7 @@ func init() {
 		false,
 		"enable debug mode",
 	)
-		rootCmd.Flags().BoolVar(
+	rootCmd.Flags().BoolVar(
 		&settings.Global.Tokens,
 		"tokens",
 		false,
