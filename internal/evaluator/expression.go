@@ -175,63 +175,6 @@ func (e *Evaluator) evalCallExpression(
 	return result
 }
 
-func (e *Evaluator) evalForExpression(
-	node *ast.ForExpression,
-) enviroment.Object {
-	var result enviroment.Object = &e.env.Single().Nil
-
-	cond := e.Eval(node.Condition)
-
-	if cond.Type() == enviroment.BOOL_TYPE {
-		for {
-			result = e.Eval(node.Body)
-			cond = e.Eval(node.Condition)
-			if !cond.(*enviroment.Bool).Value {
-				break
-			}
-		}
-
-	} else {
-		var iters int
-		switch c := cond.(type) {
-		case *enviroment.Num:
-			iters = int(c.Value)
-		case *enviroment.Str:
-			iters = len(c.Value)
-		case *enviroment.Nil:
-			iters = 0
-		case *enviroment.Func:
-			iters = c.LenOfParameters()
-		default:
-			panic("TODO")
-		}
-
-		idxRune := enviroment.TakeRune(enviroment.IDX_RUNE)
-		keyRune := enviroment.TakeRune(enviroment.KEY_RUNE)
-		valRune := enviroment.TakeRune(enviroment.VAL_RUNE)
-
-		for idx := range iters {
-			idxRune.Set(&enviroment.Num{Value: float64(idx)})
-			keyRune.Set(&enviroment.Num{Value: float64(idx)})
-			valRune.Set(&enviroment.Num{Value: float64(idx)})
-
-			result = e.EvalBlock(node.Body, nil)
-
-			if result.Type() == enviroment.CONTROL_TYPE {
-				switch res := result.(type) {
-				case *enviroment.Continue:
-					continue
-				case *enviroment.Return:
-					result = res.Value
-				}
-				break
-			}
-		}
-	}
-
-	return result
-}
-
 func (e *Evaluator) evalConditionExpression(
 	node *ast.ConditionExpression,
 ) enviroment.Object {

@@ -40,6 +40,14 @@ var typeMethodMap = map[ObjectType]methodMap{
 
 			return newList
 		},
+		"append": func(self Object, be blockEvaluator, args ...Object) Object {
+			selfList := self.(*List)
+			elem := args[0]
+
+			selfList.Elements = append(selfList.Elements, elem)
+
+			return &Nil{}
+		},
 	},
 
 	OBJ_TYPE: {
