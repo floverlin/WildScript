@@ -36,7 +36,7 @@ type Num struct {
 
 func (f *Num) Type() ObjectType { return NUM_TYPE }
 func (f *Num) Inspect() string {
-	return color.GreenString(
+	return color.CyanString(
 		strconv.FormatFloat(f.Value, 'g', -1, 64),
 	)
 }
@@ -47,7 +47,7 @@ type Str struct {
 
 func (s *Str) Type() ObjectType { return STR_TYPE }
 func (s *Str) Inspect() string {
-	return color.YellowString(s.Value)
+	return s.Value
 }
 
 type Bool struct {
@@ -82,7 +82,7 @@ type Func struct {
 
 func (f *Func) Type() ObjectType { return FUNC_TYPE }
 func (f *Func) Inspect() string {
-	return color.CyanString("func")
+	return color.MagentaString("func")
 }
 func (f *Func) LenOfParameters() int {
 	if f.Builtin != nil {

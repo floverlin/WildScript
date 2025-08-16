@@ -3,6 +3,7 @@ package enviroment
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"time"
 )
 
@@ -26,10 +27,16 @@ func (e *Enviroment) loadBuiltin() {
 	})
 
 	e.Set("input", &Func{
-		Builtin: func(be blockEvaluator, args ...Object) Object {
+		Builtin: func(_ blockEvaluator, args ...Object) Object {
 			var value string
 			fmt.Scanln(&value)
 			return &Str{Value: value}
+		},
+	})
+
+	e.Set("random", &Func{
+		Builtin: func(_ blockEvaluator, args ...Object) Object {
+			return &Num{Value: rand.Float64()}
 		},
 	})
 
@@ -79,6 +86,10 @@ func (e *Enviroment) loadBuiltin() {
 		case *Func:
 			params := obj.LenOfParameters()
 			return &Num{Value: float64(params)}
+		case *List:
+			return &Num{Value: float64(len(obj.Elements))}
+		case *Obj:
+			return &Num{Value: float64(len(obj.Fields))}
 		default:
 			panic(
 				fmt.Sprintf(
