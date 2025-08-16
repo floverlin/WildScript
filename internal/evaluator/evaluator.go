@@ -142,7 +142,7 @@ func (e *Evaluator) evalIdentifier(
 	} else if identifier.IsOuter {
 		val, ok = e.env.GetOuter(identifier.Value)
 	} else {
-		val, ok = e.env.Get(identifier.Value)
+		val, ok = e.env.GetOuter(identifier.Value)
 	}
 
 	if ok {

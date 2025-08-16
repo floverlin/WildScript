@@ -13,6 +13,7 @@ const (
 	FALSE  TokenType = "FALSE"
 	NIL    TokenType = "NIL"
 	FN     TokenType = "FN"
+	NEW    TokenType = "NEW"
 
 	DOT       TokenType = "."
 	DOG       TokenType = "@"
@@ -112,4 +113,5 @@ var specialIdents = map[string]TokenType{
 	"false": FALSE,
 	"nil":   NIL,
 	"fn":    FN,
+	"new":   NEW,
 }

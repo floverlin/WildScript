@@ -72,7 +72,19 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		expr = p.parseFuncLiteral()
 	case lexer.LBRACKET:
 		expr = p.parseListLiteral()
-	case lexer.LBRACE:
+	case lexer.NEW:
+		if p.peekToken.Type != lexer.LBRACE {
+			p.errors = append(
+				p.errors,
+				logger.Slog(
+					p.peekToken.Line,
+					p.peekToken.Column,
+					"expected { after new",
+				),
+			)
+			return nil
+		}
+		p.nextToken() // to {
 		expr = p.parseObjectLiteral()
 	case lexer.NUMBER:
 		value, err := strconv.ParseFloat(p.curToken.Literal, 64)

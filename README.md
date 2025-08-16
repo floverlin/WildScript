@@ -21,10 +21,10 @@
 ```wildscript
 age = 21;
 name = "lin";
-job = nil; jobs;
+job = nil;
 married = false;
-scream = () { print("AAA!"); };
-inventory = {
+scream = () { print("AAA!\n"); };
+inventory = new {
     book: "Holy Bible",
 };
 marks = [name, inventory, nil];
@@ -43,7 +43,7 @@ a  # "another"
 - последняя инструкция не содержит после себя ;
 - результат пустой инструкции = nil
 - основная программа - тоже блок кода, но без {}
-- обращение к внешним переменным через &
+- присваивание внешним переменным через &
 - <- value подобно return value
 
 ```
@@ -53,18 +53,20 @@ a  # "another"
 a = 1;
 b = 1;
 {
-    # a = a + 1; -> panic: undefined variable a
-    a = &a + 1;
+    &a = a + 9;
+    a = a + 1;
+    print(a);  # 2
     &b = a;
 };
-a;  # 1
+a;  # 10
 b;  # 2
 ```
 
 ## Функции
 
 - всегда возвращают одно значение
-- состоит из ключевого слова fn, списка параметров и блока
+- состоят из ключевого слова fn, списка параметров и блока
+- поддерживают замыкания
 
 ```wildscript
 f = fn(a, b) { a * b };
@@ -86,12 +88,12 @@ fn(a, b) { a * b }(2, 2)  # 4
 - доступ к обьекту из метода через руну `@self`
 
 ```wildscript
-obj = {
+obj = new {
     a: 1,
     b: "world!",
     c: () {
         self = @self;
-        print("hello, " + self.b);
+        print("hello, " + self.b + "\n");
     },
 };
 
@@ -99,10 +101,9 @@ obj.a;  # 1
 obj.b;  # "world!"
 obj.c();  # выведет "hello, world!"
 
-obj.d = "d";  # or obj.set("d", "d")
+obj.d = "d";
 
-# obj.d; -> panic: undefined obj field d
-obj.get("d");  # nil
+# obj.d; -> panic: undefined property d
 
 print(obj);  # выведет {a: 1, b: "world!", c: func, d: "d"}
 ```
@@ -190,14 +191,14 @@ true {
 
 i = 1;
 result = i < 10 {
-    print(&i);
-    &i > 5 { <- &i };
-    &i = &i + 1;
+    print(i);
+    i > 5 { <- i };
+    &i = i + 1;
 };  # 6
 
 i = 0;
-5 + (5 { &i = &i + 1; &i });  # 10
-5 + ("wild" { &i = &i + 1; &i });  # 14
+5 + (5 { &i = i + 1; i });  # 10
+5 + ("wild" { &i = i + 1; i });  # 14
 
 5 {
     [@idx, @key, @val]
@@ -246,8 +247,6 @@ i = 0;
 
 ## Стандартные функции
 
-- работают с обьектами всех типов
-
 ### print
 
 Выводит текстовые представления обьектов в консоль
@@ -256,6 +255,16 @@ i = 0;
 
 ```wildscript
 print(1, "2", true);  выведет 1 "2" true
+```
+
+### input
+
+Считывает текст из консоли
+
+- return str
+
+```wildscript
+i = input();
 ```
 
 ### len
@@ -299,6 +308,11 @@ len(3.14);  # 3
 ```wildscript
 type(3.14);  # "num"
 ```
+
+### sleep
+
+- принимает num секунд
+- return nil
 
 ### rune
 

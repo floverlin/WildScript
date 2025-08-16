@@ -3,12 +3,13 @@ package enviroment
 import (
 	"fmt"
 	"math"
+	"time"
 )
 
-func loadBuiltin(e *Enviroment) {
+func (e *Enviroment) loadBuiltin() {
 	e.Set("print", &Func{
 		Builtin: func(be blockEvaluator, args ...Object) Object {
-			for i, arg := range args {
+			for _, arg := range args {
 				if arg.Type() == OBJ_TYPE {
 					obj := arg.(*Obj)
 					r := TakeRune(STR_RUNE)
@@ -19,12 +20,16 @@ func loadBuiltin(e *Enviroment) {
 					}
 				}
 				fmt.Print(arg.Inspect())
-				if i != len(args)-1 {
-					fmt.Print(" ")
-				}
 			}
-			fmt.Println()
 			return &e.Single().Nil
+		},
+	})
+
+	e.Set("input", &Func{
+		Builtin: func(be blockEvaluator, args ...Object) Object {
+			var value string
+			fmt.Scanln(&value)
+			return &Str{Value: value}
 		},
 	})
 
@@ -40,6 +45,15 @@ func loadBuiltin(e *Enviroment) {
 			obj := args[0]
 			name := obj.(*Str).Value // MAY PANIC
 			TakeRune(name)
+			return &e.Single().Nil
+		},
+	})
+
+	e.Set("sleep", &Func{
+		Builtin: func(_ blockEvaluator, args ...Object) Object {
+			t := args[0].(*Num).Value
+			ns := time.Duration(t * 1000 * 1000 * 1000)
+			time.Sleep(ns * time.Nanosecond)
 			return &e.Single().Nil
 		},
 	})

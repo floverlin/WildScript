@@ -28,9 +28,9 @@ func New(outer *Enviroment) *Enviroment {
 				False: Bool{Value: false},
 			},
 		}
+		e.loadBuiltin()
 	}
-	
-	loadBuiltin(e)
+
 	return e
 }
 
