@@ -50,6 +50,7 @@ func (e *Evaluator) evalPropertyAccessExpression(
 	// find field in obj
 	prop := findObjectPropertry(object, node.Property)
 	if prop != nil {
+		enviroment.TakeRune(enviroment.SELF_RUNE).Set(object)
 		return prop
 	}
 

@@ -1,20 +1,20 @@
-print("hello, world!");
+print("hello, world!\n");
 
 3 {
     idx = @idx;
-    print(idx);
+    print(idx, "\n");
 };
 
-print("GO, GO WILD!");
+print("GO, GO WILD!\n");
 
-lin = {
+lin = new {
     name: "Lin",
     nick: "floverlin",
     age: 21,
-    scream: fn() { print("AAA!"); },
+    scream: fn() { print("AAA!\n"); },
     say: fn() {
         self = @self;
-        print("Hello! My name is " + self.name + "!");
+        print("Hello! My name is " + self.name + "!\n");
     }
 };
 
