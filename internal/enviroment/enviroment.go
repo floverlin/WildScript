@@ -1,15 +1,8 @@
 package enviroment
 
-type Single struct {
-	Nil   Nil
-	True  Bool
-	False Bool
-}
-
 type Enviroment struct {
 	store     map[string]Object
 	runeStore map[string]Object
-	single    *Single
 	outer     *Enviroment
 }
 
@@ -25,11 +18,6 @@ func New(outer *Enviroment) *Enviroment {
 		e = &Enviroment{
 			store:     make(map[string]Object),
 			runeStore: make(map[string]Object),
-			single: &Single{
-				Nil:   Nil{},
-				True:  Bool{Value: true},
-				False: Bool{Value: false},
-			},
 		}
 		e.loadBuiltin()
 	}
@@ -76,14 +64,4 @@ func (e *Enviroment) SetOuter(name string, val Object) (Object, bool) {
 		_, ok = e.outer.SetOuter(name, val)
 	}
 	return val, ok
-}
-
-func (e *Enviroment) Single() *Single {
-	if e.single != nil {
-		return e.single
-	}
-	if e.outer != nil {
-		return e.outer.Single()
-	}
-	panic("no single and outer")
 }

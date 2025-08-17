@@ -15,7 +15,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 			selfStr := self.(*Str)
 
 			fmt.Printf("WOW! %s :P\n", selfStr.Value)
-			return &Nil{}
+			return Global[GLOBAL_NIL]
 		},
 	},
 
@@ -47,7 +47,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 
 			selfList.Elements = append(selfList.Elements, elem)
 
-			return &Nil{}
+			return Global[GLOBAL_NIL]
 		},
 	},
 
@@ -59,7 +59,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 			maps.Copy(selfObj.Fields, otherObj.Fields)
 			maps.Copy(selfObj.Runes, otherObj.Runes)
 
-			return &Nil{}
+			return Global[GLOBAL_NIL]
 		},
 	},
 }

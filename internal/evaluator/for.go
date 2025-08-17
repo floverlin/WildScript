@@ -8,7 +8,7 @@ import (
 func (e *Evaluator) evalForExpression(
 	node *ast.ForExpression,
 ) enviroment.Object {
-	var result enviroment.Object = &e.env.Single().Nil
+	var result enviroment.Object = enviroment.Global[enviroment.GLOBAL_NIL]
 
 	cond := e.Eval(node.Condition)
 
@@ -17,8 +17,8 @@ func (e *Evaluator) evalForExpression(
 		for {
 			runes := Arguments{
 				enviroment.IDX_RUNE: &enviroment.Num{Value: float64(idx)},
-				enviroment.KEY_RUNE: &enviroment.Nil{},
-				enviroment.VAL_RUNE: &enviroment.Bool{Value: true},
+				enviroment.KEY_RUNE: enviroment.Global[enviroment.GLOBAL_NIL],
+				enviroment.VAL_RUNE: enviroment.Global[enviroment.GLOBAL_TRUE],
 			}
 			result = e.EvalBlock(node.Body, nil, runes)
 			cond = e.Eval(node.Condition)
@@ -66,7 +66,7 @@ func (e *Evaluator) evalForExpression(
 				runes = Arguments{
 					"idx": &enviroment.Num{Value: float64(idx)},
 					"key": &enviroment.Str{Value: c.Parameters[idx].Value},
-					"val": &enviroment.Nil{},
+					"val": enviroment.Global[enviroment.GLOBAL_NIL],
 				}
 			case *enviroment.List:
 				runes = Arguments{
@@ -81,7 +81,7 @@ func (e *Evaluator) evalForExpression(
 				}
 				runes = Arguments{
 					"idx": &enviroment.Num{Value: float64(idx)},
-					"key": &enviroment.Nil{},
+					"key": enviroment.Global[enviroment.GLOBAL_NIL],
 					"val": vals[idx],
 				}
 			default:

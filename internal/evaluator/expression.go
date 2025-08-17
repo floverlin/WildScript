@@ -69,31 +69,31 @@ func (e *Evaluator) evalPrefixExpression(
 		switch v := value.(type) {
 		case *enviroment.Num:
 			if v.Value == 0 {
-				return &e.env.Single().True
+				return enviroment.Global[enviroment.GLOBAL_TRUE]
 			} else {
-				return &e.env.Single().False
+				return enviroment.Global[enviroment.GLOBAL_FALSE]
 			}
 		case *enviroment.Str:
 			if v.Value == "" {
-				return &e.env.Single().True
+				return enviroment.Global[enviroment.GLOBAL_TRUE]
 			} else {
-				return &e.env.Single().False
+				return enviroment.Global[enviroment.GLOBAL_FALSE]
 			}
 		case *enviroment.Bool:
 			if !v.Value {
-				return &e.env.Single().True
+				return enviroment.Global[enviroment.GLOBAL_TRUE]
 			} else {
-				return &e.env.Single().False
+				return enviroment.Global[enviroment.GLOBAL_FALSE]
 			}
 		case *enviroment.Func:
 			params := v.LenOfParameters()
 			if params == 0 {
-				return &e.env.Single().True
+				return enviroment.Global[enviroment.GLOBAL_TRUE]
 			} else {
-				return &e.env.Single().False
+				return enviroment.Global[enviroment.GLOBAL_FALSE]
 			}
 		case *enviroment.Nil:
-			return &e.env.Single().True
+			return enviroment.Global[enviroment.GLOBAL_TRUE]
 		default:
 			panic(
 				logger.Slog(

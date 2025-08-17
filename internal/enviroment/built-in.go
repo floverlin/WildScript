@@ -23,7 +23,7 @@ func (e *Enviroment) loadBuiltin() {
 				}
 				fmt.Print(arg.Inspect())
 			}
-			return &e.Single().Nil
+			return Global[GLOBAL_NIL]
 		},
 	})
 
@@ -53,7 +53,7 @@ func (e *Enviroment) loadBuiltin() {
 			t := args[0].(*Num).Value
 			ns := time.Duration(t * 1000 * 1000 * 1000)
 			time.Sleep(ns * time.Nanosecond)
-			return &e.Single().Nil
+			return Global[GLOBAL_NIL]
 		},
 	})
 

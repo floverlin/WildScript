@@ -89,12 +89,12 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return &enviroment.Str{Value: node.Value}
 	case *ast.BooleanLiteral:
 		if node.Value {
-			return &e.env.Single().True
+			return enviroment.Global[enviroment.GLOBAL_TRUE]
 		} else {
-			return &e.env.Single().False
+			return enviroment.Global[enviroment.GLOBAL_FALSE]
 		}
 	case *ast.NilLiteral:
-		return &e.env.Single().Nil
+		return enviroment.Global[enviroment.GLOBAL_NIL]
 	default:
 		panic("unknown node type")
 	}
@@ -158,7 +158,7 @@ func (e *Evaluator) evalUseStatement(
 
 	e.env.Set(node.Name.Value, result)
 
-	return &e.env.Single().Nil
+	return enviroment.Global[enviroment.GLOBAL_NIL]
 }
 
 func (e *Evaluator) evalIdentifier(
