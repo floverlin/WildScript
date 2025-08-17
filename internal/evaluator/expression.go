@@ -121,10 +121,11 @@ func (e *Evaluator) evalCallExpression(
 
 	if callable.Type() == enviroment.OBJ_TYPE {
 		obj := callable.(*enviroment.Obj)
-		call, ok := obj.Runes[enviroment.TakeRune(enviroment.CALL_RUNE).ID]
+		call, ok := obj.Runes[enviroment.CALL_RUNE]
 		if ok && call.Type() == enviroment.FUNC_TYPE {
+			call.(*enviroment.Func).
+				Enviroment.SetRune(enviroment.SELF_RUNE, obj)
 			callable = call
-			enviroment.TakeRune(enviroment.SELF_RUNE).Set(obj)
 		}
 	}
 
@@ -163,9 +164,9 @@ func (e *Evaluator) evalCallExpression(
 		funcArgs[function.Parameters[idx].Value] = arg
 	}
 
-	callEval := New(function.Enviroment, nil) // closure
+	callEval := New(function.Enviroment, nil, nil) // closure
 
-	result := callEval.EvalBlock(function.Body, funcArgs)
+	result := callEval.EvalBlock(function.Body, funcArgs, nil)
 
 	if result.Type() == enviroment.CONTROL_TYPE {
 		if ret, ok := result.(*enviroment.Return); ok {

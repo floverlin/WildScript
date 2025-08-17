@@ -13,11 +13,12 @@ func (e *Enviroment) loadBuiltin() {
 			for _, arg := range args {
 				if arg.Type() == OBJ_TYPE {
 					obj := arg.(*Obj)
-					r := TakeRune(STR_RUNE)
-					f, ok := obj.Runes[r.ID]
+					f, ok := obj.Runes[STR_RUNE]
 					if ok {
-						TakeRune(SELF_RUNE).Set(arg)
-						arg = be.EvalBlock(f.(*Func).Body, nil)
+						runes := map[string]Object{
+							SELF_RUNE: arg,
+						}
+						arg = be.EvalBlock(f.(*Func).Body, nil, runes)
 					}
 				}
 				fmt.Print(arg.Inspect())
@@ -44,15 +45,6 @@ func (e *Enviroment) loadBuiltin() {
 		Builtin: func(_ blockEvaluator, args ...Object) Object {
 			obj := args[0]
 			return &Str{Value: string(obj.Type())}
-		},
-	})
-
-	e.Set("rune", &Func{
-		Builtin: func(_ blockEvaluator, args ...Object) Object {
-			obj := args[0]
-			name := obj.(*Str).Value // MAY PANIC
-			TakeRune(name)
-			return &e.Single().Nil
 		},
 	})
 

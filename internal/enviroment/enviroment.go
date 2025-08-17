@@ -7,21 +7,24 @@ type Single struct {
 }
 
 type Enviroment struct {
-	store  map[string]Object
-	single *Single
-	outer  *Enviroment
+	store     map[string]Object
+	runeStore map[string]Object
+	single    *Single
+	outer     *Enviroment
 }
 
 func New(outer *Enviroment) *Enviroment {
 	var e *Enviroment
 	if outer != nil {
 		e = &Enviroment{
-			store: make(map[string]Object),
-			outer: outer,
+			store:     make(map[string]Object),
+			runeStore: make(map[string]Object),
+			outer:     outer,
 		}
 	} else {
 		e = &Enviroment{
-			store: make(map[string]Object),
+			store:     make(map[string]Object),
+			runeStore: make(map[string]Object),
 			single: &Single{
 				Nil:   Nil{},
 				True:  Bool{Value: true},
@@ -34,14 +37,22 @@ func New(outer *Enviroment) *Enviroment {
 	return e
 }
 
-func (e *Enviroment) Get(name string) (Object, bool) {
-	obj, ok := e.store[name]
+func (e *Enviroment) GetRuneOuter(name string) (Object, bool) {
+	obj, ok := e.runeStore[name]
+	if !ok && e.outer != nil {
+		obj, ok = e.outer.GetRuneOuter(name)
+	}
 	return obj, ok
 }
 
-func (e *Enviroment) Set(name string, val Object) Object {
-	e.store[name] = val
+func (e *Enviroment) SetRune(name string, val Object) Object {
+	e.runeStore[name] = val
 	return val
+}
+
+func (e *Enviroment) Get(name string) (Object, bool) {
+	obj, ok := e.store[name]
+	return obj, ok
 }
 
 func (e *Enviroment) GetOuter(name string) (Object, bool) {
@@ -50,6 +61,11 @@ func (e *Enviroment) GetOuter(name string) (Object, bool) {
 		obj, ok = e.outer.GetOuter(name)
 	}
 	return obj, ok
+}
+
+func (e *Enviroment) Set(name string, val Object) Object {
+	e.store[name] = val
+	return val
 }
 
 func (e *Enviroment) SetOuter(name string, val Object) (Object, bool) {

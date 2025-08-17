@@ -69,7 +69,11 @@ func (n *Nil) Inspect() string {
 }
 
 type blockEvaluator interface {
-	EvalBlock(*ast.BlockExpression, map[string]Object) Object
+	EvalBlock(
+		*ast.BlockExpression,
+		map[string]Object,
+		map[string]Object,
+	) Object
 }
 
 type Func struct {
@@ -111,13 +115,13 @@ func (l *List) Inspect() string {
 
 type Obj struct {
 	Fields map[string]Object
-	Runes  map[uint64]Object
+	Runes  map[string]Object
 }
 
 func NewObj() *Obj {
 	return &Obj{
 		Fields: map[string]Object{},
-		Runes:  map[uint64]Object{},
+		Runes:  map[string]Object{},
 	}
 }
 

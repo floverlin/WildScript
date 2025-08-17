@@ -82,7 +82,7 @@ func RunFile(fileName string) {
 		)
 	}
 
-	e := evaluator.New(nil, nil)
+	e := evaluator.New(nil, nil, nil)
 
 	defer wrapPanic()
 

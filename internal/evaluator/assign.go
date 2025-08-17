@@ -41,13 +41,10 @@ func (e *Evaluator) evalIdentifierAssign(
 	value enviroment.Object,
 ) (enviroment.Object, error) {
 	if left.IsRune {
-		r, ok := enviroment.FindRune(left.Value)
-		if !ok {
-			return nil, errors.New("undefined rune")
-		}
-		result := r.Set(value)
+		result := e.env.SetRune(left.Value, value)
 		return result, nil
-	} else if left.IsOuter {
+	}
+	if left.IsOuter {
 		result, ok := e.env.SetOuter(left.Value, value)
 		if !ok {
 			return nil, errors.New("undefined variable")
@@ -80,8 +77,7 @@ func (e *Evaluator) evalPropertyAssign(
 	}
 
 	if left.Property.IsRune {
-		r := enviroment.TakeRune(prop)
-		obj.(*enviroment.Obj).Runes[r.ID] = value
+		obj.(*enviroment.Obj).Runes[prop] = value
 	} else {
 		obj.(*enviroment.Obj).Fields[prop] = value
 	}

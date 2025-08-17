@@ -6,15 +6,17 @@ import (
 	"wildscript/internal/logger"
 )
 
-func findObjectPropertry(object enviroment.Object, prop *ast.Identifier) enviroment.Object {
+func findObjectPropertry(
+	object enviroment.Object,
+	prop *ast.Identifier,
+) enviroment.Object {
 	if object.Type() != enviroment.OBJ_TYPE {
 		return nil
 	}
 	obj := object.(*enviroment.Obj)
 
 	if prop.IsRune {
-		r := enviroment.TakeRune(prop.Value)
-		if prop, ok := obj.Runes[r.ID]; ok {
+		if prop, ok := obj.Runes[prop.Value]; ok {
 			return prop
 		}
 	} else {
@@ -23,8 +25,7 @@ func findObjectPropertry(object enviroment.Object, prop *ast.Identifier) envirom
 		}
 	}
 
-	protoRune := enviroment.TakeRune(enviroment.PROTO_RUNE)
-	if proto, ok := obj.Runes[protoRune.ID]; ok {
+	if proto, ok := obj.Runes[enviroment.PROTO_RUNE]; ok {
 		return findObjectPropertry(proto, prop)
 	}
 
@@ -50,7 +51,10 @@ func (e *Evaluator) evalPropertyAccessExpression(
 	// find field in obj
 	prop := findObjectPropertry(object, node.Property)
 	if prop != nil {
-		enviroment.TakeRune(enviroment.SELF_RUNE).Set(object)
+		if prop.Type() == enviroment.FUNC_TYPE {
+			prop := prop.(*enviroment.Func)
+			prop.Enviroment.SetRune(enviroment.SELF_RUNE, object)
+		}
 		return prop
 	}
 

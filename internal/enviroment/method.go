@@ -34,6 +34,7 @@ var typeMethodMap = map[ObjectType]methodMap{
 				newElem := be.EvalBlock(
 					f.Body,
 					map[string]Object{paramName: elem},
+					nil,
 				)
 				newList.Elements = append(newList.Elements, newElem)
 			}

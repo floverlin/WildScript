@@ -16,10 +16,13 @@ type Evaluator struct {
 	env *enviroment.Enviroment
 }
 
-func New(env *enviroment.Enviroment, args Arguments) *Evaluator {
+func New(env *enviroment.Enviroment, args, runes Arguments) *Evaluator {
 	e := &Evaluator{env: enviroment.New(env)}
 	for key, val := range args {
 		e.env.Set(key, val)
+	}
+	for key, val := range runes {
+		e.env.SetRune(key, val)
 	}
 	return e
 }
@@ -29,7 +32,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	case *ast.Program:
 		return e.evalProgram(node)
 	case *ast.BlockExpression:
-		return e.EvalBlock(node, nil)
+		return e.EvalBlock(node, nil, nil)
 
 	case *ast.AssignStatement:
 		return e.evalAssignStatement(node)
@@ -108,10 +111,11 @@ func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 func (e *Evaluator) EvalBlock(
 	block *ast.BlockExpression,
 	args Arguments,
+	runes Arguments,
 ) enviroment.Object {
 	var result enviroment.Object
 
-	blockEval := New(e.env, args)
+	blockEval := New(e.env, args, runes)
 
 	for _, stmt := range block.Statements {
 		result = blockEval.Eval(stmt)
@@ -148,7 +152,7 @@ func (e *Evaluator) evalUseStatement(
 	p := parser.New(c)
 	mod := p.ParseProgram()
 
-	modEv := New(nil, nil)
+	modEv := New(nil, nil, nil)
 
 	result := modEv.Eval(mod)
 
@@ -164,9 +168,7 @@ func (e *Evaluator) evalIdentifier(
 	var ok bool
 
 	if identifier.IsRune {
-		r, runeOk := enviroment.FindRune(identifier.Value)
-		val = r.Get()
-		ok = runeOk
+		val, ok = e.env.GetRuneOuter(identifier.Value)
 	} else if identifier.IsOuter {
 		val, ok = e.env.GetOuter(identifier.Value)
 	} else {
@@ -206,9 +208,7 @@ func (e *Evaluator) evalObjectLiteral(
 	for _, field := range node.Fields {
 		value := e.Eval(field.Value)
 		if field.Key.IsRune {
-			newObj.Runes[enviroment.TakeRune(
-				field.Key.Value,
-			).ID] = value
+			newObj.Runes[field.Key.Value] = value
 		} else {
 			newObj.Fields[field.Key.Value] = value
 		}

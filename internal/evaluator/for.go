@@ -5,17 +5,6 @@ import (
 	"wildscript/internal/enviroment"
 )
 
-func setForRunes(idx int, key, val enviroment.Object) {
-	enviroment.TakeRune(enviroment.IDX_RUNE).
-		Set(&enviroment.Num{Value: float64(idx)})
-
-	enviroment.TakeRune(enviroment.KEY_RUNE).
-		Set(key)
-
-	enviroment.TakeRune(enviroment.VAL_RUNE).
-		Set(val)
-}
-
 func (e *Evaluator) evalForExpression(
 	node *ast.ForExpression,
 ) enviroment.Object {
@@ -26,12 +15,12 @@ func (e *Evaluator) evalForExpression(
 	if cond.Type() == enviroment.BOOL_TYPE {
 		idx := 0
 		for {
-			setForRunes(
-				idx,
-				&enviroment.Nil{},
-				&enviroment.Bool{Value: true},
-			)
-			result = e.Eval(node.Body)
+			runes := Arguments{
+				enviroment.IDX_RUNE: &enviroment.Num{Value: float64(idx)},
+				enviroment.KEY_RUNE: &enviroment.Nil{},
+				enviroment.VAL_RUNE: &enviroment.Bool{Value: true},
+			}
+			result = e.EvalBlock(node.Body, nil, runes)
 			cond = e.Eval(node.Condition)
 			if !cond.(*enviroment.Bool).Value {
 				break
@@ -59,46 +48,47 @@ func (e *Evaluator) evalForExpression(
 		}
 
 		for idx := range iters {
+			var runes Arguments
 			switch c := cond.(type) {
 			case *enviroment.Num:
-				setForRunes(
-					idx,
-					&enviroment.Num{Value: float64(idx)},
-					&enviroment.Num{Value: float64(idx)},
-				)
+				runes = Arguments{
+					"idx": &enviroment.Num{Value: float64(idx)},
+					"key": &enviroment.Num{Value: float64(idx)},
+					"val": &enviroment.Num{Value: float64(idx)},
+				}
 			case *enviroment.Str:
-				setForRunes(
-					idx,
-					&enviroment.Num{Value: float64(idx)},
-					&enviroment.Str{Value: string([]rune(c.Value)[idx])},
-				)
+				runes = Arguments{
+					"idx": &enviroment.Num{Value: float64(idx)},
+					"key": &enviroment.Num{Value: float64(idx)},
+					"val": &enviroment.Str{Value: string([]rune(c.Value)[idx])},
+				}
 			case *enviroment.Func:
-				setForRunes(
-					idx,
-					&enviroment.Str{Value: c.Parameters[idx].Value},
-					&enviroment.Nil{},
-				)
+				runes = Arguments{
+					"idx": &enviroment.Num{Value: float64(idx)},
+					"key": &enviroment.Str{Value: c.Parameters[idx].Value},
+					"val": &enviroment.Nil{},
+				}
 			case *enviroment.List:
-				setForRunes(
-					idx,
-					&enviroment.Num{Value: float64(idx)},
-					c.Elements[idx],
-				)
+				runes = Arguments{
+					"idx": &enviroment.Num{Value: float64(idx)},
+					"key": &enviroment.Num{Value: float64(idx)},
+					"val": c.Elements[idx],
+				}
 			case *enviroment.Obj:
 				vals := []enviroment.Object{}
 				for _, val := range c.Fields {
 					vals = append(vals, val)
 				}
-				setForRunes(
-					idx,
-					&enviroment.Nil{},
-					vals[idx],
-				)
+				runes = Arguments{
+					"idx": &enviroment.Num{Value: float64(idx)},
+					"key": &enviroment.Nil{},
+					"val": vals[idx],
+				}
 			default:
 				panic("TODO")
 			}
 
-			result = e.EvalBlock(node.Body, nil)
+			result = e.EvalBlock(node.Body, nil, runes)
 
 			if result.Type() == enviroment.CONTROL_TYPE {
 				switch res := result.(type) {
