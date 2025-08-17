@@ -87,7 +87,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	case *ast.NilLiteral:
 		return &e.env.Single().Nil
 	default:
-		panic("unknown node type\n")
+		panic("unknown node type")
 	}
 }
 
@@ -177,7 +177,13 @@ func (e *Evaluator) evalObjectLiteral(
 
 	for _, field := range node.Fields {
 		value := e.Eval(field.Value)
-		newObj.Fields[field.Key.Value] = value
+		if field.Key.IsRune {
+			newObj.Runes[enviroment.TakeRune(
+				field.Key.Value,
+			).ID] = value
+		} else {
+			newObj.Fields[field.Key.Value] = value
+		}
 	}
 
 	return newObj

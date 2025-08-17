@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	SELF_RUNE = "self"
+	SELF_RUNE  = "self"
 	PROTO_RUNE = "proto"
+	CALL_RUNE  = "call"
 
 	STR_RUNE = "str"
 

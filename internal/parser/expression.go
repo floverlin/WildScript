@@ -546,6 +546,13 @@ func (p *Parser) parseObjectLiteral() *ast.ObjectLiteral {
 }
 
 func (p *Parser) parseObjectField() *ast.ObjectField {
+	identType := NONE
+
+	if p.curToken.Type == lexer.DOG {
+		p.nextToken() // to ident
+		identType = RUNE
+	}
+
 	if p.curToken.Type != lexer.IDENT {
 		p.errors = append(
 			p.errors,
@@ -558,7 +565,7 @@ func (p *Parser) parseObjectField() *ast.ObjectField {
 		return nil
 	}
 
-	key := p.parseIdentifier(NONE)
+	key := p.parseIdentifier(identType)
 
 	if p.peekToken.Type != lexer.COLON {
 		p.errors = append(

@@ -119,6 +119,15 @@ func (e *Evaluator) evalCallExpression(
 ) enviroment.Object {
 	callable := e.Eval(node.Function)
 
+	if callable.Type() == enviroment.OBJ_TYPE {
+		obj := callable.(*enviroment.Obj)
+		call, ok := obj.Runes[enviroment.TakeRune(enviroment.CALL_RUNE).ID]
+		if ok && call.Type() == enviroment.FUNC_TYPE {
+			callable = call
+			enviroment.TakeRune(enviroment.SELF_RUNE).Set(obj)
+		}
+	}
+
 	if callable.Type() != enviroment.FUNC_TYPE {
 		panic(
 			logger.Slog(

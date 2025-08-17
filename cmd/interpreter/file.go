@@ -111,7 +111,7 @@ func RunFile(fileName string) {
 
 func wrapPanic() {
 	if p := recover(); p != nil {
-		fmt.Printf("[wild] runtime error: %s", p)
+		fmt.Printf("[wild] runtime error: %s\n", p)
 		os.Exit(1)
 	}
 }
