@@ -205,6 +205,45 @@ i = 0;
 };  # [4, 4, 4]
 ```
 
+## Классы
+
+```wildscript
+Prototype = new {
+    jump: fn() {
+        print("jump\n");
+    }
+};
+
+Hero = new {
+    total: 0,
+    @call: fn(name) {
+        hero = new {
+            @proto: Prototype,
+            name: name,
+            attack: 10,
+            health: 100
+        };
+        @self.total = @self.total + 1;
+        <- hero;
+    }
+};
+
+Mage = new {
+    @call: fn(name) {
+        hero = Hero(name);
+        mage = new {
+            cast: fn() { print("WOOOW! (", @self.attack, ")\n"); }
+        };
+        hero.merge(mage);
+        <- hero;
+    }
+};
+
+lin = Mage("Lin");
+lin.cast();
+lin.jump();
+```
+
 ## Математика
 
 ### num
