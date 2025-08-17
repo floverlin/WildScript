@@ -85,7 +85,7 @@ fn(a, b) { a * b }(2, 2)  # 4
 
 ## Объекты
 
-- доступ к обьекту из метода через руну `@self`
+- доступ к объекту из метода через руну `@self`
 
 ```wildscript
 obj = new {
@@ -243,6 +243,27 @@ lin = Mage("Lin");
 lin.cast();
 lin.jump();
 ```
+
+## Модули
+
+```wildscript
+# mod.ws
+my_name = "lin";
+fn println(obj) {
+    print(obj, "\n");
+};
+
+new {
+    my_name: my_name,
+    print: println
+}  # не добавляйте ;, так как мы экспортируем объект
+
+# main.ws
+use mod;
+
+mod.print(mod.my_name);  # выведет "lin" с переносом строки
+```
+
 
 ## Математика
 

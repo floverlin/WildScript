@@ -1,9 +1,13 @@
 package evaluator
 
 import (
+	"fmt"
+	"os"
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
+	"wildscript/internal/lexer"
 	"wildscript/internal/logger"
+	"wildscript/internal/parser"
 )
 
 type Arguments = map[string]enviroment.Object
@@ -31,6 +35,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalAssignStatement(node)
 	case *ast.ExpressionStatement:
 		return e.Eval(node.Expression)
+	case *ast.UseStatement:
+		return e.evalUseStatement(node)
 	case *ast.FuncStatement:
 		return e.evalAssignStatement(
 			&ast.AssignStatement{
@@ -127,6 +133,28 @@ func (e *Evaluator) evalExpressions(
 		result = append(result, evaluated)
 	}
 	return result
+}
+
+func (e *Evaluator) evalUseStatement(
+	node *ast.UseStatement,
+) enviroment.Object {
+	input, err := os.ReadFile(node.Name.Value + ".ws")
+	if err != nil {
+		panic(fmt.Sprintf("read module error: %s", err))
+	}
+
+	l := lexer.New(input)
+	c := lexer.NewCollector(l)
+	p := parser.New(c)
+	mod := p.ParseProgram()
+
+	modEv := New(nil, nil)
+
+	result := modEv.Eval(mod)
+
+	e.env.Set(node.Name.Value, result)
+
+	return &e.env.Single().Nil
 }
 
 func (e *Evaluator) evalIdentifier(

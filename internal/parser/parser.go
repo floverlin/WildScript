@@ -74,6 +74,22 @@ func (p *Parser) parseStatement() ast.Statement {
 			Token: token,
 		}
 
+	} else if p.curToken.Type == lexer.USE {
+		useStmt := &ast.UseStatement{Token: p.curToken}
+		if p.peekToken.Type != lexer.IDENT {
+			p.errors = append(p.errors,
+				logger.Slog(
+					p.peekToken.Line,
+					p.peekToken.Column,
+					"expected module identifier",
+				),
+			)
+			return nil
+		}
+		p.nextToken() // to ident
+		useStmt.Name = p.parseIdentifier(NONE)
+		stmt = useStmt
+
 	} else if p.curToken.Type == lexer.FN &&
 		p.peekToken.Type == lexer.IDENT {
 		p.nextToken() // to ident

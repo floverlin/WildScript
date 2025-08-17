@@ -59,3 +59,13 @@ func (cs *ContinueStatement) statementNode() {}
 func (cs *ContinueStatement) String() string {
 	return "->"
 }
+
+type UseStatement struct {
+	Token lexer.Token
+	Name  *Identifier
+}
+
+func (us *UseStatement) statementNode() {}
+func (us *UseStatement) String() string {
+	return fmt.Sprintf("use %s", us.Name.Value)
+}
