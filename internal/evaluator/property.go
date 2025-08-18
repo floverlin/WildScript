@@ -62,11 +62,17 @@ func (e *Evaluator) evalIndexExpression(
 	switch object := left.(type) {
 	case *enviroment.Str:
 		sl := []rune(object.Value)
+		if idx > len(sl)-1 {
+			lib.Die(node.Token, "index out of range")
+		}
 		symbol := sl[idx]
 		result = &enviroment.Str{
 			Value: string(symbol),
 		}
 	case *enviroment.Doc:
+		if idx > len(object.List)-1 {
+			lib.Die(node.Token, "index out of range")
+		}
 		result = object.List[idx]
 	default:
 		lib.Die(
@@ -118,4 +124,30 @@ func (e *Evaluator) evalSliceExpression(
 	}
 
 	return result
+}
+
+func (e *Evaluator) evalKeyExpression(
+	node *ast.KeyExpression,
+) enviroment.Object {
+	left := e.Eval(node.Left)
+	key := e.Eval(node.Key)
+
+	doc, ok := left.(*enviroment.Doc)
+	if !ok {
+		lib.Die(
+			node.Token,
+			"key access to non doc",
+		)
+	}
+	obj, ok := doc.Dict.Get(key)
+	if !ok {
+		lib.Die(
+			node.Token,
+			"key %s do not exist in %s",
+			key.Inspect(),
+			doc.Inspect(),
+		)
+	}
+
+	return obj
 }

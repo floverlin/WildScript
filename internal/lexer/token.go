@@ -17,10 +17,13 @@ const (
 	METHOD   TokenType = "METHOD"
 
 	IF   TokenType = "IF"
+	ELIF TokenType = "ELIF"
 	ELSE TokenType = "ELSE"
+	THEN TokenType = "THEN"
 
 	FOR    TokenType = "FOR"
 	WHILE  TokenType = "WHILE"
+	DO     TokenType = "DO"
 	REPEAT TokenType = "REPEAT"
 	UNTIL  TokenType = "UNTIL"
 
@@ -129,10 +132,13 @@ var specialIdents = map[string]TokenType{
 	"method":   METHOD,
 
 	"if":   IF,
+	"elif": ELIF,
 	"else": ELSE,
+	"then": THEN,
 
 	"for":    FOR,
 	"while":  WHILE,
+	"do":     DO,
 	"repeat": REPEAT,
 	"until":  UNTIL,
 

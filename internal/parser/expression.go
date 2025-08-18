@@ -26,6 +26,11 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	case lexer.IF:
 		expr = p.parseIfExpression()
+	case lexer.ELIF:
+		expr = p.parseIfExpression()
+
+	case lexer.WHILE:
+		expr = p.parseWhileExpression()
 
 	case lexer.LAMBDA:
 		p.nextToken() // to (
@@ -99,6 +104,11 @@ func (p *Parser) parseIfExpression() *ast.IfExpression {
 	p.nextToken() // to cond
 	expr.If = p.parseExpression(LOWEST)
 
+	if p.peekToken.Type != lexer.THEN {
+		p.expected("then after condition")
+	}
+	p.nextToken() // to then
+
 	if p.peekToken.Type != lexer.LBRACE {
 		p.expected("{")
 	}
@@ -106,14 +116,19 @@ func (p *Parser) parseIfExpression() *ast.IfExpression {
 	p.nextToken() // to {
 	expr.Then = p.parseBlockExpression()
 
-	if p.peekToken.Type != lexer.ELSE {
+	if p.peekToken.Type != lexer.ELSE &&
+		p.peekToken.Type != lexer.ELIF {
 		expr.Else = newNilBlockExpression(p.peekToken)
 		return expr
 	}
 
-	p.nextToken() // to else
-	p.nextToken() // to expr
-	expr.Else = p.parseExpression(LOWEST)
+	p.nextToken() // to else or elif
+	if p.curToken.Type == lexer.ELIF {
+		expr.Else = p.parseIfExpression()
+	} else {
+		p.nextToken() // to block
+		expr.Else = p.parseBlockExpression()
+	}
 
 	return expr
 }
@@ -369,7 +384,6 @@ func (p *Parser) parseDocumentElement() *ast.DocumentElement {
 	case lexer.COMMA:
 		elem.Type = ast.LIST
 		elem.Value = left
-		p.nextToken() // to ,
 	case lexer.ASSIGN:
 		p.nextToken() // to =
 		p.nextToken() // to value
@@ -385,4 +399,25 @@ func (p *Parser) parseDocumentElement() *ast.DocumentElement {
 	}
 
 	return elem
+}
+
+func (p *Parser) parseWhileExpression() *ast.WhileExpression {
+	expr := &ast.WhileExpression{
+		Token: p.curToken,
+	}
+	p.nextToken() // to cond
+	expr.If = p.parseExpression(LOWEST)
+
+	if p.peekToken.Type != lexer.DO {
+		p.expected("do")
+	}
+
+	p.nextToken() // to do
+	if p.peekToken.Type != lexer.LBRACE {
+		p.expected("{")
+	}
+	p.nextToken() // to {
+	expr.Loop = p.parseBlockExpression()
+
+	return expr
 }

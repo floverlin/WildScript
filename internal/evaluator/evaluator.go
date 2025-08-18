@@ -35,8 +35,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	case *ast.ImportStatement:
 		return e.evalImportStatement(node)
 	case *ast.FunctionStatement:
-		return e.evalAssignStatement(
-			&ast.AssignStatement{
+		return e.evalLetStatement(
+			&ast.LetStatement{
 				Token: node.Token,
 				Left:  node.Identifier,
 				Right: node.Function,
@@ -65,11 +65,14 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalSliceExpression(node)
 	case *ast.PropertyExpression:
 		return e.evalPropertyExpression(node)
-	// case *ast.KeyExpression:
-	// 	return e.evalKeyExpression(node)
+	case *ast.KeyExpression:
+		return e.evalKeyExpression(node)
 
 	case *ast.Identifier:
 		return e.evalIdentifier(node)
+
+	case *ast.DocumentLiteral:
+		return e.evalDocumentLiteral(node)
 
 	case *ast.FunctionLiteral:
 		return &enviroment.Function{
@@ -171,4 +174,25 @@ func (e *Evaluator) evalIdentifier(
 		identifier.Value,
 	)
 	return nil
+}
+
+func (e *Evaluator) evalDocumentLiteral(
+	node *ast.DocumentLiteral,
+) enviroment.Object {
+	doc := enviroment.NewDoc()
+	for _, elem := range node.Elements {
+		switch elem.Type {
+		case ast.LIST:
+			val := e.Eval(elem.Value)
+			doc.List = append(doc.List, val)
+		case ast.DICT:
+			key, val := e.Eval(elem.Key), e.Eval(elem.Value)
+			doc.Dict.Set(key, val)
+		case ast.PROP:
+			key := elem.Key.(*ast.Identifier).Value
+			val := e.Eval(elem.Value)
+			doc.Elements[key] = val
+		}
+	}
+	return doc
 }

@@ -99,7 +99,7 @@ func (e *Evaluator) evalKeyAssign(
 		return nil, errors.New("assign key to non doc type")
 	}
 
-	object.(*enviroment.Doc).Dict[key] = value
+	object.(*enviroment.Doc).Dict.Set(key, value)
 	return object, nil
 }
 

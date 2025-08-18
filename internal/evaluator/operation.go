@@ -91,10 +91,10 @@ var boolOps = map[string]func(left, right bool) (enviroment.Object, error){
 	"!=": func(left, right bool) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left != right}, nil
 	},
-	"and": func(left, right bool) (enviroment.Object, error) {
+	"or": func(left, right bool) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left || right}, nil
 	},
-	"or": func(left, right bool) (enviroment.Object, error) {
+	"and": func(left, right bool) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left && right}, nil
 	},
 }

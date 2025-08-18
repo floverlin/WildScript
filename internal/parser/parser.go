@@ -174,11 +174,11 @@ func (p *Parser) curPrecedence() int {
 
 func die(token lexer.Token, text string, args ...any) {
 	text = fmt.Sprintf("[parser] %s", text)
-	lib.Die(token, text, args)
+	lib.Die(token, text, args...)
 }
 
 func (p *Parser) expected(text string) {
-	text = "expected " + text
+	text = fmt.Sprintf("expected %s", text)
 	die(p.peekToken, text)
 }
 

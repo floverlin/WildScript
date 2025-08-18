@@ -104,7 +104,7 @@ func RunFile(fileName string) {
 
 func wrapPanic() {
 	if p := recover(); p != nil {
-		fmt.Printf("runtime error: %s\n", p)
+		fmt.Printf("%s\n", p)
 		os.Exit(1)
 	}
 }

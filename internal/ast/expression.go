@@ -83,7 +83,7 @@ type IfExpression struct {
 func (ie *IfExpression) expressionNode() {}
 func (ie *IfExpression) String() string {
 	return fmt.Sprintf(
-		"if %s %s else %s",
+		"if %s then %s else %s",
 		ie.If.String(),
 		ie.Then.String(),
 		ie.Else.String(),
@@ -97,9 +97,12 @@ type ForExpression struct {
 func (fe *ForExpression) expressionNode() {}
 func (fe *ForExpression) String() string  { return "" }
 
-type UntilExpression struct {
+type RepeatExpression struct {
 	Token lexer.Token
 }
+
+func (re *RepeatExpression) expressionNode() {}
+func (re *RepeatExpression) String() string  { return "" }
 
 type WhileExpression struct {
 	Token lexer.Token
@@ -110,14 +113,11 @@ type WhileExpression struct {
 func (we *WhileExpression) expressionNode() {}
 func (we *WhileExpression) String() string {
 	return fmt.Sprintf(
-		"while %s %s",
+		"while %s do %s",
 		we.If.String(),
 		we.Loop.String(),
 	)
 }
-
-func (ue *UntilExpression) expressionNode() {}
-func (ue *UntilExpression) String() string  { return "" }
 
 type IndexExpression struct {
 	Token lexer.Token

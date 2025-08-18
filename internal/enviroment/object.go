@@ -66,8 +66,18 @@ func (n *Nil) Inspect() string {
 
 type Doc struct {
 	List     []Object
-	Dict     map[Object]Object
+	Dict     *Dict
 	Elements map[string]Object
+}
+
+func NewDoc() *Doc {
+	return &Doc{
+		Elements: make(map[string]Object),
+		Dict: &Dict{
+			strMap: make(map[string]Object),
+			numMap: make(map[float64]Object),
+		},
+	}
 }
 
 func (d *Doc) Type() ObjectType { return DOC }
