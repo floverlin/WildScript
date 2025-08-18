@@ -8,7 +8,7 @@ import (
 )
 
 type ElementType int
-type FunctionType string
+type FunctionImplementation string
 
 const (
 	LIST ElementType = iota
@@ -17,9 +17,9 @@ const (
 )
 
 const (
-	FUNCTION FunctionType = "function"
-	LAMBDA   FunctionType = "lambda"
-	METHOD   FunctionType = "method"
+	FUNCTION FunctionImplementation = "function"
+	LAMBDA   FunctionImplementation = "lambda"
+	METHOD   FunctionImplementation = "method"
 )
 
 type Identifier struct {
@@ -75,14 +75,14 @@ type FunctionLiteral struct {
 	Token      lexer.Token
 	Parameters []*Identifier
 	Body       *BlockExpression
-	Type       FunctionType
+	Impl       FunctionImplementation
 }
 
 func (fl *FunctionLiteral) expressionNode() {}
 func (fl *FunctionLiteral) String() string {
 	var sb strings.Builder
-	if fl.Type != FUNCTION {
-		sb.WriteString(string(fl.Type))
+	if fl.Impl != FUNCTION {
+		sb.WriteString(string(fl.Impl))
 	}
 	sb.WriteString("(")
 	for idx, param := range fl.Parameters {

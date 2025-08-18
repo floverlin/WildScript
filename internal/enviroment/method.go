@@ -1,83 +1,83 @@
 package enviroment
 
-import (
-	"fmt"
-	"maps"
-)
+// import (
+// 	"fmt"
+// 	"maps"
+// )
 
-type method = func(self Object, be blockEvaluator, args ...Object) Object
+// type method = func(self Object, be blockEvaluator, args ...Object) Object
 
-type methodMap = map[string]method
+// type methodMap = map[string]method
 
-var typeMethodMap = map[ObjectType]methodMap{
-	STR_TYPE: {
-		"wow": func(self Object, _ blockEvaluator, args ...Object) Object {
-			selfStr := self.(*Str)
+// var typeMethodMap = map[ObjectType]methodMap{
+// 	STR_TYPE: {
+// 		"wow": func(self Object, _ blockEvaluator, args ...Object) Object {
+// 			selfStr := self.(*Str)
 
-			fmt.Printf("WOW! %s :P\n", selfStr.Value)
-			return Global[GLOBAL_NIL]
-		},
-	},
+// 			fmt.Printf("WOW! %s :P\n", selfStr.Value)
+// 			return Global[GLOBAL_NIL]
+// 		},
+// 	},
 
-	LIST_TYPE: {
-		"map": func(self Object, be blockEvaluator, args ...Object) Object {
-			selfList := self.(*List)
-			f := args[0].(*Func)
+// 	LIST_TYPE: {
+// 		"map": func(self Object, be blockEvaluator, args ...Object) Object {
+// 			selfList := self.(*List)
+// 			f := args[0].(*Func)
 
-			newList := &List{
-				Elements: []Object{},
-			}
+// 			newList := &List{
+// 				Elements: []Object{},
+// 			}
 
-			paramName := f.Parameters[0].Value
+// 			paramName := f.Parameters[0].Value
 
-			for _, elem := range selfList.Elements {
-				newElem := be.EvalBlock(
-					f.Body,
-					map[string]Object{paramName: elem},
-					nil,
-				)
-				newList.Elements = append(newList.Elements, newElem)
-			}
+// 			for _, elem := range selfList.Elements {
+// 				newElem := be.EvalBlock(
+// 					f.Body,
+// 					map[string]Object{paramName: elem},
+// 					nil,
+// 				)
+// 				newList.Elements = append(newList.Elements, newElem)
+// 			}
 
-			return newList
-		},
-		"append": func(self Object, be blockEvaluator, args ...Object) Object {
-			selfList := self.(*List)
-			elem := args[0]
+// 			return newList
+// 		},
+// 		"append": func(self Object, be blockEvaluator, args ...Object) Object {
+// 			selfList := self.(*List)
+// 			elem := args[0]
 
-			selfList.Elements = append(selfList.Elements, elem)
+// 			selfList.Elements = append(selfList.Elements, elem)
 
-			return Global[GLOBAL_NIL]
-		},
-	},
+// 			return Global[GLOBAL_NIL]
+// 		},
+// 	},
 
-	OBJ_TYPE: {
-		"merge": func(self Object, _ blockEvaluator, args ...Object) Object {
-			selfObj := self.(*Obj)
-			otherObj := args[0].(*Obj)
+// 	OBJ_TYPE: {
+// 		"merge": func(self Object, _ blockEvaluator, args ...Object) Object {
+// 			selfObj := self.(*Obj)
+// 			otherObj := args[0].(*Obj)
 
-			maps.Copy(selfObj.Fields, otherObj.Fields)
-			maps.Copy(selfObj.Runes, otherObj.Runes)
+// 			maps.Copy(selfObj.Fields, otherObj.Fields)
+// 			maps.Copy(selfObj.Runes, otherObj.Runes)
 
-			return Global[GLOBAL_NIL]
-		},
-	},
-}
+// 			return Global[GLOBAL_NIL]
+// 		},
+// 	},
+// }
 
-// TODO ERROR RETURN
-func FindMethod(obj Object, name string) *Func {
-	m, ok := typeMethodMap[obj.Type()]
-	if !ok {
-		return nil
-	}
-	f, ok := m[name]
-	if !ok {
-		return nil
-	}
+// // TODO ERROR RETURN
+// func FindMethod(obj Object, name string) *Func {
+// 	m, ok := typeMethodMap[obj.Type()]
+// 	if !ok {
+// 		return nil
+// 	}
+// 	f, ok := m[name]
+// 	if !ok {
+// 		return nil
+// 	}
 
-	return &Func{
-		Builtin: func(be blockEvaluator, args ...Object) Object {
-			return f(obj, be, args...)
-		},
-	}
-}
+// 	return &Func{
+// 		Builtin: func(be blockEvaluator, args ...Object) Object {
+// 			return f(obj, be, args...)
+// 		},
+// 	}
+// }

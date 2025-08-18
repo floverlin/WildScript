@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"wildscript/internal/ast"
 	"wildscript/internal/lexer"
+	"wildscript/internal/lib"
 )
 
 type Tokenizer interface {
@@ -55,6 +56,22 @@ func (p *Parser) parseStatement() ast.Statement {
 	var stmt ast.Statement
 
 	switch p.curToken.Type {
+	case lexer.LET:
+		letStmt := &ast.LetStatement{
+			Token: p.curToken,
+		}
+		if p.peekToken.Type != lexer.IDENTIFIER {
+			p.expected("identifier")
+		}
+		p.nextToken() // to ident
+		letStmt.Left = p.parseIdentifier()
+		if p.peekToken.Type != lexer.ASSIGN {
+			p.expected("=")
+		}
+		p.nextToken() // to =
+		p.nextToken() // to expr
+		letStmt.Right = p.parseExpression(LOWEST)
+		stmt = letStmt
 	case lexer.IMPORT:
 		importStmt := &ast.ImportStatement{Token: p.curToken}
 		if p.peekToken.Type != lexer.IDENTIFIER {
@@ -156,17 +173,8 @@ func (p *Parser) curPrecedence() int {
 }
 
 func die(token lexer.Token, text string, args ...any) {
-	if len(args) > 0 {
-		text = fmt.Sprintf(text, args...)
-	}
-	text = fmt.Sprintf(
-		"[parser] %s at line %d column %d",
-		text,
-		token.Line,
-		token.Column,
-	)
-
-	panic(text)
+	text = fmt.Sprintf("[parser] %s", text)
+	lib.Die(token, text, args)
 }
 
 func (p *Parser) expected(text string) {

@@ -7,6 +7,7 @@ const (
 	EOF     TokenType = "EOF"
 
 	IDENTIFIER TokenType = "IDENTIFIER"
+	LET        TokenType = "LET"
 
 	NUMBER TokenType = "NUMBER"
 	STRING TokenType = "STRING"
@@ -121,6 +122,8 @@ var dual = map[string]TokenType{
 }
 
 var specialIdents = map[string]TokenType{
+	"let": LET,
+
 	"function": FUNCTION,
 	"lambda":   LAMBDA,
 	"method":   METHOD,
@@ -146,6 +149,6 @@ var specialIdents = map[string]TokenType{
 
 	"true":  TRUE,
 	"false": FALSE,
-	
-	"nil":   NIL,
+
+	"nil": NIL,
 }

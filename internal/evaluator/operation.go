@@ -5,7 +5,7 @@ import (
 	"math"
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
-	"wildscript/internal/logger"
+	"wildscript/internal/lib"
 )
 
 func evalBinary[T any](
@@ -16,27 +16,20 @@ func evalBinary[T any](
 	if f, ok := ops[node.Operator]; ok {
 		obj, err := f(left, right)
 		if err != nil {
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"%s: %s",
-					err.Error(),
-					node.Operator,
-				),
+			lib.Die(
+				node.Token,
+				err.Error(),
 			)
 		}
 		return obj
 	}
 
-	panic(
-		logger.Slog(
-			node.Token.Line,
-			node.Token.Column,
-			"unsupported operator: %s",
-			node.Operator,
-		),
+	lib.Die(
+		node.Token,
+		"unsupported operator: %s",
+		node.Operator,
 	)
+	return nil
 }
 
 var numOps = map[string]func(left, right float64) (enviroment.Object, error){
@@ -98,10 +91,10 @@ var boolOps = map[string]func(left, right bool) (enviroment.Object, error){
 	"!=": func(left, right bool) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left != right}, nil
 	},
-	"||": func(left, right bool) (enviroment.Object, error) {
+	"and": func(left, right bool) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left || right}, nil
 	},
-	"&&": func(left, right bool) (enviroment.Object, error) {
+	"or": func(left, right bool) (enviroment.Object, error) {
 		return &enviroment.Bool{Value: left && right}, nil
 	},
 }

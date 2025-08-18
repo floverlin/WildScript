@@ -2,9 +2,10 @@ package evaluator
 
 import (
 	"errors"
+	"fmt"
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
-	"wildscript/internal/logger"
+	"wildscript/internal/lib"
 )
 
 func (e *Evaluator) evalAssignStatement(
@@ -17,20 +18,16 @@ func (e *Evaluator) evalAssignStatement(
 	switch left := stmt.Left.(type) {
 	case *ast.Identifier:
 		result, err = e.evalIdentifierAssign(left, right)
-	case *ast.PropertyAccessExpression:
+	case *ast.PropertyExpression:
 		result, err = e.evalPropertyAssign(left, right)
 	case *ast.IndexExpression:
 		result, err = e.evalIndexAssign(left, right)
+	case *ast.KeyExpression:
+		result, err = e.evalKeyAssign(left, right)
 	}
 
 	if err != nil {
-		panic(
-			logger.Slog(
-				stmt.Token.Line,
-				stmt.Token.Column,
-				"%s", err.Error(),
-			),
-		)
+		lib.Die(stmt.Token, err.Error())
 	}
 
 	return result
@@ -40,64 +37,84 @@ func (e *Evaluator) evalIdentifierAssign(
 	left *ast.Identifier,
 	value enviroment.Object,
 ) (enviroment.Object, error) {
-	if left.IsRune {
-		result := e.env.SetRune(left.Value, value)
-		return result, nil
+	result, ok := e.env.Set(left.Value, value)
+	if !ok {
+		return nil, fmt.Errorf(
+			"variable %s already exists",
+			left.Value,
+		)
 	}
-	if left.IsOuter {
-		result, ok := e.env.SetOuter(left.Value, value)
-		if !ok {
-			return nil, errors.New("undefined variable")
-		}
-		return result, nil
-	} else {
-		result := e.env.Set(left.Value, value)
-		return result, nil
-	}
+	return result, nil
 }
 
 func (e *Evaluator) evalPropertyAssign(
-	left *ast.PropertyAccessExpression,
+	left *ast.PropertyExpression,
 	value enviroment.Object,
 ) (enviroment.Object, error) {
-	obj := e.Eval(left.Object)
+	object := e.Eval(left.Left)
 	prop := left.Property.Value
-	if obj.Type() != enviroment.OBJ_TYPE {
-		return nil, errors.New("assign property to non obj type")
+
+	if object.Type() != enviroment.DOC {
+		return nil, errors.New("assign property to non doc type")
 	}
 
-	if left.Property.IsOuter {
-		panic(
-			logger.Slog(
-				left.Token.Line,
-				left.Token.Column,
-				"outer property not exists",
-			),
-		)
-	}
+	object.(*enviroment.Doc).Elements[prop] = value
 
-	if left.Property.IsRune {
-		obj.(*enviroment.Obj).Runes[prop] = value
-	} else {
-		obj.(*enviroment.Obj).Fields[prop] = value
-	}
-
-	return obj, nil
+	return object, nil
 }
 
 func (e *Evaluator) evalIndexAssign(
 	left *ast.IndexExpression,
 	value enviroment.Object,
 ) (enviroment.Object, error) {
-	list := e.Eval(left.Left)
-	indexObj := e.Eval(left.Index)
-	if indexObj.Type() != enviroment.NUM_TYPE {
+	object := e.Eval(left.Left)
+	index := e.Eval(left.Index)
+
+	if object.Type() != enviroment.DOC {
+		return nil, errors.New("assign index to non doc type")
+	}
+
+	if index.Type() != enviroment.NUM {
 		return nil, errors.New("non num index type")
 	}
-	idx := int(indexObj.(*enviroment.Num).Value)
-	if list.Type() != enviroment.LIST_TYPE {
-		return nil, errors.New("assign index to non list type")
+
+	idx := int(index.(*enviroment.Num).Value)
+
+	if idx >= len(object.(*enviroment.Doc).List) {
+		return nil, errors.New("index out of range")
 	}
-	list.(*enviroment.List).Elements[idx] = value
-	return list, nil
+
+	object.(*enviroment.Doc).List[idx] = value
+	return object, nil
+}
+
+func (e *Evaluator) evalKeyAssign(
+	left *ast.KeyExpression,
+	value enviroment.Object,
+) (enviroment.Object, error) {
+	object := e.Eval(left.Left)
+	key := e.Eval(left.Key)
+
+	if object.Type() != enviroment.DOC {
+		return nil, errors.New("assign key to non doc type")
+	}
+
+	object.(*enviroment.Doc).Dict[key] = value
+	return object, nil
+}
+
+func (e *Evaluator) evalLetStatement(
+	stmt *ast.LetStatement,
+) enviroment.Object {
+	right := e.Eval(stmt.Right)
+
+	result, ok := e.env.Create(stmt.Left.Value, right)
+	if !ok {
+		lib.Die(
+			stmt.Token,
+			"variable %s already exists",
+			stmt.Left.Value,
+		)
+	}
+	return result
 }

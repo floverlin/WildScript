@@ -26,6 +26,17 @@ func (as *AssignStatement) String() string {
 	return fmt.Sprintf("%s = %s", as.Left.String(), as.Right.String())
 }
 
+type LetStatement struct {
+	Token lexer.Token
+	Left  *Identifier
+	Right Expression
+}
+
+func (ls *LetStatement) statementNode() {}
+func (ls *LetStatement) String() string {
+	return fmt.Sprintf("let %s = %s", ls.Left.String(), ls.Right.String())
+}
+
 type FunctionStatement struct {
 	Token      lexer.Token
 	Identifier *Identifier

@@ -61,15 +61,10 @@ func RunFile(fileName string) {
 	}
 
 	p := parser.New(c)
-	program := p.ParseProgram()
 
-	if len(p.Errors()) != 0 {
-		fmt.Printf(
-			"[parser] error: %s",
-			p.Errors()[0],
-		)
-		os.Exit(1)
-	}
+	defer wrapPanic()
+
+	program := p.ParseProgram()
 
 	if gs.Debug {
 		fmt.Print(
@@ -82,9 +77,7 @@ func RunFile(fileName string) {
 		)
 	}
 
-	e := evaluator.New(nil, nil, nil)
-
-	defer wrapPanic()
+	e := evaluator.New(nil)
 
 	if !gs.Debug {
 		e.Eval(program)
@@ -98,8 +91,8 @@ func RunFile(fileName string) {
 		fmt.Printf("%d >> %s\n", idx+1, obj.Inspect())
 	}
 	fmt.Printf(
-		"%s >> %s\n",
-		color.RedString("program result"),
+		"%s >>> %s\n",
+		color.RedString("[program result]"),
 		result.Inspect(),
 	)
 
@@ -111,7 +104,7 @@ func RunFile(fileName string) {
 
 func wrapPanic() {
 	if p := recover(); p != nil {
-		fmt.Printf("[wild] runtime error: %s\n", p)
+		fmt.Printf("runtime error: %s\n", p)
 		os.Exit(1)
 	}
 }

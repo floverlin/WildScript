@@ -3,77 +3,42 @@ package evaluator
 import (
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
-	"wildscript/internal/logger"
+	"wildscript/internal/lib"
 )
 
-func findObjectPropertry(
-	object enviroment.Object,
-	prop *ast.Identifier,
+func findDocumentPropertry(
+	document *enviroment.Doc,
+	prop string,
 ) enviroment.Object {
-	if object.Type() != enviroment.OBJ_TYPE {
-		return nil
+	if value, ok := document.Elements[prop]; ok {
+		return value
 	}
-	obj := object.(*enviroment.Obj)
-
-	if prop.IsRune {
-		if prop, ok := obj.Runes[prop.Value]; ok {
-			return prop
-		}
-	} else {
-		if prop, ok := obj.Fields[prop.Value]; ok {
-			return prop
-		}
-	}
-
-	if proto, ok := obj.Runes[enviroment.PROTO_RUNE]; ok {
-		return findObjectPropertry(proto, prop)
-	}
-
 	return nil
 }
 
-func (e *Evaluator) evalPropertyAccessExpression(
-	node *ast.PropertyAccessExpression,
+func (e *Evaluator) evalPropertyExpression(
+	node *ast.PropertyExpression,
 ) enviroment.Object {
-	object := e.Eval(node.Object)
-	propIdent := node.Property.Value
+	object := e.Eval(node.Left)
+	prop := node.Property.Value
 
-	if node.Property.IsOuter {
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"outer property not exists",
-			),
-		)
+	// find elem in doc
+	elem := findDocumentPropertry(
+		object.(*enviroment.Doc),
+		prop,
+	)
+
+	if elem != nil {
+		return elem
 	}
 
-	// find field in obj
-	prop := findObjectPropertry(object, node.Property)
-	if prop != nil {
-		if prop.Type() == enviroment.FUNC_TYPE {
-			prop := prop.(*enviroment.Func)
-			prop.Enviroment.SetRune(enviroment.SELF_RUNE, object)
-		}
-		return prop
-	}
-
-	// find base type method
-	method := enviroment.FindMethod(object, propIdent)
-
-	if method == nil {
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"property %s not exists in %s",
-				propIdent,
-				object.Type(),
-			),
-		)
-	}
-
-	return method
+	lib.Die(
+		node.Token,
+		"property %s not exists in %s",
+		prop,
+		object.Type(),
+	)
+	return nil
 }
 
 func (e *Evaluator) evalIndexExpression(
@@ -81,25 +46,34 @@ func (e *Evaluator) evalIndexExpression(
 ) enviroment.Object {
 	left := e.Eval(node.Left)
 	index := e.Eval(node.Index)
+	var idx int
 
-	if index.Type() != enviroment.NUM_TYPE {
-		panic("TODO")
+	if index, ok := index.(*enviroment.Num); ok {
+		idx = int(index.Value)
+	} else {
+		lib.Die(
+			node.Token,
+			"non num index",
+		)
 	}
-	idx := int(index.(*enviroment.Num).Value)
 
 	var result enviroment.Object
 
-	switch v := left.(type) {
+	switch object := left.(type) {
 	case *enviroment.Str:
-		sl := []rune(v.Value)
+		sl := []rune(object.Value)
 		symbol := sl[idx]
 		result = &enviroment.Str{
 			Value: string(symbol),
 		}
-	case *enviroment.List:
-		result = v.Elements[idx]
+	case *enviroment.Doc:
+		result = object.List[idx]
 	default:
-		panic("TODO")
+		lib.Die(
+			node.Token,
+			"unsupported index access for %s",
+			left.Type(),
+		)
 	}
 
 	return result
@@ -112,28 +86,35 @@ func (e *Evaluator) evalSliceExpression(
 	start := e.Eval(node.Start)
 	end := e.Eval(node.End)
 
-	if start.Type() != enviroment.NUM_TYPE ||
-		end.Type() != enviroment.NUM_TYPE {
-		panic("TODO")
+	if start.Type() != enviroment.NUM ||
+		end.Type() != enviroment.NUM {
+		lib.Die(
+			node.Token,
+			"non num index",
+		)
 	}
-	startVal := int(start.(*enviroment.Num).Value)
-	endVal := int(end.(*enviroment.Num).Value)
+	startIdx := int(start.(*enviroment.Num).Value)
+	endIdx := int(end.(*enviroment.Num).Value)
 
 	var result enviroment.Object
 
-	switch v := left.(type) {
+	switch object := left.(type) {
 	case *enviroment.Str:
-		sl := []rune(v.Value)
-		symbols := sl[startVal:endVal]
+		sl := []rune(object.Value)
+		symbols := sl[startIdx:endIdx]
 		result = &enviroment.Str{
 			Value: string(symbols),
 		}
-	case *enviroment.List:
-		return &enviroment.List{
-			Elements: v.Elements[startVal:endVal],
+	case *enviroment.Doc:
+		return &enviroment.Doc{
+			List: object.List[startIdx:endIdx],
 		}
 	default:
-		panic("TODO")
+		lib.Die(
+			node.Token,
+			"unsupported slice access for %s",
+			left.Type(),
+		)
 	}
 
 	return result

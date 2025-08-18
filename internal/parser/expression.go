@@ -253,10 +253,10 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 }
 
 // from (
-func (p *Parser) parseFunctionLiteral(funcType ast.FunctionType) *ast.FunctionLiteral {
+func (p *Parser) parseFunctionLiteral(funcImpl ast.FunctionImplementation) *ast.FunctionLiteral {
 	function := &ast.FunctionLiteral{
 		Token: p.curToken,
-		Type:  funcType,
+		Impl:  funcImpl,
 	}
 
 	function.Parameters = p.parseFunctionParameters() // include )

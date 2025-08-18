@@ -2,14 +2,13 @@
 
 ## types
 
-|   Flux   |   Go    |   JavaScript   |  Python   |   Lua    |
-| :------: | :-----: | :------------: | :-------: | :------: |
-| **nil**  |   nil   | null/undefined |   none    |   nil    |
-| **num**  | float64 |     number     |   float   |  number  |
-| **str**  | string  |     string     |    str    |  string  |
-| **bool** |  bool   |    boolean     |   bool    | boolean  |
-| **func** |  func   |    function    | function  | function |
-| **doc**  |   map   |     object     | list/dict |  table   |
+|   Flux   |   Go    |   JavaScript   |  Python   |   Lua   |
+| :------: | :-----: | :------------: | :-------: | :-----: |
+| **nil**  |   nil   | null/undefined |   none    |   nil   |
+| **num**  | float64 |     number     |   float   | number  |
+| **str**  | string  |     string     |    str    | string  |
+| **bool** |  bool   |    boolean     |   bool    | boolean |
+| **doc**  |   map   |     object     | list/dict |  table  |
 
 ## doc
 
