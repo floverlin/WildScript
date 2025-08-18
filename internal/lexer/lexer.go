@@ -4,10 +4,6 @@ import (
 	"strings"
 )
 
-type Tokenizer interface {
-	NextToken() Token
-}
-
 type Lexer struct {
 	input   []byte
 	pos     int

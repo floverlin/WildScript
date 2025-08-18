@@ -70,13 +70,13 @@ func (bs *BreakStatement) String() string {
 }
 
 type ImportStatement struct {
-	Token lexer.Token
-	Name  *Identifier
+	Token  lexer.Token
+	Module *Identifier
 }
 
 func (is *ImportStatement) statementNode() {}
 func (is *ImportStatement) String() string {
-	return fmt.Sprintf("import %s", is.Name.Value)
+	return fmt.Sprintf("import %s", is.Module.Value)
 }
 
 type ExportStatement struct {

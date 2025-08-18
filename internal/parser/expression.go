@@ -4,13 +4,6 @@ import (
 	"strconv"
 	"wildscript/internal/ast"
 	"wildscript/internal/lexer"
-	"wildscript/internal/logger"
-)
-
-const (
-	NONE  = "none"
-	RUNE  = "rune"
-	OUTER = "outer"
 )
 
 // not include ; or EOF
@@ -24,83 +17,34 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.nextToken() // to expr
 		expr = p.parseExpression(LOWEST)
 		if p.peekToken.Type != lexer.RPAREN {
-			p.errors = append(
-				p.errors,
-				logger.Slog(
-					p.peekToken.Line,
-					p.peekToken.Column,
-					"expected )",
-				),
-			)
-			return nil
+			die(p.peekToken, "expected )")
 		}
 		p.nextToken() // to )
 
-	case lexer.IDENT:
-		expr = p.parseIdentifier(NONE)
-	case lexer.AMPER:
-		if p.peekToken.Type != lexer.IDENT {
-			p.errors = append(
-				p.errors,
-				logger.Slog(
-					p.peekToken.Line,
-					p.peekToken.Column,
-					"expected identifier after &",
-				),
-			)
-			return nil
-		}
-		p.nextToken() // to identifier
-		expr = p.parseIdentifier(OUTER)
-	case lexer.DOG:
-		if p.peekToken.Type != lexer.IDENT {
-			p.errors = append(
-				p.errors,
-				logger.Slog(
-					p.peekToken.Line,
-					p.peekToken.Column,
-					"expected identifier after @",
-				),
-			)
-			return nil
-		}
-		p.nextToken() // to identifier
-		expr = p.parseIdentifier(RUNE)
+	case lexer.IDENTIFIER:
+		expr = p.parseIdentifier()
 
-	case lexer.FN:
+	case lexer.IF:
+		expr = p.parseIfExpression()
+
+	case lexer.LAMBDA:
 		p.nextToken() // to (
-		expr = p.parseFuncLiteral()
-	case lexer.LBRACKET:
-		expr = p.parseListLiteral()
-	case lexer.NEW:
-		if p.peekToken.Type != lexer.LBRACE {
-			p.errors = append(
-				p.errors,
-				logger.Slog(
-					p.peekToken.Line,
-					p.peekToken.Column,
-					"expected { after new",
-				),
-			)
-			return nil
-		}
-		p.nextToken() // to {
-		expr = p.parseObjectLiteral()
+		expr = p.parseFunctionLiteral(ast.LAMBDA)
+	case lexer.METHOD:
+		p.nextToken() // to (
+		expr = p.parseFunctionLiteral(ast.METHOD)
+	case lexer.LBRACE:
+		expr = p.parseDocumentLiteral()
 	case lexer.NUMBER:
 		value, err := strconv.ParseFloat(p.curToken.Literal, 64)
 		if err != nil {
-			p.errors = append(
-				p.errors,
-				logger.Slog(
-					p.curToken.Line,
-					p.curToken.Column,
-					"could not parse %s as float",
-					p.curToken.Literal,
-				),
+			die(
+				p.curToken,
+				"could not parse %s as number",
+				p.curToken.Literal,
 			)
-			return nil
 		}
-		expr = &ast.FloatLiteral{Token: p.curToken, Value: value}
+		expr = &ast.NumberLiteral{Token: p.curToken, Value: value}
 	case lexer.STRING:
 		expr = &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
 	case lexer.TRUE:
@@ -110,35 +54,26 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	case lexer.NIL:
 		expr = &ast.NilLiteral{Token: p.curToken}
 	default:
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.curToken.Line,
-				p.curToken.Column,
-				"unexpected token: %s",
-				p.curToken.Literal,
-			),
+		die(
+			p.curToken,
+			"unexpected token: %s",
+			p.curToken.Literal,
 		)
-		return nil
 	}
 
-	for p.peekToken.Type != lexer.SEMICOLON &&
-		p.peekToken.Type != lexer.EOF &&
-		precedence < p.peekPrecedence() {
+	for precedence < p.peekPrecedence() {
 
 		p.nextToken() // to op
 
 		switch p.curToken.Type {
 		case lexer.DOT:
-			expr = p.parsePropertyAccessExpression(expr)
+			expr = p.parsePropertyExpression(expr)
 		case lexer.LBRACKET:
 			expr = p.parseBracketExpression(expr)
 		case lexer.LPAREN:
 			expr = p.parseCallExpression(expr)
 		case lexer.LBRACE:
-			expr = p.parseForExpression(expr)
-		case lexer.QUESTION:
-			expr = p.parseConditionExpression(expr)
+			expr = p.parseKeyExpression(expr)
 		default:
 			expr = p.parseInfixExpression(expr)
 		}
@@ -147,114 +82,75 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseIdentifier(identType string) *ast.Identifier {
-	var isOuter, isRune bool
-
-	switch identType {
-	case "rune":
-		isRune = true
-	case "outer":
-		isOuter = true
-	}
-
+func (p *Parser) parseIdentifier() *ast.Identifier {
 	expr := &ast.Identifier{
-		Token:   p.curToken,
-		Value:   p.curToken.Literal,
-		IsOuter: isOuter,
-		IsRune:  isRune,
+		Token: p.curToken,
+		Value: p.curToken.Literal,
 	}
 
 	return expr
 }
 
-func (p *Parser) parseConditionExpression(
-	cond ast.Expression,
-) *ast.ConditionExpression {
-	expr := &ast.ConditionExpression{
-		Token:     p.curToken,
-		Condition: cond,
+func (p *Parser) parseIfExpression() *ast.IfExpression {
+	expr := &ast.IfExpression{
+		Token: p.curToken,
 	}
 
+	p.nextToken() // to cond
+	expr.If = p.parseExpression(LOWEST)
+
 	if p.peekToken.Type != lexer.LBRACE {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected {",
-			),
-		)
-		return nil
+		p.expected("{")
 	}
 
 	p.nextToken() // to {
-	expr.Consequence = p.parseBlockExpression()
+	expr.Then = p.parseBlockExpression()
 
-	if p.peekToken.Type != lexer.COLON {
-		expr.Alternative = newNilBlockExpression(p.peekToken)
+	if p.peekToken.Type != lexer.ELSE {
+		expr.Else = newNilBlockExpression(p.peekToken)
 		return expr
 	}
 
-	p.nextToken() // to :
+	p.nextToken() // to else
 	p.nextToken() // to expr
-	expr.Alternative = p.parseExpression(LOWEST)
+	expr.Else = p.parseExpression(LOWEST)
 
 	return expr
 }
 
-func (p *Parser) parseForExpression(
-	cond ast.Expression,
-) *ast.ForExpression {
-	expr := &ast.ForExpression{
-		Token:     p.curToken,
-		Condition: cond,
-	}
-
-	expr.Body = p.parseBlockExpression() // include }
-
-	return expr
-}
-
-func (p *Parser) parsePropertyAccessExpression(
+func (p *Parser) parsePropertyExpression(
 	left ast.Expression,
-) *ast.PropertyAccessExpression {
-	expr := &ast.PropertyAccessExpression{
-		Token:  p.curToken,
-		Object: left,
+) *ast.PropertyExpression {
+	expr := &ast.PropertyExpression{
+		Token: p.curToken,
+		Left:  left,
 	}
+
+	if p.peekToken.Type != lexer.IDENTIFIER {
+		p.expected("property")
+	}
+
 	p.nextToken() // to prop
+	expr.Property = p.parseIdentifier()
 
-	var prop *ast.Identifier
-	switch p.curToken.Type {
-	case lexer.IDENT:
-		prop = p.parseIdentifier(NONE)
-	case lexer.DOG:
-		if p.peekToken.Type != lexer.IDENT {
-			p.errors = append(
-				p.errors,
-				logger.Slog(
-					p.peekToken.Line,
-					p.peekToken.Column,
-					"expected identifier after @",
-				),
-			)
-			return nil
-		}
-		p.nextToken() // to identifier
-		prop = p.parseIdentifier(RUNE)
-	default:
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected identifier after .",
-			),
-		)
-		return nil
+	return expr
+}
+
+func (p *Parser) parseKeyExpression(
+	left ast.Expression,
+) *ast.KeyExpression {
+	expr := &ast.KeyExpression{
+		Token: p.curToken,
+		Left:  left,
+	}
+	p.nextToken() // to key
+	expr.Key = p.parseExpression(LOWEST)
+
+	if p.peekToken.Type != lexer.RBRACE {
+		p.expected("}")
 	}
 
-	expr.Property = prop
+	p.nextToken() // to }
 	return expr
 }
 
@@ -287,15 +183,7 @@ func (p *Parser) parseBracketExpression(
 	}
 
 	if p.peekToken.Type != lexer.RBRACKET {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected ]",
-			),
-		)
-		return nil
+		p.expected("]")
 	}
 
 	p.nextToken() // to ]
@@ -357,15 +245,7 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	}
 
 	if p.peekToken.Type != lexer.RPAREN {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected )",
-			),
-		)
-		return nil
+		p.expected(")")
 	}
 
 	p.nextToken() // to )
@@ -373,35 +253,16 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 }
 
 // from (
-func (p *Parser) parseFuncLiteral() *ast.FuncLiteral {
-	function := &ast.FuncLiteral{
+func (p *Parser) parseFunctionLiteral(funcType ast.FunctionType) *ast.FunctionLiteral {
+	function := &ast.FunctionLiteral{
 		Token: p.curToken,
+		Type:  funcType,
 	}
 
-	if p.curToken.Type != lexer.LPAREN {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.curToken.Line,
-				p.curToken.Column,
-				"expected (",
-			),
-		)
-		return nil
-	}
-
-	function.Parameters = p.parseFuncParameters() // include )
+	function.Parameters = p.parseFunctionParameters() // include )
 
 	if p.peekToken.Type != lexer.LBRACE {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected {",
-			),
-		)
-		return nil
+		p.expected("{")
 	}
 
 	p.nextToken() // to {
@@ -410,7 +271,7 @@ func (p *Parser) parseFuncLiteral() *ast.FuncLiteral {
 	return function
 }
 
-func (p *Parser) parseFuncParameters() []*ast.Identifier {
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	params := []*ast.Identifier{}
 
 	if p.peekToken.Type == lexer.RPAREN {
@@ -418,28 +279,27 @@ func (p *Parser) parseFuncParameters() []*ast.Identifier {
 		return params
 	}
 
+	if p.peekToken.Type != lexer.IDENTIFIER {
+		p.expected("parameter")
+	}
+
 	p.nextToken() // to ident
-	params = append(params, p.parseIdentifier(NONE))
+	params = append(params, p.parseIdentifier())
 
 	for {
 		if p.peekToken.Type != lexer.COMMA {
 			break
 		}
 		p.nextToken() // to ,
+		if p.peekToken.Type != lexer.IDENTIFIER {
+			p.expected("parameter")
+		}
 		p.nextToken() // to ident
-		params = append(params, p.parseIdentifier(NONE))
+		params = append(params, p.parseIdentifier())
 	}
 
 	if p.peekToken.Type != lexer.RPAREN {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected )",
-			),
-		)
-		return nil
+		p.expected(")")
 	}
 
 	p.nextToken() // to )
@@ -467,125 +327,62 @@ func (p *Parser) parseBlockExpression() *ast.BlockExpression {
 	return block
 }
 
-func (p *Parser) parseListLiteral() *ast.ListLiteral {
-	lit := &ast.ListLiteral{
+func (p *Parser) parseDocumentLiteral() *ast.DocumentLiteral {
+	lit := &ast.DocumentLiteral{
 		Token: p.curToken,
 	}
-	elems := []ast.Expression{}
+	elems := []*ast.DocumentElement{}
 
-	if p.peekToken.Type == lexer.RBRACKET {
-		p.nextToken() // to ]
+	if p.peekToken.Type == lexer.RBRACE {
+		p.nextToken() // to }
 		lit.Elements = elems
 		return lit
 	}
 
 	p.nextToken() // to elem
-	elems = append(elems, p.parseExpression(LOWEST))
+
+	elems = append(elems, p.parseDocumentElement())
 
 	for p.peekToken.Type == lexer.COMMA {
 		p.nextToken() // to ,
 		p.nextToken() // to elem
-
-		elems = append(elems, p.parseExpression(LOWEST))
+		elems = append(elems, p.parseDocumentElement())
 	}
 
-	if p.peekToken.Type != lexer.RBRACKET {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected ]",
-			),
-		)
-		return nil
+	if p.peekToken.Type != lexer.RBRACE {
+		p.expected("}")
 	}
 
-	p.nextToken() // to ]
+	p.nextToken() // to }
 	lit.Elements = elems
 	return lit
 }
 
-func (p *Parser) parseObjectLiteral() *ast.ObjectLiteral {
-	lit := &ast.ObjectLiteral{
+func (p *Parser) parseDocumentElement() *ast.DocumentElement {
+	elem := &ast.DocumentElement{
 		Token: p.curToken,
 	}
-	fields := []*ast.ObjectField{}
 
-	if p.peekToken.Type == lexer.RBRACE {
-		p.nextToken() // to }
-		lit.Fields = fields
-		return lit
-	}
+	left := p.parseExpression(LOWEST)
 
-	p.nextToken() // to field
-
-	fields = append(fields, p.parseObjectField())
-
-	for p.peekToken.Type == lexer.COMMA {
+	switch p.peekToken.Type {
+	case lexer.COMMA:
+		elem.Type = ast.LIST
+		elem.Value = left
 		p.nextToken() // to ,
-		p.nextToken() // to field
-		fields = append(fields, p.parseObjectField())
+	case lexer.ASSIGN:
+		p.nextToken() // to =
+		p.nextToken() // to value
+		elem.Type = ast.PROP
+		elem.Key = left
+		elem.Value = p.parseExpression(LOWEST)
+	case lexer.COLON:
+		p.nextToken() // to :
+		p.nextToken() // to value
+		elem.Type = ast.DICT
+		elem.Key = left
+		elem.Value = p.parseExpression(LOWEST)
 	}
 
-	if p.peekToken.Type != lexer.RBRACE {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected }",
-			),
-		)
-		return nil
-	}
-
-	p.nextToken() // to }
-	lit.Fields = fields
-	return lit
-}
-
-func (p *Parser) parseObjectField() *ast.ObjectField {
-	identType := NONE
-
-	if p.curToken.Type == lexer.DOG {
-		p.nextToken() // to ident
-		identType = RUNE
-	}
-
-	if p.curToken.Type != lexer.IDENT {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.curToken.Line,
-				p.curToken.Column,
-				"expected idetifier",
-			),
-		)
-		return nil
-	}
-
-	key := p.parseIdentifier(identType)
-
-	if p.peekToken.Type != lexer.COLON {
-		p.errors = append(
-			p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected :",
-			),
-		)
-		return nil
-	}
-
-	p.nextToken() // to :
-	p.nextToken() // to value
-
-	value := p.parseExpression(LOWEST)
-
-	return &ast.ObjectField{
-		Key:   key,
-		Value: value,
-	}
+	return elem
 }

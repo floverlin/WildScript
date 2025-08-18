@@ -1,19 +1,22 @@
 package parser
 
 import (
+	"fmt"
 	"wildscript/internal/ast"
 	"wildscript/internal/lexer"
-	"wildscript/internal/logger"
 )
 
-type Parser struct {
-	lexer     lexer.Tokenizer
-	curToken  lexer.Token
-	peekToken lexer.Token
-	errors    []string
+type Tokenizer interface {
+	NextToken() lexer.Token
 }
 
-func New(lexer lexer.Tokenizer) *Parser {
+type Parser struct {
+	lexer     Tokenizer
+	curToken  lexer.Token
+	peekToken lexer.Token
+}
+
+func New(lexer Tokenizer) *Parser {
 	p := &Parser{lexer: lexer}
 	p.nextToken() // fill peek
 	p.nextToken() // fill cur
@@ -27,7 +30,6 @@ func (p *Parser) nextToken() {
 
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
-	program.Statements = []ast.Statement{}
 
 	for {
 		stmt := p.parseStatement() // include ; or EOF
@@ -51,90 +53,88 @@ func (p *Parser) parseStatement() ast.Statement {
 	}
 
 	var stmt ast.Statement
-	token := p.curToken
 
-	if p.curToken.Type == lexer.RETURN {
+	switch p.curToken.Type {
+	case lexer.IMPORT:
+		importStmt := &ast.ImportStatement{Token: p.curToken}
+		if p.peekToken.Type != lexer.IDENTIFIER {
+			p.expected("expected module identifier")
+		}
+		p.nextToken() // to ident
+		importStmt.Module = p.parseIdentifier()
+		stmt = importStmt
+	case lexer.EXPORT:
+	case lexer.RETURN:
 		if p.peekToken.Type == lexer.SEMICOLON ||
+			p.peekToken.Type == lexer.RBRACE ||
 			p.peekToken.Type == lexer.EOF {
 			stmt = &ast.ReturnStatement{
-				Token: token,
+				Token: p.curToken,
 				Value: &ast.NilLiteral{
-					Token: token,
+					Token: p.peekToken,
 				},
 			}
 		} else {
-			p.nextToken() // to expr
-			stmt = &ast.ReturnStatement{
-				Token: token,
-				Value: p.parseExpression(LOWEST),
+			returnStmt := &ast.ReturnStatement{
+				Token: p.curToken,
 			}
+			p.nextToken() // to expr
+			returnStmt.Value = p.parseExpression(LOWEST)
+			stmt = returnStmt
 		}
-	} else if p.curToken.Type == lexer.CONTINUE {
-		stmt = &ast.ContinueStatement{
-			Token: token,
-		}
-
-	} else if p.curToken.Type == lexer.USE {
-		useStmt := &ast.UseStatement{Token: p.curToken}
-		if p.peekToken.Type != lexer.IDENT {
-			p.errors = append(p.errors,
-				logger.Slog(
-					p.peekToken.Line,
-					p.peekToken.Column,
-					"expected module identifier",
-				),
-			)
-			return nil
-		}
-		p.nextToken() // to ident
-		useStmt.Name = p.parseIdentifier(NONE)
-		stmt = useStmt
-
-	} else if p.curToken.Type == lexer.FN &&
-		p.peekToken.Type == lexer.IDENT {
-		p.nextToken() // to ident
-		funcStmt := &ast.FuncStatement{
+	case lexer.BREAK:
+		stmt = &ast.BreakStatement{
 			Token: p.curToken,
 		}
-		funcStmt.Identifier = p.parseIdentifier(NONE)
+	case lexer.CONTINUE:
+		stmt = &ast.ContinueStatement{
+			Token: p.curToken,
+		}
+	case lexer.FUNCTION:
+		if p.peekToken.Type != lexer.IDENTIFIER {
+			p.expected("function identifier")
+		}
+		funcStmt := &ast.FunctionStatement{
+			Token: p.curToken,
+		}
+		p.nextToken() // to ident
+		funcStmt.Identifier = p.parseIdentifier()
+		if p.peekToken.Type != lexer.LPAREN {
+			p.expected("(")
+		}
 		p.nextToken() // to (
-		funcStmt.Function = p.parseFuncLiteral()
+		funcStmt.Function = p.parseFunctionLiteral(ast.FUNCTION)
 		stmt = funcStmt
-	} else {
-		expr := p.parseExpression(LOWEST) // not include ; or EOF
+	}
 
+	if stmt == nil {
+		token := p.curToken
+		expr := p.parseExpression(LOWEST) // not include ; or EOF
 		if p.peekToken.Type == lexer.ASSIGN {
 			p.nextToken() // to =
-			assign := &ast.AssignStatement{
-				Token: token,
+			assignStmt := &ast.AssignStatement{
+				Token: p.curToken,
 				Left:  expr,
 			}
-
-			p.nextToken()                      // to right expr
-			right := p.parseExpression(LOWEST) // not include ; or EOF
-			assign.Right = right
-
-			stmt = assign
+			p.nextToken()                                // to right expr
+			assignStmt.Right = p.parseExpression(LOWEST) // not include ; or EOF
+			stmt = assignStmt
 		} else {
 			stmt = &ast.ExpressionStatement{
 				Token:      token,
 				Expression: expr,
 			}
 		}
+	}
 
+	if stmt == nil {
+		die(p.curToken, "nil statement")
 	}
 
 	if p.peekToken.Type != lexer.SEMICOLON &&
 		p.peekToken.Type != lexer.EOF &&
 		p.peekToken.Type != lexer.RBRACE {
-		p.errors = append(p.errors,
-			logger.Slog(
-				p.peekToken.Line,
-				p.peekToken.Column,
-				"expected ;",
-			),
-		)
-		return nil
+		p.expected("; or }")
 	}
 
 	p.nextToken() // to ; or EOF
@@ -155,8 +155,23 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
-func (p *Parser) Errors() []string {
-	return p.errors
+func die(token lexer.Token, text string, args ...any) {
+	if len(args) > 0 {
+		text = fmt.Sprintf(text, args...)
+	}
+	text = fmt.Sprintf(
+		"[parser] %s at line %d column %d",
+		text,
+		token.Line,
+		token.Column,
+	)
+
+	panic(text)
+}
+
+func (p *Parser) expected(text string) {
+	text = "expected " + text
+	die(p.peekToken, text)
 }
 
 func newNilBlockExpression(token lexer.Token) *ast.BlockExpression {

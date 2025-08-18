@@ -96,7 +96,8 @@ func (fl *FunctionLiteral) String() string {
 }
 
 type DocumentElement struct {
-	Key   *Identifier
+	Token lexer.Token
+	Key   Expression
 	Type  ElementType
 	Value Expression
 }
