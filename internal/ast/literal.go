@@ -7,31 +7,39 @@ import (
 	"wildscript/internal/lexer"
 )
 
+type ElementType int
+type FunctionType string
+
+const (
+	LIST ElementType = iota
+	PROP
+	DICT
+)
+
+const (
+	FUNCTION FunctionType = "function"
+	LAMBDA   FunctionType = "lambda"
+	METHOD   FunctionType = "method"
+)
+
 type Identifier struct {
-	Token   lexer.Token
-	Value   string
-	IsOuter bool
-	IsRune  bool
+	Token lexer.Token
+	Value string
 }
 
 func (i *Identifier) expressionNode() {}
 func (i *Identifier) String() string {
-	if i.IsOuter {
-		return "&" + i.Value
-	} else if i.IsRune {
-		return "@" + i.Value
-	}
 	return i.Value
 }
 
-type FloatLiteral struct {
+type NumberLiteral struct {
 	Token lexer.Token
 	Value float64
 }
 
-func (fl *FloatLiteral) expressionNode() {}
-func (fl *FloatLiteral) String() string {
-	return strconv.FormatFloat(fl.Value, 'g', -1, 64)
+func (nl *NumberLiteral) expressionNode() {}
+func (nl *NumberLiteral) String() string {
+	return strconv.FormatFloat(nl.Value, 'g', -1, 64)
 }
 
 type StringLiteral struct {
@@ -63,74 +71,72 @@ func (nl *NilLiteral) String() string {
 	return "nil"
 }
 
-type FuncLiteral struct {
+type FunctionLiteral struct {
 	Token      lexer.Token
 	Parameters []*Identifier
 	Body       *BlockExpression
+	Type       FunctionType
 }
 
-func (fl *FuncLiteral) expressionNode() {}
-func (fl *FuncLiteral) String() string {
-	var out strings.Builder
-	out.WriteString("fn(")
+func (fl *FunctionLiteral) expressionNode() {}
+func (fl *FunctionLiteral) String() string {
+	var sb strings.Builder
+	if fl.Type != FUNCTION {
+		sb.WriteString(string(fl.Type))
+	}
+	sb.WriteString("(")
 	for idx, param := range fl.Parameters {
-		out.WriteString(param.String())
+		sb.WriteString(param.String())
 		if idx != len(fl.Parameters)-1 {
-			out.WriteString(", ")
+			sb.WriteString(", ")
 		}
 	}
-	out.WriteString(") " + fl.Body.String())
-	return out.String()
+	sb.WriteString(") " + fl.Body.String())
+	return sb.String()
 }
 
-type ListLiteral struct {
-	Token    lexer.Token
-	Elements []Expression
-}
-
-func (ll *ListLiteral) expressionNode() {}
-func (ll *ListLiteral) String() string {
-	var out strings.Builder
-	out.WriteByte('[')
-	for idx, elem := range ll.Elements {
-		out.WriteString(elem.String())
-		if idx != len(ll.Elements)-1 {
-			out.WriteString(", ")
-		}
-	}
-	out.WriteByte(']')
-	return out.String()
-}
-
-type ObjectField struct {
+type DocumentElement struct {
 	Key   *Identifier
+	Type  ElementType
 	Value Expression
 }
 
-type ObjectLiteral struct {
-	Token  lexer.Token
-	Fields []*ObjectField
+func (de *DocumentElement) String() string {
+	switch de.Type {
+	case PROP:
+		return fmt.Sprintf(
+			"%s = %s",
+			de.Key.String(),
+			de.Value.String(),
+		)
+	case LIST:
+		return de.Value.String()
+	case DICT:
+		return fmt.Sprintf(
+			"%s: %s",
+			de.Key.String(),
+			de.Value.String(),
+		)
+	default:
+		return "error"
+	}
 }
 
-func (ol *ObjectLiteral) expressionNode() {}
-func (ol *ObjectLiteral) String() string {
-	var out strings.Builder
-	out.WriteString("{ ")
-	for idx, field := range ol.Fields {
-		if idx != 0 {
-			out.WriteString("    ")
-		}
-		out.WriteString(
-			fmt.Sprintf(
-				"%s: %s",
-				field.Key.String(),
-				field.Value.String(),
-			),
-		)
-		if idx != len(ol.Fields)-1 {
-			out.WriteString(",\n")
+type DocumentLiteral struct {
+	Token    lexer.Token
+	Elements []*DocumentElement
+}
+
+func (dl *DocumentLiteral) expressionNode() {}
+func (dl *DocumentLiteral) String() string {
+	var sb strings.Builder
+	sb.WriteString("{")
+	for idx, elem := range dl.Elements {
+		sb.WriteString(elem.String())
+		if idx != len(dl.Elements)-1 {
+			sb.WriteString(", ")
 		}
 	}
-	out.WriteString(" }")
-	return out.String()
+	sb.WriteString("}")
+	return sb.String()
 }

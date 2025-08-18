@@ -8,11 +8,7 @@ type Collector struct {
 }
 
 func NewCollector(lexer *Lexer) *Collector {
-	c := &Collector{
-		lexer:  lexer,
-		tokens: []Token{},
-		pos:    0,
-	}
+	c := &Collector{lexer: lexer}
 	c.collect()
 	return c
 }

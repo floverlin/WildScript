@@ -21,16 +21,12 @@ type Program struct {
 }
 
 func (p *Program) String() string {
-	var out strings.Builder
+	var sb strings.Builder
 	for idx, stmt := range p.Statements {
-		out.WriteString(stmt.String())
+		sb.WriteString(stmt.String())
 		if idx != len(p.Statements)-1 {
-			out.WriteByte('\n')
+			sb.WriteString("\n")
 		}
 	}
-	return out.String()
-}
-
-func joiner(args ...string) string {
-	return strings.Join(args, " ")
+	return sb.String()
 }

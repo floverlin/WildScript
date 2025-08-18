@@ -54,9 +54,9 @@ func (l *Lexer) peekChar() byte {
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' ||
+		l.ch == '\r' ||
 		l.ch == '\n' ||
-		l.ch == '\t' ||
-		l.ch == '\r' {
+		l.ch == '\t' {
 		l.readChar()
 	}
 }
@@ -97,7 +97,7 @@ func (l *Lexer) NextToken() Token {
 }
 
 func (l *Lexer) readString() Token {
-	line, col := l.line, l.column
+	line, column := l.line, l.column
 	l.readChar()
 	var sb strings.Builder
 	for l.ch != '"' {
@@ -117,17 +117,17 @@ func (l *Lexer) readString() Token {
 
 		if l.peekChar() == 0 {
 			l.readChar()
-			return newToken(ILLEGAL, sb.String(), line, col)
+			return newToken(ILLEGAL, sb.String(), line, column)
 		}
 
 		l.readChar()
 	}
 	l.readChar()
-	return newToken(STRING, sb.String(), line, col)
+	return newToken(STRING, sb.String(), line, column)
 }
 
 func (l *Lexer) readNumber() Token {
-	line, col := l.line, l.column
+	line, column := l.line, l.column
 	start := l.pos
 	var dots int
 	for isDigit(l.ch) || l.ch == '.' {
@@ -137,27 +137,27 @@ func (l *Lexer) readNumber() Token {
 		l.readChar()
 	}
 	if dots > 1 {
-		return newToken(ILLEGAL, string(l.input[start:l.pos]), line, col)
+		return newToken(ILLEGAL, string(l.input[start:l.pos]), line, column)
 	}
-	return newToken(NUMBER, string(l.input[start:l.pos]), line, col)
+	return newToken(NUMBER, string(l.input[start:l.pos]), line, column)
 }
 
 func (l *Lexer) readIdentifier() Token {
-	line, col := l.line, l.column
+	line, column := l.line, l.column
 	start := l.pos
-	for isDigit(l.ch) || isLetter(l.ch) || l.ch == '_' {
+	for isLetter(l.ch) || isDigit(l.ch) {
 		l.readChar()
 	}
 	literal := string(l.input[start:l.pos])
 	tokenType := lookupIdent(literal)
-	return newToken(tokenType, literal, line, col)
+	return newToken(tokenType, literal, line, column)
 }
 
 func lookupIdent(ident string) TokenType {
 	if identType, ok := specialIdents[ident]; ok {
 		return identType
 	}
-	return IDENT
+	return IDENTIFIER
 }
 
 func isDigit(c byte) bool {

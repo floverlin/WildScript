@@ -6,15 +6,38 @@ const (
 	ILLEGAL TokenType = "ILLEGAL"
 	EOF     TokenType = "EOF"
 
-	IDENT  TokenType = "IDENT"
+	IDENTIFIER TokenType = "IDENTIFIER"
+
 	NUMBER TokenType = "NUMBER"
 	STRING TokenType = "STRING"
-	TRUE   TokenType = "TRUE"
-	FALSE  TokenType = "FALSE"
-	NIL    TokenType = "NIL"
-	FN     TokenType = "FN"
-	NEW    TokenType = "NEW"
-	USE    TokenType = "USE"
+
+	FUNCTION TokenType = "FUNCTION"
+	LAMBDA   TokenType = "LAMBDA"
+	METHOD   TokenType = "METHOD"
+
+	IF   TokenType = "IF"
+	ELSE TokenType = "ELSE"
+
+	FOR    TokenType = "FOR"
+	WHILE  TokenType = "WHILE"
+	REPEAT TokenType = "REPEAT"
+	UNTIL  TokenType = "UNTIL"
+
+	RETURN   TokenType = "RETURN"
+	CONTINUE TokenType = "CONTINUE"
+	BREAK    TokenType = "BREAK"
+
+	IMPORT TokenType = "IMPORT"
+	EXPORT TokenType = "EXPORT"
+
+	AND TokenType = "AND"
+	OR  TokenType = "OR"
+	NOT TokenType = "NOT"
+
+	TRUE  TokenType = "TRUE"
+	FALSE TokenType = "FALSE"
+
+	NIL TokenType = "NIL"
 
 	DOT       TokenType = "."
 	DOG       TokenType = "@"
@@ -46,12 +69,8 @@ const (
 	LESS_EQ    TokenType = "<="
 	GREATER_EQ TokenType = ">="
 
-	AND TokenType = "&&"
-	OR  TokenType = "||"
-	NOT TokenType = "!"
-
-	RETURN   TokenType = "<-"
-	CONTINUE TokenType = "->"
+	LARROW TokenType = "<-"
+	RARROW TokenType = "->"
 )
 
 type Token struct {
@@ -90,8 +109,6 @@ var mono = map[byte]TokenType{
 
 	'<': LESS,
 	'>': GREATER,
-
-	'!': NOT,
 }
 
 var dual = map[string]TokenType{
@@ -101,19 +118,34 @@ var dual = map[string]TokenType{
 	"!=": NOT_EQUAL,
 	"<=": LESS_EQ,
 	">=": GREATER_EQ,
-
-	"&&": AND,
-	"||": OR,
-
-	"<-": RETURN,
-	"->": CONTINUE,
 }
 
 var specialIdents = map[string]TokenType{
+	"function": FUNCTION,
+	"lambda":   LAMBDA,
+	"method":   METHOD,
+
+	"if":   IF,
+	"else": ELSE,
+
+	"for":    FOR,
+	"while":  WHILE,
+	"repeat": REPEAT,
+	"until":  UNTIL,
+
+	"return":   RETURN,
+	"continue": CONTINUE,
+	"break":    BREAK,
+
+	"import": IMPORT,
+	"export": EXPORT,
+
+	"and": AND,
+	"or":  OR,
+	"not": NOT,
+
 	"true":  TRUE,
 	"false": FALSE,
+	
 	"nil":   NIL,
-	"fn":    FN,
-	"new":   NEW,
-	"use":   USE,
 }

@@ -23,19 +23,19 @@ type AssignStatement struct {
 
 func (as *AssignStatement) statementNode() {}
 func (as *AssignStatement) String() string {
-	return joiner(as.Left.String(), "=", as.Right.String())
+	return fmt.Sprintf("%s = %s", as.Left.String(), as.Right.String())
 }
 
-type FuncStatement struct {
+type FunctionStatement struct {
 	Token      lexer.Token
 	Identifier *Identifier
-	Function   *FuncLiteral
+	Function   *FunctionLiteral
 }
 
-func (fs *FuncStatement) statementNode() {}
-func (fs *FuncStatement) String() string {
+func (fs *FunctionStatement) statementNode() {}
+func (fs *FunctionStatement) String() string {
 	return fmt.Sprintf(
-		"%s => %s",
+		"function %s%s",
 		fs.Identifier.String(),
 		fs.Function.String(),
 	)
@@ -48,7 +48,7 @@ type ReturnStatement struct {
 
 func (rs *ReturnStatement) statementNode() {}
 func (rs *ReturnStatement) String() string {
-	return joiner("<-", rs.Value.String())
+	return fmt.Sprintf("return %s", rs.Value.String())
 }
 
 type ContinueStatement struct {
@@ -57,15 +57,34 @@ type ContinueStatement struct {
 
 func (cs *ContinueStatement) statementNode() {}
 func (cs *ContinueStatement) String() string {
-	return "->"
+	return "continue"
 }
 
-type UseStatement struct {
+type BreakStatement struct {
+	Token lexer.Token
+}
+
+func (bs *BreakStatement) statementNode() {}
+func (bs *BreakStatement) String() string {
+	return "break"
+}
+
+type ImportStatement struct {
 	Token lexer.Token
 	Name  *Identifier
 }
 
-func (us *UseStatement) statementNode() {}
-func (us *UseStatement) String() string {
-	return fmt.Sprintf("use %s", us.Name.Value)
+func (is *ImportStatement) statementNode() {}
+func (is *ImportStatement) String() string {
+	return fmt.Sprintf("import %s", is.Name.Value)
+}
+
+type ExportStatement struct {
+	Token lexer.Token
+	Value Expression
+}
+
+func (es *ExportStatement) statementNode() {}
+func (es *ExportStatement) String() string {
+	return fmt.Sprintf("export %s", es.Value.String())
 }

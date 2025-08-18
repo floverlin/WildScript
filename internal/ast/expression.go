@@ -15,7 +15,12 @@ type InfixExpression struct {
 
 func (ie *InfixExpression) expressionNode() {}
 func (ie *InfixExpression) String() string {
-	return joiner("(", ie.Left.String(), ie.Operator, ie.Right.String(), ")")
+	return fmt.Sprintf(
+		"(%s %s %s)",
+		ie.Left.String(),
+		ie.Operator,
+		ie.Right.String(),
+	)
 }
 
 type PrefixExpression struct {
@@ -26,7 +31,7 @@ type PrefixExpression struct {
 
 func (pe *PrefixExpression) expressionNode() {}
 func (pe *PrefixExpression) String() string {
-	return joiner("(", pe.Operator, pe.Right.String(), ")")
+	return fmt.Sprintf("(%s %s)", pe.Operator, pe.Right.String())
 }
 
 type CallExpression struct {
@@ -37,16 +42,16 @@ type CallExpression struct {
 
 func (ce *CallExpression) expressionNode() {}
 func (ce *CallExpression) String() string {
-	var out strings.Builder
-	out.WriteString(ce.Function.String() + "(")
+	var sb strings.Builder
+	sb.WriteString(ce.Function.String() + "(")
 	for idx, arg := range ce.Arguments {
-		out.WriteString(arg.String())
+		sb.WriteString(arg.String())
 		if idx != len(ce.Arguments)-1 {
-			out.WriteString(", ")
+			sb.WriteString(", ")
 		}
 	}
-	out.WriteByte(')')
-	return out.String()
+	sb.WriteString(")")
+	return sb.String()
 }
 
 type BlockExpression struct {
@@ -56,50 +61,63 @@ type BlockExpression struct {
 
 func (be *BlockExpression) expressionNode() {}
 func (be *BlockExpression) String() string {
-	var out strings.Builder
-	out.WriteString("{ ")
+	var sb strings.Builder
+	sb.WriteString("{")
 	for idx, stmt := range be.Statements {
-		if idx != 0 {
-			out.WriteString("    ")
-		}
-		out.WriteString(stmt.String())
+		sb.WriteString(stmt.String())
 		if idx != len(be.Statements)-1 {
-			out.WriteByte('\n')
+			sb.WriteString("; ")
 		}
 	}
-	out.WriteString(" }")
-	return out.String()
+	sb.WriteString("}")
+	return sb.String()
 }
 
-type ConditionExpression struct {
-	Token       lexer.Token
-	Condition   Expression
-	Consequence *BlockExpression
-	Alternative Expression
+type IfExpression struct {
+	Token lexer.Token
+	If    Expression
+	Then  *BlockExpression
+	Else  Expression
 }
 
-func (ce *ConditionExpression) expressionNode() {}
-func (ce *ConditionExpression) String() string {
-	return joiner(
-		ce.Condition.String(), "?",
-		ce.Consequence.String(), ":",
-		ce.Alternative.String(),
+func (ie *IfExpression) expressionNode() {}
+func (ie *IfExpression) String() string {
+	return fmt.Sprintf(
+		"if %s %s else %s",
+		ie.If.String(),
+		ie.Then.String(),
+		ie.Else.String(),
 	)
 }
 
 type ForExpression struct {
-	Token     lexer.Token
-	Condition Expression
-	Body      *BlockExpression
+	Token lexer.Token
 }
 
 func (fe *ForExpression) expressionNode() {}
-func (fe *ForExpression) String() string {
-	return joiner(
-		fe.Condition.String(),
-		fe.Body.String(),
+func (fe *ForExpression) String() string  { return "" }
+
+type UntilExpression struct {
+	Token lexer.Token
+}
+
+type WhileExpression struct {
+	Token lexer.Token
+	If    Expression
+	Loop  *BlockExpression
+}
+
+func (we *WhileExpression) expressionNode() {}
+func (we *WhileExpression) String() string {
+	return fmt.Sprintf(
+		"while %s %s",
+		we.If.String(),
+		we.Loop.String(),
 	)
 }
+
+func (ue *UntilExpression) expressionNode() {}
+func (ue *UntilExpression) String() string  { return "" }
 
 type IndexExpression struct {
 	Token lexer.Token
@@ -107,12 +125,12 @@ type IndexExpression struct {
 	Index Expression
 }
 
-func (is *IndexExpression) expressionNode() {}
-func (is *IndexExpression) String() string {
+func (ie *IndexExpression) expressionNode() {}
+func (ie *IndexExpression) String() string {
 	return fmt.Sprintf(
 		"%s[%s]",
-		is.Left.String(),
-		is.Index.String(),
+		ie.Left.String(),
+		ie.Index.String(),
 	)
 }
 
@@ -133,17 +151,32 @@ func (se *SliceExpression) String() string {
 	)
 }
 
-type PropertyAccessExpression struct {
-	Token lexer.Token
-	Object   Expression
+type PropertyExpression struct {
+	Token    lexer.Token
+	Left     Expression
 	Property *Identifier
 }
 
-func (pae *PropertyAccessExpression) expressionNode() {}
-func (pae *PropertyAccessExpression) String() string {
+func (pe *PropertyExpression) expressionNode() {}
+func (pe *PropertyExpression) String() string {
 	return fmt.Sprintf(
 		"%s.%s",
-		pae.Object.String(),
-		pae.Property.String(),
+		pe.Left.String(),
+		pe.Property.String(),
+	)
+}
+
+type KeyExpression struct {
+	Token lexer.Token
+	Left  Expression
+	Key   Expression
+}
+
+func (ke *KeyExpression) expressionNode() {}
+func (ke *KeyExpression) String() string {
+	return fmt.Sprintf(
+		"%s{%s}",
+		ke.Left.String(),
+		ke.Key.String(),
 	)
 }
