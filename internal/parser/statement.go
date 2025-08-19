@@ -28,13 +28,21 @@ func (p *Parser) parseStatement() ast.Statement {
 		}
 		p.nextToken() // to ident
 		letStmt.Left = p.parseIdentifier()
-		if p.peekToken.Type != lexer.ASSIGN {
-			p.expected("=")
+		
+		if p.peekToken.Type == lexer.SEMICOLON ||
+			p.peekToken.Type == lexer.EOF ||
+			p.peekToken.Type == lexer.RBRACE {
+			letStmt.Right = &ast.NilLiteral{Token: p.curToken}
+			stmt = letStmt
+		} else {
+			if p.peekToken.Type != lexer.ASSIGN {
+				p.expected("=")
+			}
+			p.nextToken() // to =
+			p.nextToken() // to expr
+			letStmt.Right = p.parseExpression(LOWEST)
+			stmt = letStmt
 		}
-		p.nextToken() // to =
-		p.nextToken() // to expr
-		letStmt.Right = p.parseExpression(LOWEST)
-		stmt = letStmt
 	case lexer.IMPORT:
 		importStmt := &ast.ImportStatement{Token: p.curToken}
 		if p.peekToken.Type != lexer.IDENTIFIER {

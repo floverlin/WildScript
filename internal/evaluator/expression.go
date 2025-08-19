@@ -99,6 +99,13 @@ func (e *Evaluator) evalPrefixExpression(
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
 ) enviroment.Object {
+	var self enviroment.Object
+	if prop, ok := node.Function.(*ast.PropertyExpression); ok {
+		self = e.Eval(prop.Left)
+	} else {
+		self = enviroment.GLOBAL_NIL
+	}
+
 	callable := e.Eval(node.Function)
 
 	if callable.Type() != enviroment.FUNCTION &&
@@ -118,12 +125,16 @@ func (e *Evaluator) evalCallExpression(
 
 	f := callable.(*enviroment.Function)
 
+	if f.Impl == ast.METHOD {
+		args = append([]enviroment.Object{self}, args...)
+	}
+
 	if len(args) != len(f.Parameters) {
 		lib.Die(
 			node.Token,
 			"function want %d argument(s) got %d",
-			len(args),
 			len(f.Parameters),
+			len(args),
 		)
 	}
 

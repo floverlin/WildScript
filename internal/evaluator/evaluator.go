@@ -117,7 +117,7 @@ func (e *Evaluator) EvalBlock(
 
 	blockEval := New(outer)
 	for key, val := range args {
-		blockEval.env.Set(key, val)
+		blockEval.env.Create(key, val)
 	}
 
 	for _, stmt := range block.Statements {
