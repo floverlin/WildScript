@@ -61,17 +61,27 @@ func (e *Evaluator) evalPrefixExpression(
 
 	switch node.Operator {
 	case "not":
-		switch v := right.(type) {
-		case *enviroment.Bool:
-			if !v.Value {
+		if boolObject, ok := right.(*enviroment.Bool); ok {
+			if !boolObject.Value {
 				return enviroment.GLOBAL_TRUE
 			} else {
 				return enviroment.GLOBAL_FALSE
 			}
-		default:
+		} else {
 			lib.Die(
 				node.Token,
 				"unsupperted not operand type %s",
+				right.Type(),
+			)
+			return nil
+		}
+	case "-":
+		if numObject, ok := right.(*enviroment.Num); ok {
+			return &enviroment.Num{Value: -numObject.Value}
+		} else {
+			lib.Die(
+				node.Token,
+				"unsupperted minus operand type %s",
 				right.Type(),
 			)
 			return nil

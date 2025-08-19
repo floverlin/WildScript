@@ -13,6 +13,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	switch p.curToken.Type {
 	case lexer.NOT:
 		expr = p.parsePrefixExpression()
+	case lexer.MINUS:
+		expr = p.parsePrefixExpression()
 	case lexer.LPAREN:
 		p.nextToken() // to expr
 		expr = p.parseExpression(LOWEST)
