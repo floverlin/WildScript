@@ -16,9 +16,7 @@ const (
 	STR  ObjectType = "str"
 	BOOL ObjectType = "bool"
 	DOC  ObjectType = "doc"
-
-	FUNCTION        ObjectType = "function"
-	NATIVE_FUNCTION ObjectType = "native_function"
+	FUNC ObjectType = "func"
 
 	SIGNAL ObjectType = "__signal"
 )

@@ -77,7 +77,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalDocumentLiteral(node)
 
 	case *ast.FunctionLiteral:
-		return &enviroment.Function{
+		return &enviroment.Func{
 			Parameters: node.Parameters,
 			Body:       node.Body,
 			Enviroment: e.env,

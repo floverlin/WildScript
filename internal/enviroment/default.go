@@ -16,6 +16,12 @@ var DefaultMeta = map[ObjectType]map[string]MetaFunc{
 }
 
 var boolMeta = map[string]MetaFunc{
+	"__not": func(self Object, args ...Object) (Object, error) {
+		if self.(*Bool).Value {
+			return GLOBAL_FALSE, nil
+		}
+		return GLOBAL_TRUE, nil
+	},
 	"__eq": func(self Object, args ...Object) (Object, error) {
 		left, right := self.(*Bool), args[0].(*Bool)
 		if left.Value != right.Value {
@@ -25,9 +31,9 @@ var boolMeta = map[string]MetaFunc{
 	},
 	"__str": func(self Object, args ...Object) (Object, error) {
 		if self.(*Bool).Value {
-			return &Str{Value: "false"}, nil
+			return &Str{Value: "true"}, nil
 		}
-		return &Str{Value: "true"}, nil
+		return &Str{Value: "false"}, nil
 	},
 }
 
@@ -88,6 +94,9 @@ var docMeta = map[string]MetaFunc{
 }
 
 var numMeta = map[string]MetaFunc{
+	"__unm": func(self Object, args ...Object) (Object, error) {
+		return &Num{Value: -self.(*Num).Value}, nil
+	},
 	"__add": func(self Object, args ...Object) (Object, error) {
 		left, right := self.(*Num), args[0].(*Num)
 		return &Num{Value: left.Value + right.Value}, nil

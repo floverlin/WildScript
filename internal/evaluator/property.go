@@ -6,47 +6,45 @@ import (
 	"wildscript/internal/lib"
 )
 
-func findDocumentPropertry(
-	document *enviroment.Doc,
-	prop string,
-) enviroment.Object {
-	if value, ok := document.Elements[prop]; ok {
-		return value
-	}
-	return nil
-}
-
 func (e *Evaluator) evalPropertyExpression(
 	node *ast.PropertyExpression,
 ) enviroment.Object {
 	object := e.Eval(node.Left)
-	prop := node.Property.Value
+	prop := &enviroment.Str{Value: node.Property.Value}
 
-	// find elem in doc
-	elem := findDocumentPropertry(
-		object.(*enviroment.Doc),
-		prop,
-	)
-
-	if elem != nil {
-		return elem
+	meta, ok := enviroment.DefaultMeta[object.Type()]
+	if !ok {
+		lib.Die(
+			node.Token,
+			"unsupported type",
+		)
 	}
 
-	lib.Die(
-		node.Token,
-		"property %s not exists in %s",
-		prop,
-		object.Type(),
-	)
-	return nil
+	f, ok := meta["__property"]
+	if !ok {
+		lib.Die(
+			node.Token,
+			"unsupported operation",
+		)
+	}
+
+	result, err := f(object, prop)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	return result
 }
 
 func (e *Evaluator) evalIndexExpression(
 	node *ast.IndexExpression,
 ) enviroment.Object {
 	left := e.Eval(node.Left)
-	index := e.Eval(node.Index)
 
+	index := e.Eval(node.Index)
 	if index.Type() != enviroment.NUM {
 		lib.Die(
 			node.Token,
@@ -55,7 +53,6 @@ func (e *Evaluator) evalIndexExpression(
 	}
 
 	meta, ok := enviroment.DefaultMeta[left.Type()]
-
 	if !ok {
 		lib.Die(
 			node.Token,
@@ -64,7 +61,6 @@ func (e *Evaluator) evalIndexExpression(
 	}
 
 	f, ok := meta["__index"]
-
 	if !ok {
 		lib.Die(
 			node.Token,
@@ -73,38 +69,12 @@ func (e *Evaluator) evalIndexExpression(
 	}
 
 	result, err := f(left, index)
-
 	if err != nil {
 		lib.Die(
 			node.Token,
 			err.Error(),
 		)
 	}
-
-	// var result enviroment.Object
-
-	// switch object := left.(type) {
-	// case *enviroment.Str:
-	// 	sl := []rune(object.Value)
-	// 	if idx > len(sl)-1 {
-	// 		lib.Die(node.Token, "index out of range")
-	// 	}
-	// 	symbol := sl[idx]
-	// 	result = &enviroment.Str{
-	// 		Value: string(symbol),
-	// 	}
-	// case *enviroment.Doc:
-	// 	if idx > len(object.List)-1 {
-	// 		lib.Die(node.Token, "index out of range")
-	// 	}
-	// 	result = object.List[idx]
-	// default:
-	// 	lib.Die(
-	// 		node.Token,
-	// 		"unsupported index access for %s",
-	// 		left.Type(),
-	// 	)
-	// }
 
 	return result
 }
@@ -123,27 +93,28 @@ func (e *Evaluator) evalSliceExpression(
 			"non num index",
 		)
 	}
-	startIdx := int(start.(*enviroment.Num).Value)
-	endIdx := int(end.(*enviroment.Num).Value)
 
-	var result enviroment.Object
-
-	switch object := left.(type) {
-	case *enviroment.Str:
-		sl := []rune(object.Value)
-		symbols := sl[startIdx:endIdx]
-		result = &enviroment.Str{
-			Value: string(symbols),
-		}
-	case *enviroment.Doc:
-		return &enviroment.Doc{
-			List: object.List[startIdx:endIdx],
-		}
-	default:
+	meta, ok := enviroment.DefaultMeta[left.Type()]
+	if !ok {
 		lib.Die(
 			node.Token,
-			"unsupported slice access for %s",
-			left.Type(),
+			"unsupported type",
+		)
+	}
+
+	f, ok := meta["__slice"]
+	if !ok {
+		lib.Die(
+			node.Token,
+			"unsupported operation",
+		)
+	}
+
+	result, err := f(left, start, end)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
 		)
 	}
 

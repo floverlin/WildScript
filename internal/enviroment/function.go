@@ -6,35 +6,17 @@ import (
 	"github.com/fatih/color"
 )
 
-type blockEvaluator interface {
-	EvalBlock(
-		*ast.BlockExpression,
-		*Enviroment,
-		map[string]Object,
-	) Object
-}
+type Native func(...Object) Object
 
-type Callable interface {
-	Call(be blockEvaluator, args ...Object) Object
-}
-
-type Function struct {
+type Func struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockExpression
 	Enviroment *Enviroment
+	Native     Native
 	Impl       ast.FunctionImplementation
 }
 
-func (f *Function) Type() ObjectType { return FUNCTION }
-func (f *Function) Inspect() string {
-	return color.MagentaString(string(f.Impl))
-}
-
-type NativeFunction struct {
-	Native func(blockEvaluator, ...Object) Object
-}
-
-func (nf *NativeFunction) Type() ObjectType { return NATIVE_FUNCTION }
-func (nf *NativeFunction) Inspect() string {
-	return color.MagentaString("native_function")
+func (f *Func) Type() ObjectType { return FUNC }
+func (f *Func) Inspect() string {
+	return color.MagentaString("func")
 }

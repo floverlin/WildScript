@@ -6,6 +6,21 @@ import (
 	"wildscript/internal/lib"
 )
 
+var binOps = map[string]string{
+	"+":  "__add",
+	"-":  "__sub",
+	"*":  "__mul",
+	"/":  "__div",
+	"//": "__floor_div",
+	"%":  "__mod",
+	"^":  "__pow",
+}
+
+var unOps = map[string]string{
+	"-":   "__unm",
+	"not": "__not",
+}
+
 func (e *Evaluator) evalInfixExpression(
 	node *ast.InfixExpression,
 ) enviroment.Object {
@@ -15,43 +30,39 @@ func (e *Evaluator) evalInfixExpression(
 	if left.Type() != right.Type() {
 		lib.Die(
 			node.Token,
-			"wrong operands type %s and %s",
+			"non equal operands type %s and %s",
 			left.Type(),
 			right.Type(),
 		)
 	}
 
-	switch left.Type() {
-	case enviroment.NUM:
-		return evalBinary(
-			left.(*enviroment.Num).Value,
-			right.(*enviroment.Num).Value,
-			numOps,
-			node,
-		)
-	case enviroment.BOOL:
-		return evalBinary(
-			left.(*enviroment.Bool).Value,
-			right.(*enviroment.Bool).Value,
-			boolOps,
-			node,
-		)
-	case enviroment.STR:
-		return evalBinary(
-			left.(*enviroment.Str).Value,
-			right.(*enviroment.Str).Value,
-			strOps,
-			node,
-		)
-	default:
+	meta, ok := enviroment.DefaultMeta[left.Type()]
+	if !ok {
 		lib.Die(
 			node.Token,
-			"unsupported %s operands type %s",
-			node.Operator,
-			left.Type(),
+			"unsupported type",
 		)
-		return nil
 	}
+
+	op := binOps[node.Operator]
+
+	f, ok := meta[op]
+	if !ok {
+		lib.Die(
+			node.Token,
+			"unsupported operation",
+		)
+	}
+
+	result, err := f(left, right)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	return result
 }
 
 func (e *Evaluator) evalPrefixExpression(
@@ -59,41 +70,33 @@ func (e *Evaluator) evalPrefixExpression(
 ) enviroment.Object {
 	right := e.Eval(node.Right)
 
-	switch node.Operator {
-	case "not":
-		if boolObject, ok := right.(*enviroment.Bool); ok {
-			if !boolObject.Value {
-				return enviroment.GLOBAL_TRUE
-			} else {
-				return enviroment.GLOBAL_FALSE
-			}
-		} else {
-			lib.Die(
-				node.Token,
-				"unsupperted not operand type %s",
-				right.Type(),
-			)
-			return nil
-		}
-	case "-":
-		if numObject, ok := right.(*enviroment.Num); ok {
-			return &enviroment.Num{Value: -numObject.Value}
-		} else {
-			lib.Die(
-				node.Token,
-				"unsupperted minus operand type %s",
-				right.Type(),
-			)
-			return nil
-		}
-	default:
+	meta, ok := enviroment.DefaultMeta[right.Type()]
+	if !ok {
 		lib.Die(
 			node.Token,
-			"unknown prefix operator %s",
-			node.Operator,
+			"unsupported type",
 		)
-		return nil
 	}
+
+	op := unOps[node.Operator]
+
+	f, ok := meta[op]
+	if !ok {
+		lib.Die(
+			node.Token,
+			"unsupported operation",
+		)
+	}
+
+	result, err := f(right)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	return result
 }
 
 func (e *Evaluator) evalCallExpression(
@@ -108,8 +111,8 @@ func (e *Evaluator) evalCallExpression(
 
 	callable := e.Eval(node.Function)
 
-	if callable.Type() != enviroment.FUNCTION &&
-		callable.Type() != enviroment.NATIVE_FUNCTION {
+	f, ok := callable.(*enviroment.Func)
+	if !ok {
 		lib.Die(
 			node.Token,
 			"callable %s is not a function",
@@ -119,11 +122,9 @@ func (e *Evaluator) evalCallExpression(
 
 	args := e.evalExpressions(node.Arguments)
 
-	if f, ok := callable.(*enviroment.NativeFunction); ok {
-		return f.Native(e, args...)
+	if f.Impl == ast.NATIVE {
+		return f.Native(args...)
 	}
-
-	f := callable.(*enviroment.Function)
 
 	if f.Impl == ast.METHOD {
 		args = append([]enviroment.Object{self}, args...)
@@ -147,7 +148,7 @@ func (e *Evaluator) evalCallExpression(
 
 	if result.Type() == enviroment.SIGNAL {
 		if ret, ok := result.(*enviroment.Return); ok {
-			result = ret.Value
+			return ret.Value
 		} else {
 			lib.Die(
 				node.Token,
@@ -156,7 +157,7 @@ func (e *Evaluator) evalCallExpression(
 		}
 	}
 
-	return result
+	return enviroment.GLOBAL_NIL
 }
 
 func (e *Evaluator) evalIfExpression(
