@@ -383,6 +383,9 @@ func (p *Parser) parseDocumentElement() *ast.DocumentElement {
 	case lexer.COMMA:
 		elem.Type = ast.LIST
 		elem.Value = left
+	case lexer.RBRACE:
+		elem.Type = ast.LIST
+		elem.Value = left
 	case lexer.ASSIGN:
 		p.nextToken() // to =
 		p.nextToken() // to value

@@ -27,7 +27,7 @@ type Function struct {
 
 func (f *Function) Type() ObjectType { return FUNCTION }
 func (f *Function) Inspect() string {
-	return color.MagentaString("function")
+	return color.MagentaString(string(f.Impl))
 }
 
 type NativeFunction struct {

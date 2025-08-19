@@ -1,8 +1,28 @@
 package enviroment
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Dict struct {
 	strMap map[string]Object
 	numMap map[float64]Object
+}
+
+func (d *Dict) Len() int {
+	return len(d.numMap) + len(d.strMap)
+}
+
+func (d *Dict) String() string {
+	var sb strings.Builder
+	for key, val := range d.strMap {
+		sb.WriteString(fmt.Sprintf("%s: %s, ", key, val.Inspect()))
+	}
+	for key, val := range d.numMap {
+		sb.WriteString(fmt.Sprintf("%f: %s, ", key, val.Inspect()))
+	}
+	return sb.String()
 }
 
 func (d *Dict) Set(k, v Object) {
@@ -15,6 +35,7 @@ func (d *Dict) Set(k, v Object) {
 		panic("TODO")
 	}
 }
+
 func (d *Dict) Get(k Object) (Object, bool) {
 	switch k := k.(type) {
 	case *Str:

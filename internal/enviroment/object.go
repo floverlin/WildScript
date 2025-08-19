@@ -1,7 +1,9 @@
 package enviroment
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -82,7 +84,19 @@ func NewDoc() *Doc {
 
 func (d *Doc) Type() ObjectType { return DOC }
 func (d *Doc) Inspect() string {
-	return color.MagentaString("doc")
+	var sb strings.Builder
+	sb.WriteString("{")
+	for key, elem := range d.Elements {
+		sb.WriteString(fmt.Sprintf("%s = %s, ", key, elem.Inspect()))
+	}
+	sb.WriteString(d.Dict.String())
+	for idx, elem := range d.List {
+		sb.WriteString(fmt.Sprintf("[%d]: %s, ", idx, elem.Inspect()))
+	}
+	result := sb.String()
+	result = result[:len(result)-2]
+	result += "}"
+	return result
 }
 
 // ------------------------------  CONTROL  ------------------------------ //
