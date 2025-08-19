@@ -193,7 +193,7 @@ func (e *Evaluator) evalDocumentLiteral(
 		case ast.PROP:
 			key := elem.Key.(*ast.Identifier).Value
 			val := e.Eval(elem.Value)
-			doc.Elements[key] = val
+			doc.Prop[key] = val
 		}
 	}
 	return doc

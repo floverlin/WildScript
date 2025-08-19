@@ -1,6 +1,7 @@
 package enviroment
 
 import (
+	"fmt"
 	"wildscript/internal/ast"
 
 	"github.com/fatih/color"
@@ -18,5 +19,6 @@ type Func struct {
 
 func (f *Func) Type() ObjectType { return FUNC }
 func (f *Func) Inspect() string {
-	return color.MagentaString("func")
+	return color.MagentaString(
+		fmt.Sprintf("func<%s>", f.Impl))
 }

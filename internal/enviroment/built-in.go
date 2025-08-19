@@ -44,6 +44,19 @@ func (e *Enviroment) loadBuiltin() {
 			return &Str{Value: input}
 		},
 	})
+	e.Create("set_meta", &Func{
+		Impl: ast.NATIVE,
+		Native: func(o ...Object) Object {
+			o[0].(*Doc).Meta = o[1].(*Doc)
+			return GLOBAL_NIL
+		},
+	})
+	e.Create("get_meta", &Func{
+		Impl: ast.NATIVE,
+		Native: func(o ...Object) Object {
+			return o[0].(*Doc).Meta
+		},
+	})
 }
 
 func print(o ...Object) Object {

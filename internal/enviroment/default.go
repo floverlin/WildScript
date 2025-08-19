@@ -40,7 +40,7 @@ var boolMeta = map[string]MetaFunc{
 var docMeta = map[string]MetaFunc{
 	"__len": func(self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
-		val := len(s.Elements) + len(s.List) + s.Dict.Len()
+		val := len(s.Prop) + len(s.List) + s.Dict.Len()
 		return &Num{Value: float64(val)}, nil
 	},
 	"__str": func(self Object, args ...Object) (Object, error) {
@@ -79,7 +79,7 @@ var docMeta = map[string]MetaFunc{
 	"__property": func(self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
-		result, ok := s.Elements[prop.Value]
+		result, ok := s.Prop[prop.Value]
 		if !ok {
 			return nil, errors.New("property not exists")
 		}
@@ -88,7 +88,7 @@ var docMeta = map[string]MetaFunc{
 	"__set_property": func(self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
-		s.Elements[prop.Value] = args[1]
+		s.Prop[prop.Value] = args[1]
 		return self, nil
 	},
 }
