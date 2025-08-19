@@ -46,41 +46,65 @@ func (e *Evaluator) evalIndexExpression(
 ) enviroment.Object {
 	left := e.Eval(node.Left)
 	index := e.Eval(node.Index)
-	var idx int
 
-	if index, ok := index.(*enviroment.Num); ok {
-		idx = int(index.Value)
-	} else {
+	if index.Type() != enviroment.NUM {
 		lib.Die(
 			node.Token,
 			"non num index",
 		)
 	}
 
-	var result enviroment.Object
+	meta, ok := enviroment.DefaultMeta[left.Type()]
 
-	switch object := left.(type) {
-	case *enviroment.Str:
-		sl := []rune(object.Value)
-		if idx > len(sl)-1 {
-			lib.Die(node.Token, "index out of range")
-		}
-		symbol := sl[idx]
-		result = &enviroment.Str{
-			Value: string(symbol),
-		}
-	case *enviroment.Doc:
-		if idx > len(object.List)-1 {
-			lib.Die(node.Token, "index out of range")
-		}
-		result = object.List[idx]
-	default:
+	if !ok {
 		lib.Die(
 			node.Token,
-			"unsupported index access for %s",
-			left.Type(),
+			"unsupported type",
 		)
 	}
+
+	f, ok := meta["__index"]
+
+	if !ok {
+		lib.Die(
+			node.Token,
+			"unsupported operation",
+		)
+	}
+
+	result, err := f(left, index)
+
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	// var result enviroment.Object
+
+	// switch object := left.(type) {
+	// case *enviroment.Str:
+	// 	sl := []rune(object.Value)
+	// 	if idx > len(sl)-1 {
+	// 		lib.Die(node.Token, "index out of range")
+	// 	}
+	// 	symbol := sl[idx]
+	// 	result = &enviroment.Str{
+	// 		Value: string(symbol),
+	// 	}
+	// case *enviroment.Doc:
+	// 	if idx > len(object.List)-1 {
+	// 		lib.Die(node.Token, "index out of range")
+	// 	}
+	// 	result = object.List[idx]
+	// default:
+	// 	lib.Die(
+	// 		node.Token,
+	// 		"unsupported index access for %s",
+	// 		left.Type(),
+	// 	)
+	// }
 
 	return result
 }
