@@ -48,6 +48,10 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return &enviroment.Continue{}
 	case *ast.BreakStatement:
 		return &enviroment.Break{}
+	case *ast.WhileStatement:
+		return e.evalWhileStatement(node)
+	case *ast.RepeatStatement:
+		return e.evalRepeatStatement(node)
 
 	case *ast.InfixExpression:
 		return e.evalInfixExpression(node)
@@ -55,8 +59,6 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalPrefixExpression(node)
 	case *ast.IfExpression:
 		return e.evalIfExpression(node)
-	case *ast.WhileExpression:
-		return e.evalWhileExpression(node)
 	case *ast.CallExpression:
 		return e.evalCallExpression(node)
 	case *ast.IndexExpression:

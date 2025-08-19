@@ -29,9 +29,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	case lexer.ELIF:
 		expr = p.parseIfExpression()
 
-	case lexer.WHILE:
-		expr = p.parseWhileExpression()
-
 	case lexer.LAMBDA:
 		p.nextToken() // to (
 		expr = p.parseFunctionLiteral(ast.LAMBDA)
@@ -399,25 +396,4 @@ func (p *Parser) parseDocumentElement() *ast.DocumentElement {
 	}
 
 	return elem
-}
-
-func (p *Parser) parseWhileExpression() *ast.WhileExpression {
-	expr := &ast.WhileExpression{
-		Token: p.curToken,
-	}
-	p.nextToken() // to cond
-	expr.If = p.parseExpression(LOWEST)
-
-	if p.peekToken.Type != lexer.DO {
-		p.expected("do")
-	}
-
-	p.nextToken() // to do
-	if p.peekToken.Type != lexer.LBRACE {
-		p.expected("{")
-	}
-	p.nextToken() // to {
-	expr.Loop = p.parseBlockExpression()
-
-	return expr
 }

@@ -99,3 +99,40 @@ func (es *ExportStatement) statementNode() {}
 func (es *ExportStatement) String() string {
 	return fmt.Sprintf("export %s", es.Value.String())
 }
+
+type ForStatement struct {
+	Token lexer.Token
+}
+
+func (fs *ForStatement) statementNode() {}
+func (fs *ForStatement) String() string { return "" }
+
+type RepeatStatement struct {
+	Token lexer.Token
+	Until Expression
+	Loop  *BlockExpression
+}
+
+func (rs *RepeatStatement) statementNode() {}
+func (rs *RepeatStatement) String() string {
+	return fmt.Sprintf(
+		"repeat %s until %s",
+		rs.Loop.String(),
+		rs.Until.String(),
+	)
+}
+
+type WhileStatement struct {
+	Token lexer.Token
+	If    Expression
+	Loop  *BlockExpression
+}
+
+func (ws *WhileStatement) statementNode() {}
+func (ws *WhileStatement) String() string {
+	return fmt.Sprintf(
+		"while %s do %s",
+		ws.If.String(),
+		ws.Loop.String(),
+	)
+}

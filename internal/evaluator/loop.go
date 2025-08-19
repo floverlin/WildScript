@@ -6,10 +6,9 @@ import (
 	"wildscript/internal/lib"
 )
 
-func (e *Evaluator) evalWhileExpression(
-	node *ast.WhileExpression,
+func (e *Evaluator) evalWhileStatement(
+	node *ast.WhileStatement,
 ) enviroment.Object {
-	var result enviroment.Object
 	condObject := e.Eval(node.If)
 	cond, ok := condObject.(*enviroment.Bool)
 	if !ok {
@@ -18,8 +17,11 @@ func (e *Evaluator) evalWhileExpression(
 			"non bool condition",
 		)
 	}
+	var iters float64
 	for cond.Value {
-		result = e.Eval(node.Loop)
+		e.Eval(node.Loop)
+		iters++
+
 		condObject = e.Eval(node.If)
 		cond, ok = condObject.(*enviroment.Bool)
 		if !ok {
@@ -30,5 +32,29 @@ func (e *Evaluator) evalWhileExpression(
 		}
 	}
 
-	return result
+	return &enviroment.Num{Value: iters}
+}
+
+func (e *Evaluator) evalRepeatStatement(
+	node *ast.RepeatStatement,
+) enviroment.Object {
+	var iters float64
+	for {
+		e.Eval(node.Loop)
+		iters++
+
+		condObject := e.Eval(node.Until)
+		cond, ok := condObject.(*enviroment.Bool)
+		if !ok {
+			lib.Die(
+				node.Token,
+				"non bool condition",
+			)
+		}
+		if !cond.Value {
+			break
+		}
+	}
+
+	return &enviroment.Num{Value: iters}
 }

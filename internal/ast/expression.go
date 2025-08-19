@@ -90,35 +90,6 @@ func (ie *IfExpression) String() string {
 	)
 }
 
-type ForExpression struct {
-	Token lexer.Token
-}
-
-func (fe *ForExpression) expressionNode() {}
-func (fe *ForExpression) String() string  { return "" }
-
-type RepeatExpression struct {
-	Token lexer.Token
-}
-
-func (re *RepeatExpression) expressionNode() {}
-func (re *RepeatExpression) String() string  { return "" }
-
-type WhileExpression struct {
-	Token lexer.Token
-	If    Expression
-	Loop  *BlockExpression
-}
-
-func (we *WhileExpression) expressionNode() {}
-func (we *WhileExpression) String() string {
-	return fmt.Sprintf(
-		"while %s do %s",
-		we.If.String(),
-		we.Loop.String(),
-	)
-}
-
 type IndexExpression struct {
 	Token lexer.Token
 	Left  Expression
