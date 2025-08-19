@@ -1,10 +1,26 @@
 package evaluator
 
 import (
+	"errors"
 	"wildscript/internal/ast"
 	"wildscript/internal/enviroment"
 	"wildscript/internal/lib"
 )
+
+func lookupMeta(
+	object enviroment.Object,
+	metaName string,
+) (enviroment.MetaFunc, error) {
+	meta, ok := enviroment.DefaultMeta[object.Type()]
+	if !ok {
+		return nil, errors.New("unsupported type")
+	}
+	f, ok := meta[metaName]
+	if !ok {
+		return nil, errors.New("unsupported operation")
+	}
+	return f, nil
+}
 
 func (e *Evaluator) evalPropertyExpression(
 	node *ast.PropertyExpression,
@@ -12,19 +28,11 @@ func (e *Evaluator) evalPropertyExpression(
 	object := e.Eval(node.Left)
 	prop := &enviroment.Str{Value: node.Property.Value}
 
-	meta, ok := enviroment.DefaultMeta[object.Type()]
-	if !ok {
+	f, err := lookupMeta(object, "__property")
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"unsupported type",
-		)
-	}
-
-	f, ok := meta["__property"]
-	if !ok {
-		lib.Die(
-			node.Token,
-			"unsupported operation",
+			err.Error(),
 		)
 	}
 
@@ -52,19 +60,11 @@ func (e *Evaluator) evalIndexExpression(
 		)
 	}
 
-	meta, ok := enviroment.DefaultMeta[left.Type()]
-	if !ok {
+	f, err := lookupMeta(left, "__index")
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"unsupported type",
-		)
-	}
-
-	f, ok := meta["__index"]
-	if !ok {
-		lib.Die(
-			node.Token,
-			"unsupported operation",
+			err.Error(),
 		)
 	}
 
@@ -94,19 +94,11 @@ func (e *Evaluator) evalSliceExpression(
 		)
 	}
 
-	meta, ok := enviroment.DefaultMeta[left.Type()]
-	if !ok {
+	f, err := lookupMeta(left, "__slice")
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"unsupported type",
-		)
-	}
-
-	f, ok := meta["__slice"]
-	if !ok {
-		lib.Die(
-			node.Token,
-			"unsupported operation",
+			err.Error(),
 		)
 	}
 
@@ -127,22 +119,21 @@ func (e *Evaluator) evalKeyExpression(
 	left := e.Eval(node.Left)
 	key := e.Eval(node.Key)
 
-	doc, ok := left.(*enviroment.Doc)
-	if !ok {
+	f, err := lookupMeta(left, "__key")
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"key access to non doc",
-		)
-	}
-	obj, ok := doc.Dict.Get(key)
-	if !ok {
-		lib.Die(
-			node.Token,
-			"key %s do not exist in %s",
-			key.Inspect(),
-			doc.Inspect(),
+			err.Error(),
 		)
 	}
 
-	return obj
+	result, err := f(left, key)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	return result
 }

@@ -61,7 +61,7 @@ var docMeta = map[string]MetaFunc{
 			return nil, errors.New("index out of range")
 		}
 		s.List[idx] = args[0]
-		return args[0], nil
+		return self, nil
 	},
 	"__key": func(self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
@@ -74,7 +74,7 @@ var docMeta = map[string]MetaFunc{
 	"__set_key": func(self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		s.Dict.Set(args[0], args[1])
-		return args[1], nil
+		return self, nil
 	},
 	"__property": func(self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
@@ -89,7 +89,7 @@ var docMeta = map[string]MetaFunc{
 		s := self.(*Doc)
 		prop := args[0].(*Str)
 		s.Elements[prop.Value] = args[1]
-		return args[1], nil
+		return self, nil
 	},
 }
 

@@ -52,15 +52,25 @@ func (e *Evaluator) evalPropertyAssign(
 	value enviroment.Object,
 ) (enviroment.Object, error) {
 	object := e.Eval(left.Left)
-	prop := left.Property.Value
+	prop := &enviroment.Str{Value: left.Property.Value}
 
-	if object.Type() != enviroment.DOC {
-		return nil, errors.New("assign property to non doc type")
+	f, err := lookupMeta(object, "__set_property")
+	if err != nil {
+		lib.Die(
+			left.Token,
+			err.Error(),
+		)
 	}
 
-	object.(*enviroment.Doc).Elements[prop] = value
+	result, err := f(object, prop, value)
+	if err != nil {
+		lib.Die(
+			left.Token,
+			err.Error(),
+		)
+	}
 
-	return object, nil
+	return result, nil
 }
 
 func (e *Evaluator) evalIndexAssign(
@@ -70,22 +80,27 @@ func (e *Evaluator) evalIndexAssign(
 	object := e.Eval(left.Left)
 	index := e.Eval(left.Index)
 
-	if object.Type() != enviroment.DOC {
-		return nil, errors.New("assign index to non doc type")
-	}
-
 	if index.Type() != enviroment.NUM {
 		return nil, errors.New("non num index type")
 	}
 
-	idx := int(index.(*enviroment.Num).Value)
-
-	if idx >= len(object.(*enviroment.Doc).List) {
-		return nil, errors.New("index out of range")
+	f, err := lookupMeta(object, "__set_index")
+	if err != nil {
+		lib.Die(
+			left.Token,
+			err.Error(),
+		)
 	}
 
-	object.(*enviroment.Doc).List[idx] = value
-	return object, nil
+	result, err := f(object, index, value)
+	if err != nil {
+		lib.Die(
+			left.Token,
+			err.Error(),
+		)
+	}
+
+	return result, nil
 }
 
 func (e *Evaluator) evalKeyAssign(
@@ -95,12 +110,23 @@ func (e *Evaluator) evalKeyAssign(
 	object := e.Eval(left.Left)
 	key := e.Eval(left.Key)
 
-	if object.Type() != enviroment.DOC {
-		return nil, errors.New("assign key to non doc type")
+	f, err := lookupMeta(object, "__set_key")
+	if err != nil {
+		lib.Die(
+			left.Token,
+			err.Error(),
+		)
 	}
 
-	object.(*enviroment.Doc).Dict.Set(key, value)
-	return object, nil
+	result, err := f(object, key, value)
+	if err != nil {
+		lib.Die(
+			left.Token,
+			err.Error(),
+		)
+	}
+
+	return result, nil
 }
 
 func (e *Evaluator) evalLetStatement(
