@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 	"wildscript/internal/lexer"
 )
 
@@ -87,8 +88,13 @@ type ImportStatement struct {
 
 func (is *ImportStatement) statementNode() {}
 func (is *ImportStatement) String() string {
-	// return fmt.Sprintf("import %s", is.Module.Value)
-	return "TODO"
+	var sb strings.Builder
+	sb.WriteString("import ")
+	for _, mod := range is.Module {
+		sb.WriteString(mod.String() + ".")
+	}
+	result := sb.String()
+	return result[:len(result)-1]
 }
 
 type ExportStatement struct {

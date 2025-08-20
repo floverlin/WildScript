@@ -1,5 +1,11 @@
 # FLUX
 
+## name
+
+- Eclipt
+- Lyn
+- Nivelle
+
 ## types
 
 |   Flux   |   Go    |   JavaScript   |  Python   |   Lua   |

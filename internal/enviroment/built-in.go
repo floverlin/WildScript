@@ -1,6 +1,7 @@
 package enviroment
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"wildscript/internal/ast"
@@ -65,6 +66,51 @@ func (e *Enviroment) loadBuiltin() {
 			right := args[1].(*Doc)
 			maps.Copy(left.Attrs, right.Attrs)
 			return GLOBAL_NIL, nil
+		},
+	})
+	e.Create("str", &Func{
+		Impl: ast.FUNCTION,
+		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+			f, ok := LookupMeta(args[0], "__str")
+			if !ok {
+				fmt.Print(args[0].Type())
+				return nil, errors.New("can't convert to string")
+			}
+			str, err := f.(*Func).Call(be, args[0])
+			if err != nil {
+				return nil, err
+			}
+			return str, nil
+		},
+	})
+	e.Create("num", &Func{
+		Impl: ast.FUNCTION,
+		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+			f, ok := LookupMeta(args[0], "__num")
+			if !ok {
+				fmt.Print(args[0].Type())
+				return nil, errors.New("can't convert to number")
+			}
+			num, err := f.(*Func).Call(be, args[0])
+			if err != nil {
+				return nil, err
+			}
+			return num, nil
+		},
+	})
+	e.Create("bool", &Func{
+		Impl: ast.FUNCTION,
+		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+			f, ok := LookupMeta(args[0], "__bool")
+			if !ok {
+				fmt.Print(args[0].Type())
+				return nil, errors.New("can't convert to boolean")
+			}
+			b, err := f.(*Func).Call(be, args[0])
+			if err != nil {
+				return nil, err
+			}
+			return b, nil
 		},
 	})
 }
