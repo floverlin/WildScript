@@ -245,8 +245,17 @@ var strMeta = map[string]MetaFunc{
 	},
 	"__slice": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		sl := []rune(self.(*Str).Value)
-		start := int(args[0].(*Num).Value)
-		end := int(args[1].(*Num).Value)
+		var start, end int
+		if _, ok := args[0].(*Nil); ok {
+			start = 0
+		} else {
+			start = int(args[0].(*Num).Value)
+		}
+		if _, ok := args[1].(*Nil); ok {
+			end = len(sl)
+		} else {
+			end = int(args[1].(*Num).Value)
+		}
 		if start < 0 || end > len(sl) {
 			return nil, errors.New("index out of range")
 		}

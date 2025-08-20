@@ -97,8 +97,10 @@ func (e *Evaluator) evalSliceExpression(
 	start := e.Eval(node.Start)
 	end := e.Eval(node.End)
 
-	if start.Type() != enviroment.NUM ||
-		end.Type() != enviroment.NUM {
+	if (start.Type() != enviroment.NUM &&
+		start.Type() != enviroment.NIL) ||
+		(end.Type() != enviroment.NUM &&
+			end.Type() != enviroment.NIL) {
 		lib.Die(
 			node.Token,
 			"non num index",
