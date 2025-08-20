@@ -157,8 +157,12 @@ func (p *Parser) parseKeyExpression(
 		Token: p.curToken,
 		Left:  left,
 	}
-	p.nextToken() // to key
-	expr.Key = p.parseExpression(LOWEST)
+	if p.peekToken.Type == lexer.RBRACE {
+		expr.Key = &ast.NilLiteral{}
+	} else {
+		p.nextToken() // to key
+		expr.Key = p.parseExpression(LOWEST)
+	}
 
 	if p.peekToken.Type != lexer.RBRACE {
 		p.expected("}")
@@ -174,14 +178,24 @@ func (p *Parser) parseBracketExpression(
 	var expr ast.Expression
 	token := p.curToken
 
-	p.nextToken() // to index
-	firstIndex := p.parseExpression(LOWEST)
+	var firstIndex ast.Expression
+	if p.peekToken.Type == lexer.COLON ||
+		p.peekToken.Type == lexer.RBRACKET {
+		firstIndex = &ast.NilLiteral{Token: p.peekToken}
+	} else {
+		p.nextToken() // to expr
+		firstIndex = p.parseExpression(LOWEST)
+	}
 
 	if p.peekToken.Type == lexer.COLON {
 		p.nextToken() // to :
-		p.nextToken() // to index
-
-		secondIndex := p.parseExpression(LOWEST)
+		var secondIndex ast.Expression
+		if p.peekToken.Type == lexer.RBRACKET {
+			secondIndex = &ast.NilLiteral{Token: p.curToken}
+		} else {
+			p.nextToken() // to expr
+			secondIndex = p.parseExpression(LOWEST)
+		}
 		expr = &ast.SliceExpression{
 			Token: token,
 			Left:  left,
