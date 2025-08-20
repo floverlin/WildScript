@@ -36,25 +36,15 @@ func (e *Evaluator) evalInfixExpression(
 		)
 	}
 
-	meta, ok := enviroment.DefaultMeta[left.Type()]
-	if !ok {
+	f, err := lookupMeta(left, binOps[node.Operator])
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"unsupported type",
+			err.Error(),
 		)
 	}
 
-	op := binOps[node.Operator]
-
-	f, ok := meta[op]
-	if !ok {
-		lib.Die(
-			node.Token,
-			"unsupported operation",
-		)
-	}
-
-	result, err := f(left, right)
+	result, err := f.Call(e, left, right)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -70,25 +60,15 @@ func (e *Evaluator) evalPrefixExpression(
 ) enviroment.Object {
 	right := e.Eval(node.Right)
 
-	meta, ok := enviroment.DefaultMeta[right.Type()]
-	if !ok {
+	f, err := lookupMeta(right, unOps[node.Operator])
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"unsupported type",
+			err.Error(),
 		)
 	}
 
-	op := unOps[node.Operator]
-
-	f, ok := meta[op]
-	if !ok {
-		lib.Die(
-			node.Token,
-			"unsupported operation",
-		)
-	}
-
-	result, err := f(right)
+	result, err := f.Call(e, right)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -109,14 +89,28 @@ func (e *Evaluator) evalCallExpression(
 		self = enviroment.GLOBAL_NIL
 	}
 
-	callable := e.Eval(node.Function)
+	var t any
+	left := e.Eval(node.Function)
 
-	f, ok := callable.(*enviroment.Func)
+	if left.Type() == enviroment.DOC {
+		f, err := lookupMeta(left, "__call")
+		if err != nil {
+			lib.Die(
+				node.Token,
+				err.Error(),
+			)
+		}
+		t = f
+	} else {
+		t = left
+	}
+
+	f, ok := t.(*enviroment.Func)
 	if !ok {
 		lib.Die(
 			node.Token,
 			"callable %s is not a function",
-			callable.Inspect(),
+			left.Inspect(),
 		)
 	}
 
@@ -130,34 +124,16 @@ func (e *Evaluator) evalCallExpression(
 		args = append([]enviroment.Object{self}, args...)
 	}
 
-	if len(args) != len(f.Parameters) {
+	result, err := f.Call(e, args...)
+
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"function want %d argument(s) got %d",
-			len(f.Parameters),
-			len(args),
+			err.Error(),
 		)
 	}
 
-	fArgs := map[string]enviroment.Object{} // args
-	for idx, arg := range args {
-		fArgs[f.Parameters[idx].Value] = arg
-	}
-
-	result := e.EvalBlock(f.Body, f.Enviroment, fArgs)
-
-	if result.Type() == enviroment.SIGNAL {
-		if ret, ok := result.(*enviroment.Return); ok {
-			return ret.Value
-		} else {
-			lib.Die(
-				node.Token,
-				"continue or break in function",
-			)
-		}
-	}
-
-	return enviroment.GLOBAL_NIL
+	return result
 }
 
 func (e *Evaluator) evalIfExpression(

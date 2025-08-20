@@ -10,7 +10,18 @@ import (
 func lookupMeta(
 	object enviroment.Object,
 	metaName string,
-) (enviroment.MetaFunc, error) {
+) (enviroment.Callable, error) {
+	if doc, ok := object.(*enviroment.Doc); ok {
+		if doc.Meta != nil {
+			f, ok := doc.Meta.Prop[metaName]
+			if ok {
+				if f, ok := f.(*enviroment.Func); ok {
+					return f, nil
+				}
+			}
+		}
+	}
+
 	meta, ok := enviroment.DefaultMeta[object.Type()]
 	if !ok {
 		return nil, errors.New("unsupported type")
@@ -36,7 +47,7 @@ func (e *Evaluator) evalPropertyExpression(
 		)
 	}
 
-	result, err := f(object, prop)
+	result, err := f.Call(e, object, prop)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -68,7 +79,7 @@ func (e *Evaluator) evalIndexExpression(
 		)
 	}
 
-	result, err := f(left, index)
+	result, err := f.Call(e, left, index)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -102,7 +113,7 @@ func (e *Evaluator) evalSliceExpression(
 		)
 	}
 
-	result, err := f(left, start, end)
+	result, err := f.Call(e, left, start, end)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -127,7 +138,7 @@ func (e *Evaluator) evalKeyExpression(
 		)
 	}
 
-	result, err := f(left, key)
+	result, err := f.Call(e, left, key)
 	if err != nil {
 		lib.Die(
 			node.Token,

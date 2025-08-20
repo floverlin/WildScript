@@ -62,7 +62,7 @@ func (e *Evaluator) evalPropertyAssign(
 		)
 	}
 
-	result, err := f(object, prop, value)
+	result, err := f.Call(e, object, prop, value)
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -92,7 +92,7 @@ func (e *Evaluator) evalIndexAssign(
 		)
 	}
 
-	result, err := f(object, index, value)
+	result, err := f.Call(e, object, index, value)
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -118,7 +118,7 @@ func (e *Evaluator) evalKeyAssign(
 		)
 	}
 
-	result, err := f(object, key, value)
+	result, err := f.Call(e, object, key, value)
 	if err != nil {
 		lib.Die(
 			left.Token,

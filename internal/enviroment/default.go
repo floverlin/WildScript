@@ -6,7 +6,15 @@ import (
 	"strconv"
 )
 
+type Callable interface {
+	Call(be blockEvaluator, args ...Object) (Object, error)
+}
+
 type MetaFunc func(self Object, args ...Object) (Object, error)
+
+func (mf MetaFunc) Call(_ blockEvaluator, args ...Object) (Object, error) {
+	return mf(args[0], args[1:]...)
+}
 
 var DefaultMeta = map[ObjectType]map[string]MetaFunc{
 	STR:  strMeta,
