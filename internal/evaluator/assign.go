@@ -22,6 +22,8 @@ func (e *Evaluator) evalAssignStatement(
 		result, err = e.evalAttributeAssign(left, right)
 	case *ast.IndexExpression:
 		result, err = e.evalIndexAssign(left, right)
+	case *ast.SliceExpression:
+		result, err = e.evalSliceAssign(left, right)
 	case *ast.KeyExpression:
 		result, err = e.evalKeyAssign(left, right)
 	}
@@ -84,7 +86,15 @@ func (e *Evaluator) evalIndexAssign(
 		return nil, errors.New("non num index type")
 	}
 
-	f, err := lookupMeta(object, "__set_index")
+	f, metaErr := lookupMeta(object, "__set_index")
+	if metaErr != nil {
+		lib.Die(
+			left.Token,
+			metaErr.Error(),
+		)
+	}
+	result, err := f.Call(e, object, index, value)
+
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -92,7 +102,36 @@ func (e *Evaluator) evalIndexAssign(
 		)
 	}
 
-	result, err := f.Call(e, object, index, value)
+	return result, nil
+}
+
+func (e *Evaluator) evalSliceAssign(
+	left *ast.SliceExpression,
+	value enviroment.Object,
+) (enviroment.Object, error) {
+	object := e.Eval(left.Left)
+	start := e.Eval(left.Start)
+	end := e.Eval(left.End)
+
+	if (start.Type() != enviroment.NUM &&
+		start.Type() != enviroment.NIL) ||
+		(end.Type() != enviroment.NUM &&
+			end.Type() != enviroment.NIL) {
+		lib.Die(
+			left.Token,
+			"non num index",
+		)
+	}
+
+	f, metaErr := lookupMeta(object, "__set_slice")
+	if metaErr != nil {
+		lib.Die(
+			left.Token,
+			metaErr.Error(),
+		)
+	}
+	result, err := f.Call(e, object, start, end, value)
+
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -109,6 +148,26 @@ func (e *Evaluator) evalKeyAssign(
 ) (enviroment.Object, error) {
 	object := e.Eval(left.Left)
 	key := e.Eval(left.Key)
+
+	if key.Type() == enviroment.NIL {
+		f, err := lookupMeta(object, "__set_dict")
+		if err != nil {
+			lib.Die(
+				left.Token,
+				err.Error(),
+			)
+		}
+
+		result, err := f.Call(e, object, value)
+		if err != nil {
+			lib.Die(
+				left.Token,
+				err.Error(),
+			)
+		}
+
+		return result, nil
+	}
 
 	f, err := lookupMeta(object, "__set_key")
 	if err != nil {

@@ -1,5 +1,7 @@
 package lexer
 
+import "slices"
+
 type Collector struct {
 	lexer    *Lexer
 	tokens   []Token
@@ -23,11 +25,11 @@ func (c *Collector) NextToken() Token {
 }
 
 func (c *Collector) Tokens() []Token {
-	return c.tokens[:]
+	return slices.Clone(c.tokens)
 }
 
 func (c *Collector) Illegals() []Token {
-	return c.illegals[:]
+	return slices.Clone(c.illegals)
 }
 
 func (c *Collector) Reset() {

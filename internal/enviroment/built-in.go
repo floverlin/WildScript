@@ -7,11 +7,11 @@ import (
 
 func (e *Enviroment) loadBuiltin() {
 	e.Create("__print", &Func{
-		Impl:   ast.NATIVE,
+		Impl:   ast.FUNCTION,
 		Native: print,
 	})
 	e.Create("print", &Func{
-		Impl: ast.NATIVE,
+		Impl: ast.FUNCTION,
 		Native: func(o ...Object) Object {
 			for idx, arg := range o {
 				print(arg)
@@ -23,7 +23,7 @@ func (e *Enviroment) loadBuiltin() {
 		},
 	})
 	e.Create("println", &Func{
-		Impl: ast.NATIVE,
+		Impl: ast.FUNCTION,
 		Native: func(o ...Object) Object {
 			for idx, arg := range o {
 				print(arg)
@@ -37,7 +37,7 @@ func (e *Enviroment) loadBuiltin() {
 		},
 	})
 	e.Create("input", &Func{
-		Impl: ast.NATIVE,
+		Impl: ast.FUNCTION,
 		Native: func(o ...Object) Object {
 			var input string
 			fmt.Scanln(&input)
@@ -45,14 +45,14 @@ func (e *Enviroment) loadBuiltin() {
 		},
 	})
 	e.Create("set_meta", &Func{
-		Impl: ast.NATIVE,
+		Impl: ast.FUNCTION,
 		Native: func(o ...Object) Object {
 			o[0].(*Doc).Meta = o[1].(*Doc)
 			return GLOBAL_NIL
 		},
 	})
 	e.Create("get_meta", &Func{
-		Impl: ast.NATIVE,
+		Impl: ast.FUNCTION,
 		Native: func(o ...Object) Object {
 			return o[0].(*Doc).Meta
 		},

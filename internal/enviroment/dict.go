@@ -2,6 +2,7 @@ package enviroment
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 )
 
@@ -18,6 +19,13 @@ func NewDict() *Dict {
 	return &Dict{
 		strMap: map[string]Object{},
 		numMap: map[float64]Object{},
+	}
+}
+
+func (d *Dict) Clone() *Dict {
+	return &Dict{
+		strMap: maps.Clone(d.strMap),
+		numMap: maps.Clone(d.numMap),
 	}
 }
 

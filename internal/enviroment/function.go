@@ -33,12 +33,12 @@ type blockEvaluator interface {
 }
 
 func (f *Func) Call(be blockEvaluator, self Object, args ...Object) (Object, error) {
-	if f.Impl == ast.NATIVE {
-		return f.Native(args...), nil
-	}
-
 	if f.Impl == ast.METHOD {
 		args = append([]Object{self}, args...)
+	}
+
+	if f.Native != nil {
+		return f.Native(args...), nil
 	}
 
 	if len(args) != len(f.Parameters) {

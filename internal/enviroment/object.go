@@ -91,7 +91,9 @@ func (d *Doc) Inspect() string {
 		sb.WriteString(fmt.Sprintf("[%d]: %s, ", idx, elem.Inspect()))
 	}
 	result := sb.String()
-	result = result[:len(result)-2]
+	if len(result) > 1 {
+		result = result[:len(result)-2]
+	}
 	result += "}"
 	return result
 }

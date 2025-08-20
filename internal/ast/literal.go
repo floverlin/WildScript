@@ -20,7 +20,6 @@ const (
 	FUNCTION FunctionImplementation = "function"
 	LAMBDA   FunctionImplementation = "lambda"
 	METHOD   FunctionImplementation = "method"
-	NATIVE   FunctionImplementation = "native"
 )
 
 type Identifier struct {

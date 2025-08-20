@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 )
 
@@ -103,11 +104,29 @@ var docMeta = map[string]MetaFunc{
 		s.Dict.Set(args[0], args[1])
 		return self, nil
 	},
+	"__dict": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*Doc)
+		dict := NewDoc()
+		dict.Dict = s.Dict.Clone()
+		dict.Meta = classDict
+		return dict, nil
+	},
+	"__set_dict": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*Doc)
+		dict := args[0].(*Doc)
+		s.Dict = dict.Dict.Clone()
+		return self, nil
+	},
 	"__attribute": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
 		result, ok := s.Attrs[prop.Value]
 		if !ok {
+			if s.Meta != nil {
+				if result, ok := s.Meta.Attrs[prop.Value]; ok {
+					return result, nil
+				}
+			}
 			return nil, errors.New("attribute not exists")
 		}
 		return result, nil
@@ -116,6 +135,43 @@ var docMeta = map[string]MetaFunc{
 		s := self.(*Doc)
 		prop := args[0].(*Str)
 		s.Attrs[prop.Value] = args[1]
+		return self, nil
+	},
+	"__slice": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*Doc)
+		var start, end int
+		if _, ok := args[0].(*Nil); ok {
+			start = 0
+		} else {
+			start = int(args[0].(*Num).Value)
+		}
+		if _, ok := args[1].(*Nil); ok {
+			end = len(s.List)
+		} else {
+			end = int(args[1].(*Num).Value)
+		}
+		slice := NewDoc()
+		slice.Meta = classList
+		slice.List = slices.Clone(s.List[start:end])
+		return slice, nil
+	},
+	"__set_slice": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*Doc)
+		var start, end int
+		if _, ok := args[0].(*Nil); ok {
+			start = 0
+		} else {
+			start = int(args[0].(*Num).Value)
+		}
+		if _, ok := args[1].(*Nil); ok {
+			end = len(s.List)
+		} else {
+			end = int(args[1].(*Num).Value)
+		}
+		list := args[2].(*Doc).List
+		list = append(list, s.List[end:]...)
+		list = append(s.List[:start], list...)
+		s.List = slices.Clone(list)
 		return self, nil
 	},
 }

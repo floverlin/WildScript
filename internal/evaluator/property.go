@@ -54,7 +54,6 @@ func (e *Evaluator) evalAttributeExpression(
 			err.Error(),
 		)
 	}
-
 	return result
 }
 
@@ -131,6 +130,26 @@ func (e *Evaluator) evalKeyExpression(
 ) enviroment.Object {
 	left := e.Eval(node.Left)
 	key := e.Eval(node.Key)
+
+	if key.Type() == enviroment.NIL {
+		f, err := lookupMeta(left, "__dict")
+		if err != nil {
+			lib.Die(
+				node.Token,
+				err.Error(),
+			)
+		}
+
+		result, err := f.Call(e, left)
+		if err != nil {
+			lib.Die(
+				node.Token,
+				err.Error(),
+			)
+		}
+
+		return result
+	}
 
 	f, err := lookupMeta(left, "__key")
 	if err != nil {
