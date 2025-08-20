@@ -28,7 +28,7 @@ func (p *Parser) parseStatement() ast.Statement {
 		}
 		p.nextToken() // to ident
 		letStmt.Left = p.parseIdentifier()
-		
+
 		if p.peekToken.Type == lexer.SEMICOLON ||
 			p.peekToken.Type == lexer.EOF ||
 			p.peekToken.Type == lexer.RBRACE {
@@ -49,9 +49,18 @@ func (p *Parser) parseStatement() ast.Statement {
 			p.expected("expected module identifier")
 		}
 		p.nextToken() // to ident
-		importStmt.Module = p.parseIdentifier()
+		importStmt.Module = append(importStmt.Module, p.parseIdentifier())
+		for p.peekToken.Type == lexer.DOT {
+			p.nextToken() //to .
+			p.nextToken() // to ident
+			importStmt.Module = append(importStmt.Module, p.parseIdentifier())
+		}
 		stmt = importStmt
 	case lexer.EXPORT:
+		exportStmt := &ast.ExportStatement{Token: p.curToken}
+		p.nextToken() // to exptr
+		exportStmt.Value = p.parseExpression(LOWEST)
+		stmt = exportStmt
 	case lexer.RETURN:
 		if p.peekToken.Type == lexer.SEMICOLON ||
 			p.peekToken.Type == lexer.RBRACE ||

@@ -70,7 +70,7 @@ func (e *Enviroment) loadBuiltin() {
 }
 
 func print(be blockEvaluator, self Object, args ...Object) (Object, error) {
-	f, ok := lookupMeta(args[0], "__str")
+	f, ok := LookupMeta(args[0], "__str")
 	if !ok {
 		fmt.Print(args[0].Type())
 		return GLOBAL_NIL, nil

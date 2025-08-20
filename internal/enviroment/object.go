@@ -107,6 +107,13 @@ type Return struct {
 func (r *Return) Type() ObjectType { return SIGNAL }
 func (r *Return) Inspect() string  { return "__return" }
 
+type Export struct {
+	Value Object
+}
+
+func (e *Export) Type() ObjectType { return SIGNAL }
+func (e *Export) Inspect() string  { return "__export" }
+
 type Continue struct{}
 
 func (c *Continue) Type() ObjectType { return SIGNAL }

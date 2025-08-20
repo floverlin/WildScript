@@ -30,7 +30,9 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	program := &ast.Program{}
+	program := &ast.Program{
+		Token: p.curToken,
+	}
 
 	for {
 		stmt := p.parseStatement() // include ; or EOF

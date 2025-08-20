@@ -22,7 +22,10 @@ func lookup(
 	return &enviroment.Func{Native: f}, nil
 }
 
-func (e *Evaluator) attribute(object enviroment.Object, attr string) (enviroment.Object, error) {
+func (e *Evaluator) attribute(
+	object enviroment.Object,
+	attr string,
+) (enviroment.Object, error) {
 	f, err := lookup(object, "__attribute")
 	if err != nil {
 		return nil, err

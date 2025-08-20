@@ -34,6 +34,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.Eval(node.Expression)
 	case *ast.ImportStatement:
 		return e.evalImportStatement(node)
+	case *ast.ExportStatement:
+		return &enviroment.Export{Value: e.Eval(node.Value)}
 	case *ast.FunctionStatement:
 		return e.evalLetStatement(
 			&ast.LetStatement{
@@ -104,8 +106,17 @@ func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 	var result enviroment.Object
 	for _, stmt := range program.Statements {
 		result = e.Eval(stmt)
+		if result.Type() == enviroment.SIGNAL {
+			if export, ok := result.(*enviroment.Export); ok {
+				return export.Value
+			}
+			lib.Die(
+				program.Token,
+				"unexpected signal",
+			)
+		}
 	}
-	return result
+	return enviroment.GLOBAL_NIL
 }
 
 func (e *Evaluator) EvalBlock(
@@ -144,7 +155,12 @@ func (e *Evaluator) evalExpressions(
 func (e *Evaluator) evalImportStatement(
 	node *ast.ImportStatement,
 ) enviroment.Object {
-	input, err := os.ReadFile(node.Module.Value + lib.EXT)
+	var modulePath string
+	for _, mod := range node.Module {
+		modulePath += mod.Value + "/"
+	}
+	modulePath = modulePath[:len(modulePath)-1] + lib.EXT
+	input, err := os.ReadFile(modulePath)
 	if err != nil {
 		panic(fmt.Sprintf("read module error: %s", err))
 	}
@@ -157,7 +173,7 @@ func (e *Evaluator) evalImportStatement(
 
 	result := modEv.Eval(mod)
 
-	e.env.Set(node.Module.Value, result)
+	e.env.Create(node.Module[len(node.Module)-1].Value, result)
 
 	return enviroment.GLOBAL_NIL
 }

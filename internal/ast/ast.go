@@ -1,6 +1,9 @@
 package ast
 
-import "strings"
+import (
+	"strings"
+	"wildscript/internal/lexer"
+)
 
 type Node interface {
 	String() string
@@ -17,6 +20,7 @@ type Expression interface {
 }
 
 type Program struct {
+	Token      lexer.Token
 	Statements []Statement
 }
 

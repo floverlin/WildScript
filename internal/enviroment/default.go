@@ -8,22 +8,22 @@ import (
 	"strconv"
 )
 
-func lookup(doc *Doc, attr string) (Object, bool) {
+func LookupAttr(doc *Doc, attr string) (Object, bool) {
 	if result, ok := doc.Attrs[attr]; ok {
 		return result, ok
 	}
 	if doc.Meta != nil {
-		if result, ok := lookup(doc.Meta, attr); ok {
+		if result, ok := LookupAttr(doc.Meta, attr); ok {
 			return result, ok
 		}
 	}
 	return nil, false
 }
 
-func lookupMeta(obj Object, attr string) (Object, bool) {
+func LookupMeta(obj Object, attr string) (Object, bool) {
 	if doc, ok := obj.(*Doc); ok {
 		if doc.Meta != nil {
-			return lookup(doc.Meta, attr)
+			return LookupAttr(doc.Meta, attr)
 		}
 	}
 	meta, ok := DefaultMeta[obj.Type()]
@@ -140,7 +140,7 @@ var docMeta = map[string]Native{
 	"__attribute": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
-		if result, ok := lookup(s, prop.Value); ok {
+		if result, ok := LookupAttr(s, prop.Value); ok {
 			return result, nil
 		}
 		return nil, errors.New("attribute not exists")
@@ -290,6 +290,9 @@ var numMeta = map[string]Native{
 }
 
 var strMeta = map[string]Native{
+	"__str": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		return self, nil
+	},
 	"__add": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		left, right := self.(*Str), args[0].(*Str)
 		return &Str{Value: left.Value + right.Value}, nil
