@@ -18,8 +18,8 @@ func (e *Evaluator) evalAssignStatement(
 	switch left := stmt.Left.(type) {
 	case *ast.Identifier:
 		result, err = e.evalIdentifierAssign(left, right)
-	case *ast.PropertyExpression:
-		result, err = e.evalPropertyAssign(left, right)
+	case *ast.AttributeExpression:
+		result, err = e.evalAttributeAssign(left, right)
 	case *ast.IndexExpression:
 		result, err = e.evalIndexAssign(left, right)
 	case *ast.KeyExpression:
@@ -47,14 +47,14 @@ func (e *Evaluator) evalIdentifierAssign(
 	return result, nil
 }
 
-func (e *Evaluator) evalPropertyAssign(
-	left *ast.PropertyExpression,
+func (e *Evaluator) evalAttributeAssign(
+	left *ast.AttributeExpression,
 	value enviroment.Object,
 ) (enviroment.Object, error) {
 	object := e.Eval(left.Left)
-	prop := &enviroment.Str{Value: left.Property.Value}
+	prop := &enviroment.Str{Value: left.Attribute.Value}
 
-	f, err := lookupMeta(object, "__set_property")
+	f, err := lookupMeta(object, "__set_attribute")
 	if err != nil {
 		lib.Die(
 			left.Token,

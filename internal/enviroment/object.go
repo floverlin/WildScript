@@ -65,20 +65,17 @@ func (n *Nil) Inspect() string {
 }
 
 type Doc struct {
-	List []Object
-	Dict *Dict
-	Prop map[string]Object
-	Meta *Doc
+	List  []Object
+	Dict  *Dict
+	Attrs map[string]Object
+	Meta  *Doc
 }
 
 func NewDoc() *Doc {
 	return &Doc{
-		Prop: make(map[string]Object),
-		Dict: &Dict{
-			strMap: make(map[string]Object),
-			numMap: make(map[float64]Object),
-		},
-		Meta: nil,
+		Attrs: make(map[string]Object),
+		Dict:  NewDict(),
+		Meta:  nil,
 	}
 }
 
@@ -86,7 +83,7 @@ func (d *Doc) Type() ObjectType { return DOC }
 func (d *Doc) Inspect() string {
 	var sb strings.Builder
 	sb.WriteString("{")
-	for key, elem := range d.Prop {
+	for key, elem := range d.Attrs {
 		sb.WriteString(fmt.Sprintf("%s = %s, ", key, elem.Inspect()))
 	}
 	sb.WriteString(d.Dict.String())

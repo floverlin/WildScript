@@ -14,6 +14,13 @@ var binOps = map[string]string{
 	"//": "__floor_div",
 	"%":  "__mod",
 	"^":  "__pow",
+
+	"<":  "__lt",
+	"<=": "__le",
+	">":  "__gt",
+	">=": "__ge",
+	"==": "__eq",
+	"!=": "__ne",
 }
 
 var unOps = map[string]string{
@@ -85,7 +92,7 @@ func (e *Evaluator) evalCallExpression(
 	left := e.Eval(node.Function)
 
 	var self enviroment.Object
-	if prop, ok := node.Function.(*ast.PropertyExpression); ok {
+	if prop, ok := node.Function.(*ast.AttributeExpression); ok {
 		self = e.Eval(prop.Left)
 	} else if doc, ok := left.(*enviroment.Doc); ok {
 		self = doc

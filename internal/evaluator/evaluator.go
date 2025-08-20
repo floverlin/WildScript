@@ -65,8 +65,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalIndexExpression(node)
 	case *ast.SliceExpression:
 		return e.evalSliceExpression(node)
-	case *ast.PropertyExpression:
-		return e.evalPropertyExpression(node)
+	case *ast.AttributeExpression:
+		return e.evalAttributeExpression(node)
 	case *ast.KeyExpression:
 		return e.evalKeyExpression(node)
 
@@ -193,7 +193,7 @@ func (e *Evaluator) evalDocumentLiteral(
 		case ast.PROP:
 			key := elem.Key.(*ast.Identifier).Value
 			val := e.Eval(elem.Value)
-			doc.Prop[key] = val
+			doc.Attrs[key] = val
 		}
 	}
 	return doc

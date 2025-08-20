@@ -47,12 +47,50 @@ my_object = {
     name = "flux",
 }
 
-__meta(my_object, meta_object)
+set_meta(my_object, meta_object)
 
 println(my_object)  # >> "my object flux"
 
-__meta(my_object)  # meta_object
+get_meta(my_object)  # meta_object
 ```
+
+- \_\_add
+- \_\_sub
+- \_\_mul
+- \_\_div
+- \_\_floor_div
+- \_\_mod
+- \_\_pow
+
+- \_\_unm
+- \_\_not
+
+- \_\_eq
+- \_\_lt
+- \_\_le
+
+- \_\_str
+- \_\_num
+- \_\_bool
+
+- \_\_call
+- \_\_len
+
+- \_\_slice
+
+- \_\_index
+- \_\_safe_index
+- \_\_set_index
+- \_\_set_list
+
+- \_\_key
+- \_\_safe_key
+- \_\_set_key
+- \_\_set_dict
+
+- \_\_attribute
+- \_\_safe_attribute
+- \_\_set_attribute
 
 ## for while repeat
 
@@ -73,7 +111,7 @@ repeat {
 } until i < 1
 ```
 
-# if else
+## if else
 
 ```flux
 if 1 < 2 {
@@ -83,7 +121,7 @@ if 1 < 2 {
 }
 ```
 
-# func
+## func
 
 ```flux
 function hello(name) {
@@ -94,4 +132,25 @@ function hello(name) {
 let hello = lambda(name) {
     println("Hello, " + name + "!")
 }  # default return nil
+```
+
+## slice
+
+```flux
+let slice = doc[:]
+slice.append("another one lin")
+doc[] = slice;
+doc[] = doc[2:-2].
+    append("and another one lin").
+    reverse()
+```
+
+## safe
+
+```flux
+let res = my_doc?.users?[16]?{"address"}
+res  # { value = "rolotushkina", ok = true }
+res = my_doc?.users?[16]?{"adres"}
+res  # { value = nil, ok = false}
+res.or("no address")  # "no address"
 ```

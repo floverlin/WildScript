@@ -71,7 +71,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 		switch p.curToken.Type {
 		case lexer.DOT:
-			expr = p.parsePropertyExpression(expr)
+			expr = p.parseAttributeExpression(expr)
 		case lexer.LBRACKET:
 			expr = p.parseBracketExpression(expr)
 		case lexer.LPAREN:
@@ -132,10 +132,10 @@ func (p *Parser) parseIfExpression() *ast.IfExpression {
 	return expr
 }
 
-func (p *Parser) parsePropertyExpression(
+func (p *Parser) parseAttributeExpression(
 	left ast.Expression,
-) *ast.PropertyExpression {
-	expr := &ast.PropertyExpression{
+) *ast.AttributeExpression {
+	expr := &ast.AttributeExpression{
 		Token: p.curToken,
 		Left:  left,
 	}
@@ -145,7 +145,7 @@ func (p *Parser) parsePropertyExpression(
 	}
 
 	p.nextToken() // to prop
-	expr.Property = p.parseIdentifier()
+	expr.Attribute = p.parseIdentifier()
 
 	return expr
 }

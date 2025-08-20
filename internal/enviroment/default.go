@@ -60,11 +60,18 @@ var funcMeta = map[string]MetaFunc{
 var docMeta = map[string]MetaFunc{
 	"__len": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
-		val := len(s.Prop) + len(s.List) + s.Dict.Len()
+		val := len(s.Attrs) + len(s.List) + s.Dict.Len()
 		return &Num{Value: float64(val)}, nil
 	},
 	"__str": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		return &Str{Value: "document"}, nil
+	},
+	"__bool": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*Doc)
+		if s.Dict.Len() == 0 && len(s.List) == 0 && len(s.Attrs) == 0 {
+			return GLOBAL_FALSE, nil
+		}
+		return GLOBAL_TRUE, nil
 	},
 	"__index": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
@@ -96,19 +103,19 @@ var docMeta = map[string]MetaFunc{
 		s.Dict.Set(args[0], args[1])
 		return self, nil
 	},
-	"__property": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+	"__attribute": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
-		result, ok := s.Prop[prop.Value]
+		result, ok := s.Attrs[prop.Value]
 		if !ok {
-			return nil, errors.New("property not exists")
+			return nil, errors.New("attribute not exists")
 		}
 		return result, nil
 	},
-	"__set_property": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+	"__set_attribute": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
-		s.Prop[prop.Value] = args[1]
+		s.Attrs[prop.Value] = args[1]
 		return self, nil
 	},
 }
@@ -170,17 +177,45 @@ var numMeta = map[string]MetaFunc{
 	},
 	"__eq": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		left, right := self.(*Num), args[0].(*Num)
-		if left.Value != right.Value {
-			return GLOBAL_FALSE, nil
+		if left.Value == right.Value {
+			return GLOBAL_TRUE, nil
 		}
-		return GLOBAL_TRUE, nil
+		return GLOBAL_FALSE, nil
+	},
+	"__ne": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		left, right := self.(*Num), args[0].(*Num)
+		if left.Value != right.Value {
+			return GLOBAL_TRUE, nil
+		}
+		return GLOBAL_FALSE, nil
 	},
 	"__lt": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		left, right := self.(*Num), args[0].(*Num)
-		if left.Value >= right.Value {
-			return GLOBAL_FALSE, nil
+		if left.Value < right.Value {
+			return GLOBAL_TRUE, nil
 		}
-		return GLOBAL_TRUE, nil
+		return GLOBAL_FALSE, nil
+	},
+	"__le": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		left, right := self.(*Num), args[0].(*Num)
+		if left.Value <= right.Value {
+			return GLOBAL_TRUE, nil
+		}
+		return GLOBAL_FALSE, nil
+	},
+	"__gt": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		left, right := self.(*Num), args[0].(*Num)
+		if left.Value > right.Value {
+			return GLOBAL_TRUE, nil
+		}
+		return GLOBAL_FALSE, nil
+	},
+	"__ge": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		left, right := self.(*Num), args[0].(*Num)
+		if left.Value >= right.Value {
+			return GLOBAL_TRUE, nil
+		}
+		return GLOBAL_FALSE, nil
 	},
 }
 
@@ -192,6 +227,10 @@ var strMeta = map[string]MetaFunc{
 	"__eq": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		left, right := self.(*Str), args[0].(*Str)
 		return &Bool{Value: left.Value == right.Value}, nil
+	},
+	"__ne": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		left, right := self.(*Str), args[0].(*Str)
+		return &Bool{Value: left.Value != right.Value}, nil
 	},
 	"__len": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		return &Num{Value: float64(len([]rune(self.(*Str).Value)))}, nil

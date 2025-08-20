@@ -13,7 +13,7 @@ func lookupMeta(
 ) (enviroment.Callable, error) {
 	if doc, ok := object.(*enviroment.Doc); ok {
 		if doc.Meta != nil {
-			f, ok := doc.Meta.Prop[metaName]
+			f, ok := doc.Meta.Attrs[metaName]
 			if ok {
 				if f, ok := f.(*enviroment.Func); ok {
 					return f, nil
@@ -33,13 +33,13 @@ func lookupMeta(
 	return f, nil
 }
 
-func (e *Evaluator) evalPropertyExpression(
-	node *ast.PropertyExpression,
+func (e *Evaluator) evalAttributeExpression(
+	node *ast.AttributeExpression,
 ) enviroment.Object {
 	object := e.Eval(node.Left)
-	prop := &enviroment.Str{Value: node.Property.Value}
+	prop := &enviroment.Str{Value: node.Attribute.Value}
 
-	f, err := lookupMeta(object, "__property")
+	f, err := lookupMeta(object, "__attribute")
 	if err != nil {
 		lib.Die(
 			node.Token,

@@ -122,18 +122,18 @@ func (se *SliceExpression) String() string {
 	)
 }
 
-type PropertyExpression struct {
+type AttributeExpression struct {
 	Token    lexer.Token
 	Left     Expression
-	Property *Identifier
+	Attribute *Identifier
 }
 
-func (pe *PropertyExpression) expressionNode() {}
-func (pe *PropertyExpression) String() string {
+func (ae *AttributeExpression) expressionNode() {}
+func (ae *AttributeExpression) String() string {
 	return fmt.Sprintf(
 		"%s.%s",
-		pe.Left.String(),
-		pe.Property.String(),
+		ae.Left.String(),
+		ae.Attribute.String(),
 	)
 }
 

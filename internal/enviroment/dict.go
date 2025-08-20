@@ -14,6 +14,13 @@ func (d *Dict) Len() int {
 	return len(d.numMap) + len(d.strMap)
 }
 
+func NewDict() *Dict {
+	return &Dict{
+		strMap: map[string]Object{},
+		numMap: map[float64]Object{},
+	}
+}
+
 func (d *Dict) String() string {
 	var sb strings.Builder
 	for key, val := range d.strMap {
