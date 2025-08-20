@@ -43,7 +43,7 @@ func (e *Evaluator) evalInfixExpression(
 		)
 	}
 
-	f, err := lookupMeta(left, binOps[node.Operator])
+	f, err := lookup(left, binOps[node.Operator])
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -67,7 +67,7 @@ func (e *Evaluator) evalPrefixExpression(
 ) enviroment.Object {
 	right := e.Eval(node.Right)
 
-	f, err := lookupMeta(right, unOps[node.Operator])
+	f, err := lookup(right, unOps[node.Operator])
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -107,14 +107,14 @@ func (e *Evaluator) evalCallExpression(
 	if f, ok := left.(*enviroment.Func); ok {
 		result, err = f.Call(e, self, args...)
 	} else {
-		f, metaErr := lookupMeta(left, "__call")
+		f, metaErr := e.attribute(left, "__call")
 		if metaErr != nil {
 			lib.Die(
 				node.Token,
 				metaErr.Error(),
 			)
 		}
-		result, err = f.Call(e, self, args...)
+		result, err = f.(*enviroment.Func).Call(e, self, args...)
 	}
 
 	if err != nil {

@@ -12,18 +12,18 @@ var classList = &Doc{
 	Attrs: map[string]Object{
 		"append": &Func{
 			Impl: ast.METHOD,
-			Native: func(o ...Object) Object {
-				self := o[0].(*Doc)
-				self.List = append(self.List, o[1:]...)
-				return self
+			Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+				s := self.(*Doc)
+				s.List = append(s.List, args[1:]...)
+				return s, nil
 			},
 		},
 		"reverse": &Func{
 			Impl: ast.METHOD,
-			Native: func(o ...Object) Object {
-				self := o[0].(*Doc)
-				slices.Reverse(self.List)
-				return self
+			Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+				s := self.(*Doc)
+				slices.Reverse(s.List)
+				return s, nil
 			},
 		},
 	},
@@ -35,10 +35,10 @@ var classDict = &Doc{
 	Attrs: map[string]Object{
 		"hop": &Func{
 			Impl: ast.METHOD,
-			Native: func(o ...Object) Object {
-				self := o[0]
+			Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+				s := self.(*Doc)
 				fmt.Println("HOP!")
-				return self
+				return s, nil
 			},
 		},
 	},

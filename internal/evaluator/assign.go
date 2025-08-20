@@ -56,7 +56,7 @@ func (e *Evaluator) evalAttributeAssign(
 	object := e.Eval(left.Left)
 	prop := &enviroment.Str{Value: left.Attribute.Value}
 
-	f, err := lookupMeta(object, "__set_attribute")
+	f, err := lookup(object, "__set_attribute")
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -86,7 +86,7 @@ func (e *Evaluator) evalIndexAssign(
 		return nil, errors.New("non num index type")
 	}
 
-	f, metaErr := lookupMeta(object, "__set_index")
+	f, metaErr := lookup(object, "__set_index")
 	if metaErr != nil {
 		lib.Die(
 			left.Token,
@@ -123,7 +123,7 @@ func (e *Evaluator) evalSliceAssign(
 		)
 	}
 
-	f, metaErr := lookupMeta(object, "__set_slice")
+	f, metaErr := lookup(object, "__set_slice")
 	if metaErr != nil {
 		lib.Die(
 			left.Token,
@@ -150,7 +150,7 @@ func (e *Evaluator) evalKeyAssign(
 	key := e.Eval(left.Key)
 
 	if key.Type() == enviroment.NIL {
-		f, err := lookupMeta(object, "__set_dict")
+		f, err := lookup(object, "__set_dict")
 		if err != nil {
 			lib.Die(
 				left.Token,
@@ -169,7 +169,7 @@ func (e *Evaluator) evalKeyAssign(
 		return result, nil
 	}
 
-	f, err := lookupMeta(object, "__set_key")
+	f, err := lookup(object, "__set_key")
 	if err != nil {
 		lib.Die(
 			left.Token,

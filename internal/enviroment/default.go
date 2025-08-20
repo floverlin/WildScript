@@ -8,17 +8,37 @@ import (
 	"strconv"
 )
 
+func lookup(doc *Doc, attr string) (Object, bool) {
+	if result, ok := doc.Attrs[attr]; ok {
+		return result, ok
+	}
+	if doc.Meta != nil {
+		if result, ok := lookup(doc.Meta, attr); ok {
+			return result, ok
+		}
+	}
+	return nil, false
+}
+
+func lookupMeta(obj Object, attr string) (Object, bool) {
+	if doc, ok := obj.(*Doc); ok {
+		if doc.Meta != nil {
+			return lookup(doc.Meta, attr)
+		}
+	}
+	meta, ok := DefaultMeta[obj.Type()]
+	if !ok {
+		return nil, false
+	}
+	result, ok := meta[attr]
+	return &Func{Native: result}, ok
+}
+
 type Callable interface {
 	Call(be blockEvaluator, self Object, args ...Object) (Object, error)
 }
 
-type MetaFunc func(be blockEvaluator, self Object, args ...Object) (Object, error)
-
-func (mf MetaFunc) Call(be blockEvaluator, self Object, args ...Object) (Object, error) {
-	return mf(be, self, args...)
-}
-
-var DefaultMeta = map[ObjectType]map[string]MetaFunc{
+var DefaultMeta = map[ObjectType]map[string]Native{
 	STR:  strMeta,
 	BOOL: boolMeta,
 	NUM:  numMeta,
@@ -26,7 +46,7 @@ var DefaultMeta = map[ObjectType]map[string]MetaFunc{
 	FUNC: funcMeta,
 }
 
-var boolMeta = map[string]MetaFunc{
+var boolMeta = map[string]Native{
 	"__not": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		if self.(*Bool).Value {
 			return GLOBAL_FALSE, nil
@@ -48,7 +68,7 @@ var boolMeta = map[string]MetaFunc{
 	},
 }
 
-var funcMeta = map[string]MetaFunc{
+var funcMeta = map[string]Native{
 	"__call": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		fmt.Println("!!")
 		return self.(*Func).Call(be, self, args...)
@@ -58,7 +78,7 @@ var funcMeta = map[string]MetaFunc{
 	},
 }
 
-var docMeta = map[string]MetaFunc{
+var docMeta = map[string]Native{
 	"__len": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		val := len(s.Attrs) + len(s.List) + s.Dict.Len()
@@ -120,16 +140,10 @@ var docMeta = map[string]MetaFunc{
 	"__attribute": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
 		prop := args[0].(*Str)
-		result, ok := s.Attrs[prop.Value]
-		if !ok {
-			if s.Meta != nil {
-				if result, ok := s.Meta.Attrs[prop.Value]; ok {
-					return result, nil
-				}
-			}
-			return nil, errors.New("attribute not exists")
+		if result, ok := lookup(s, prop.Value); ok {
+			return result, nil
 		}
-		return result, nil
+		return nil, errors.New("attribute not exists")
 	},
 	"__set_attribute": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*Doc)
@@ -176,7 +190,7 @@ var docMeta = map[string]MetaFunc{
 	},
 }
 
-var numMeta = map[string]MetaFunc{
+var numMeta = map[string]Native{
 	"__unm": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		return &Num{Value: -self.(*Num).Value}, nil
 	},
@@ -275,7 +289,7 @@ var numMeta = map[string]MetaFunc{
 	},
 }
 
-var strMeta = map[string]MetaFunc{
+var strMeta = map[string]Native{
 	"__add": func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		left, right := self.(*Str), args[0].(*Str)
 		return &Str{Value: left.Value + right.Value}, nil

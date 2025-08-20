@@ -7,21 +7,10 @@ import (
 	"wildscript/internal/lib"
 )
 
-func lookupMeta(
+func lookup(
 	object enviroment.Object,
 	metaName string,
 ) (enviroment.Callable, error) {
-	if doc, ok := object.(*enviroment.Doc); ok {
-		if doc.Meta != nil {
-			f, ok := doc.Meta.Attrs[metaName]
-			if ok {
-				if f, ok := f.(*enviroment.Func); ok {
-					return f, nil
-				}
-			}
-		}
-	}
-
 	meta, ok := enviroment.DefaultMeta[object.Type()]
 	if !ok {
 		return nil, errors.New("unsupported type")
@@ -30,7 +19,20 @@ func lookupMeta(
 	if !ok {
 		return nil, errors.New("unsupported operation")
 	}
-	return f, nil
+	return &enviroment.Func{Native: f}, nil
+}
+
+func (e *Evaluator) attribute(object enviroment.Object, attr string) (enviroment.Object, error) {
+	f, err := lookup(object, "__attribute")
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := f.Call(e, object, &enviroment.Str{Value: attr})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (e *Evaluator) evalAttributeExpression(
@@ -39,7 +41,7 @@ func (e *Evaluator) evalAttributeExpression(
 	object := e.Eval(node.Left)
 	prop := &enviroment.Str{Value: node.Attribute.Value}
 
-	f, err := lookupMeta(object, "__attribute")
+	f, err := lookup(object, "__attribute")
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -70,7 +72,7 @@ func (e *Evaluator) evalIndexExpression(
 		)
 	}
 
-	f, err := lookupMeta(left, "__index")
+	f, err := lookup(left, "__index")
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -106,7 +108,7 @@ func (e *Evaluator) evalSliceExpression(
 		)
 	}
 
-	f, err := lookupMeta(left, "__slice")
+	f, err := lookup(left, "__slice")
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -132,7 +134,7 @@ func (e *Evaluator) evalKeyExpression(
 	key := e.Eval(node.Key)
 
 	if key.Type() == enviroment.NIL {
-		f, err := lookupMeta(left, "__dict")
+		f, err := lookup(left, "__dict")
 		if err != nil {
 			lib.Die(
 				node.Token,
@@ -151,7 +153,7 @@ func (e *Evaluator) evalKeyExpression(
 		return result
 	}
 
-	f, err := lookupMeta(left, "__key")
+	f, err := lookup(left, "__key")
 	if err != nil {
 		lib.Die(
 			node.Token,

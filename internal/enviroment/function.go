@@ -8,7 +8,7 @@ import (
 	"github.com/fatih/color"
 )
 
-type Native func(...Object) Object
+type Native func(be blockEvaluator, self Object, args ...Object) (Object, error)
 
 type Func struct {
 	Parameters []*ast.Identifier
@@ -32,13 +32,17 @@ type blockEvaluator interface {
 	) Object
 }
 
-func (f *Func) Call(be blockEvaluator, self Object, args ...Object) (Object, error) {
-	if f.Impl == ast.METHOD {
-		args = append([]Object{self}, args...)
+func (f *Func) Call(
+	be blockEvaluator,
+	self Object,
+	args ...Object,
+) (Object, error) {
+	if f.Native != nil {
+		return f.Native(be, self, args...)
 	}
 
-	if f.Native != nil {
-		return f.Native(args...), nil
+	if f.Impl == ast.METHOD {
+		args = append([]Object{self}, args...)
 	}
 
 	if len(args) != len(f.Parameters) {
