@@ -82,49 +82,33 @@ func (e *Evaluator) evalPrefixExpression(
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
 ) enviroment.Object {
+	left := e.Eval(node.Function)
+
 	var self enviroment.Object
 	if prop, ok := node.Function.(*ast.PropertyExpression); ok {
 		self = e.Eval(prop.Left)
+	} else if doc, ok := left.(*enviroment.Doc); ok {
+		self = doc
 	} else {
 		self = enviroment.GLOBAL_NIL
 	}
 
-	var t any
-	left := e.Eval(node.Function)
+	args := e.evalExpressions(node.Arguments)
+	var result enviroment.Object
+	var err error
 
-	if left.Type() == enviroment.DOC {
-		f, err := lookupMeta(left, "__call")
-		if err != nil {
+	if f, ok := left.(*enviroment.Func); ok {
+		result, err = f.Call(e, self, args...)
+	} else {
+		f, metaErr := lookupMeta(left, "__call")
+		if metaErr != nil {
 			lib.Die(
 				node.Token,
-				err.Error(),
+				metaErr.Error(),
 			)
 		}
-		t = f
-	} else {
-		t = left
+		result, err = f.Call(e, self, args...)
 	}
-
-	f, ok := t.(*enviroment.Func)
-	if !ok {
-		lib.Die(
-			node.Token,
-			"callable %s is not a function",
-			left.Inspect(),
-		)
-	}
-
-	args := e.evalExpressions(node.Arguments)
-
-	if f.Impl == ast.NATIVE {
-		return f.Native(args...)
-	}
-
-	if f.Impl == ast.METHOD {
-		args = append([]enviroment.Object{self}, args...)
-	}
-
-	result, err := f.Call(e, args...)
 
 	if err != nil {
 		lib.Die(

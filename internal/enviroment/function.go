@@ -32,7 +32,15 @@ type blockEvaluator interface {
 	) Object
 }
 
-func (f *Func) Call(be blockEvaluator, args ...Object) (Object, error) {
+func (f *Func) Call(be blockEvaluator, self Object, args ...Object) (Object, error) {
+	if f.Impl == ast.NATIVE {
+		return f.Native(args...), nil
+	}
+
+	if f.Impl == ast.METHOD {
+		args = append([]Object{self}, args...)
+	}
+
 	if len(args) != len(f.Parameters) {
 		return nil, fmt.Errorf(
 			"function want %d argument(s) got %d",
