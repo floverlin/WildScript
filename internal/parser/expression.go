@@ -74,10 +74,10 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			expr = p.parseAttributeExpression(expr)
 		case lexer.LBRACKET:
 			expr = p.parseBracketExpression(expr)
-		case lexer.LPAREN:
-			expr = p.parseCallExpression(expr)
 		case lexer.LBRACE:
 			expr = p.parseKeyExpression(expr)
+		case lexer.LPAREN:
+			expr = p.parseCallExpression(expr)
 		default:
 			expr = p.parseInfixExpression(expr)
 		}

@@ -1,162 +1,381 @@
-# FLUX
+# SIGILLUM
 
-## name
+## типы
 
-- Eclipt
-- Lyn
-- Nivelle
+Sigillum - язык с динамической типизацией
 
-## types
+функция `type` позволяет получить строковое представление типа
 
-|   Flux   |   Go    |   JavaScript   |  Python   |   Lua   |
-| :------: | :-----: | :------------: | :-------: | :-----: |
-| **nil**  |   nil   | null/undefined |   none    |   nil   |
-| **num**  | float64 |     number     |   float   | number  |
-| **str**  | string  |     string     |    str    | string  |
-| **bool** |  bool   |    boolean     |   bool    | boolean |
-| **doc**  |   map   |     object     | list/dict |  table  |
+```sigillum
+type("sigillum");   # string
+type(1176);         # number
+type(lambda() {});  # function
+```
 
-## doc
+таблица типов и их аналогов в других языках
 
-```flux
-let my_object = {
-    "a",
-    "b",
-    "c",
-    name = "Lin"
-    say = method(self) {
-        println("Hello, World!")
+|   Sigillum   |   Go    | JavaScript |  Python  |   Lua    |
+| :----------: | :-----: | :--------: | :------: | :------: |
+|   **nil**    |   nil   |    null    |   none   |   nil    |
+|  **number**  | float64 |   number   |  float   |  number  |
+|  **string**  | string  |   string   |   str    |  string  |
+| **boolean**  |  bool   |  boolean   |   bool   | boolean  |
+| **document** | struct  |   object   |  class   |  table   |
+| **function** |  func   |  function  | function | function |
+
+### nil
+
+тип с единственным значением, обозначающим отсутствие значения
+
+присваивается переменной при обьявлении без инициализации
+
+```sigillum
+let a;
+let b = nil;
+type(a);  # nil
+type(b);  # nil
+```
+
+### number
+
+представляет вещественные числа (с плавающей точкой двойной точности)
+
+```sigillum
+let a = 1;
+let b = 10.76;
+a = a + b;
+a;        # 11.76
+type(a);  # number
+```
+
+### string
+
+представляет последовательность символов произвольной длинны
+
+строки неизменяемы, поддерживают обьединение и срезы
+
+```sigillum
+let a = "hello";
+let b = ", world!";
+let hello = a + b;
+hello;       # hello, world!
+hello[1:5];  # ello
+```
+
+### boolean
+
+представляет два традиционных логических значения `true` и `false`
+
+только этот тип используется в условиях (без автоприведения)
+
+```sigillum
+let a = false;
+let b = 1 < 2;
+if a then {
+    "hello"
+} else {
+    "world"
+};        # world
+b;        # true
+type(b);  # boolean
+```
+
+для условного автоприведения рекомендуется создать отдельную функцию
+
+```sigillum
+function nonempty(object) {
+    if type(object) == "number" then {
+        if object == 0 then {
+            return false
+        } else {
+            return true
+        }
+    } elif type(object) == "string" then {
+        ...
+    }
+};
+
+if nonempty(my_object) then {
+    ...
+}
+```
+
+### function
+
+всегда возвращают одно значение (по умолчанию - nil)
+
+подразделяются на 4 типа
+
+1. function - обычная функция
+2. lambda - анонимная функция (обьявляется внутри выражения)
+3. method - автоматически принимает первым аргументом обьект, которому принадлежит
+4. native - функция с нативной реализацией
+
+```sigillum
+function add(a, b) {
+    return a + b
+};
+
+let sub = lambda(a, b) {
+    return a - b
+};
+
+let object = {
+    name = "Nihil",
+    hello = method(self) {
+        return "Hello! My name is " + self.name
+    },
+};
+
+type(type);  # function
+```
+
+### document
+
+тип для композиции и наследования
+
+состоит из списка doc[index], словаря doc{key} и атрибутов doc.attr
+
+```sigillum
+let doc = {
+    "a", "b", "c",  # обьявление списка
+    name = "Sigil"  # обьявление атрибутов
+    great = method(self) {
         println("My name is " + self.name + "!")
     },
     number = 1176,
-    "string key": "string value",
+    "string key": "string value",  # обьявление словаря
     123: "number value",
 }
 
-my_object[1]  # "b"
-my_object.say()  # >> "Hello, World!"
-my_object{123}  # "number value"
-let key = "string key"
-my_object{key}  # "string value"
+doc[1];
+doc[2] = "d";
+doc[3];  # panic -> index out of range
+
+doc.great();  # My name is Sigil!
+doc.hello;  # panic -> attribute doesn't exists
+
+doc{123};
+let key = "string key";
+doc{key};  # или doc{"string key"}
+doc{"wrong key"};  # panic -> key doesn't exists
 ```
 
-## meta
+#### meta
 
-```flux
-let meta_object = {
-    __str = method(self) {
-        return "my object " + self.name
+функция `set_meta` позволяет задать документу метадоку (документ, атрибуты которого переопределяют поведение)
+
+функция `get_meta` позволяет получит метадоку документа
+
+```sigillum
+let md = {
+    __call = method(self) {
+        return self.name
     },
-}
+    __index = method(self, index) {
+        return "haha, joke!"
+    },
+};
 
-my_object = {
-    name = "flux",
-}
+set_meta(doc, md);
 
-set_meta(my_object, meta_object)
-
-println(my_object)  # >> "my object flux"
-
-get_meta(my_object)  # meta_object
+doc();  # Sigil
+doc[1176];  # haha, joke!
 ```
 
-- \_\_add
-- \_\_sub
-- \_\_mul
-- \_\_div
-- \_\_floor_div
-- \_\_mod
-- \_\_pow
+## поток выполнения
 
-- \_\_unm
-- \_\_not
+### циклы
 
-- \_\_eq
-- \_\_lt
-- \_\_le
+есть три вида циклов
 
-- \_\_str
-- \_\_num
-- \_\_bool
+1. перебор for
+2. с предусловием while
+3. с постусловием repeat
 
-- \_\_call
-- \_\_len
+```sigillum
+for range(10) do {  # range возвращает итератор
+    print("!")
+};
+println();
 
-- \_\_slice
-
-- \_\_index
-- \_\_safe_index
-- \_\_set_index
-- \_\_set_list
-
-- \_\_key
-- \_\_safe_key
-- \_\_set_key
-- \_\_set_dict
-
-- \_\_attribute
-- \_\_safe_attribute
-- \_\_set_attribute
-
-## for while repeat
-
-```flux
-for idx, val in my_list {
-    println(idx, val)
-}
+let list = {1, 2, 3};
+for val in list[] do {  # [] возвращает итерируемый список
+    print(val, " ");
+};
+println();
 
 let i = 0
-while i < 10 {
-    println(i)
+while i < 10 do {
+    print(i, " ");
     i = i + 1
-}
+};
+println();
 
 repeat {
-    println(i)
+    print(i, " ");
     i = i - 1
-} until i < 1
+} until i < 1;
+println();
 ```
 
-## if else
+### ветвления
 
-```flux
-if 1 < 2 {
+могут быть использованы внутри выражения, возвращая результат последней инсnрукции блока (без ; на конце)
+
+```sigillum
+if 1 < 2 then {
     println(true)
 } else {
     println(false)
-}
+};
+
+let name = "Sigil";
+let hello = "Hello!" + if type(name) == "string" then {
+    "My name is " + name
+    } else { "" };
+hello;  # Hello! My name is Sigil
 ```
 
-## func
+## panic ? Result
 
-```flux
-function hello(name) {
-    println("Hello, " + name + "!")
-    return true
-}
+при взятии из документа атрибута/значения списка/значения словаря, которого не существует, произойдет паника
 
-let hello = lambda(name) {
-    println("Hello, " + name + "!")
-}  # default return nil
+так же панику можно вызвать с помошью оператора panic
+
+после panic передается строка - message, число - code или документ с этими атрибутами
+
+```sigillum
+function unsafe() {
+    panic "used unsafe function"
+};
+unsafe();  # panic -> {message = "used unsafe function"}
+
+panic 404;  # panic -> {code = 404}
+
+panic {
+    message = "LOL",
+    code = 1337,
+    };  # panic -> {message = "LOL", code = 1337}
+
+panic;  # panic -> {} не nil!
 ```
 
-## slice
+для безопасного взятия значения из документа или вызова функции используется оператор `?`
 
-```flux
-let slice = doc[:]
-slice.append("another one lin")
+при его использовании результатом будет Result = `{value_, error_}`, где
+value - возвращаемое значение или nil, если была остановлена паника,
+error - ошибка или nil, если паники не было
+
+Result содержит методы для работы с полученным значением
+
+```sigillum
+doc.users?[36]?{"address"}?.or(nil);  # адрес 36-го пользователя или nil
+
+let result = num("not a number")?;
+result;  # {
+    value_ = nil,
+    error_ = {
+        message = "could not convert string to number"
+        },
+    }
+```
+
+## классы
+
+классы реализуются через цепочку присвоений атрибутов и метадоков
+
+### конструктор
+
+их можно реализовать вручную используя `set_meta` и `merge` функции
+или воспользоваться конструктором
+
+```sigillum
+define Human {
+    __init = method(self, name) {
+        self.name = name
+    }
+};
+
+define Witch(Human) {
+    __init = method(self, name) {
+        super(name)
+    },
+    cast = method(self) {
+        println(self.name + " is casting spell!")
+    },
+};
+
+let zullie = Witch("Zullie");
+zullie.cast();  # Zullie is casting spell!
+```
+
+### List Dict slice
+
+для обработки данных документа можно взять эти данные в виде поддокумента вида
+
+1. slice - копия участка исходного списка документа
+2. list - полный список документа (ссылается на исходный документ)
+3. dict - полный словарь исходного документа (ссылается на исходный документ)
+
+все три подтипа обладают набором методов для работы с данными
+
+чтобы вернуть обработанные данные в документ используется присваивание по
+
+1. срезу `doc[start:end] =` - вставляет список внутрь среза
+2. списку `doc[] =` - заменяет список
+3. словарю `doc{} =` - заменяет словарь
+
+```sigillum
+let doc = {1, 2, 3};
+let slice = doc[:];
+slice.append(4).reverse();
 doc[] = slice;
-doc[] = doc[2:-2].
-    append("and another one lin").
-    reverse()
+
+doc[].append(0, -1).
+    reverse();
 ```
 
-## safe
+на самом деле slice и list - это экземпляры одного класса List,
+просто slice использует свой собственный список, а list использует `_ref` ссылку
 
-```flux
-let res = my_doc?.users?[16]?{"address"}
-res  # { value = "rolotushkina", ok = true }
-res = my_doc?.users?[16]?{"adres"}
-res  # { value = nil, ok = false}
-res.or("no address")  # "no address"
+slice.\_ref == nil; # true
+
+то же самое справедливо и для Dict, но его вариант без `_ref` ссылки создается через метод `copy()`
+
+## модули
+
+для импорта модуля используется оператор `import`
+
+после него через точку пишется путь к файлу (путь должен быть в формате синтаксиса переменных)
+
+импортированные данные будут помещены в окружение под последним именем в пути
+
+можно задать псевдоним импорта через `as`
+
+```sigillum
+import mod;
+import utils.mod as utils;
+
+let constant = mod.CONSTANT;
+utils.func(constant);  # 1176
+```
+
+в модулях необходимо определить, что они будут экспортировать через опертор `export`
+
+он **завершает** выполнение модуля подобно `return` функции
+
+после него указывается экспортируемый обьект
+
+```sigillum
+# mod.sil
+let constant = 1176;
+export {CONSTANT = constant}
+
+#utils/mod.sil
+export {
+    func = lambda(c) {
+        println(c)
+    },
+}
 ```

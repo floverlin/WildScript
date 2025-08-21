@@ -4,7 +4,7 @@ import "wildscript/internal/lexer"
 
 const (
 	LOWEST = iota
-	IF_LOOP
+	IF
 	LOGICAL_OR
 	LOGICAL_AND
 	COMPARISON
@@ -17,10 +17,7 @@ const (
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.IF:    IF_LOOP,
-	lexer.FOR:   IF_LOOP,
-	lexer.WHILE: IF_LOOP,
-	lexer.UNTIL: IF_LOOP,
+	lexer.IF: IF,
 
 	lexer.OR:  LOGICAL_OR,
 	lexer.AND: LOGICAL_AND,
@@ -48,4 +45,5 @@ var precedences = map[lexer.TokenType]int{
 	lexer.LPAREN:   CALL,
 	lexer.LBRACKET: CALL,
 	lexer.LBRACE:   CALL,
+	lexer.QUESTION: CALL,
 }
