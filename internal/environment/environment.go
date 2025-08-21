@@ -1,12 +1,12 @@
-package enviroment
+package environment
 
-type Enviroment struct {
+type Environment struct {
 	store map[string]Object
-	outer *Enviroment
+	outer *Environment
 }
 
-func New(outer *Enviroment) *Enviroment {
-	e := &Enviroment{
+func New(outer *Environment) *Environment {
+	e := &Environment{
 		store: make(map[string]Object),
 	}
 	if outer != nil {
@@ -18,7 +18,7 @@ func New(outer *Enviroment) *Enviroment {
 	return e
 }
 
-func (e *Enviroment) Get(name string) (Object, bool) {
+func (e *Environment) Get(name string) (Object, bool) {
 	obj, ok := e.store[name]
 	if !ok && e.outer != nil {
 		obj, ok = e.outer.Get(name)
@@ -26,7 +26,7 @@ func (e *Enviroment) Get(name string) (Object, bool) {
 	return obj, ok
 }
 
-func (e *Enviroment) Set(name string, val Object) (Object, bool) {
+func (e *Environment) Set(name string, val Object) (Object, bool) {
 	_, ok := e.store[name]
 	if ok {
 		e.store[name] = val
@@ -36,7 +36,7 @@ func (e *Enviroment) Set(name string, val Object) (Object, bool) {
 	return val, ok
 }
 
-func (e *Enviroment) Create(name string, val Object) (Object, bool) {
+func (e *Environment) Create(name string, val Object) (Object, bool) {
 	_, ok := e.store[name]
 	if ok {
 		return nil, false

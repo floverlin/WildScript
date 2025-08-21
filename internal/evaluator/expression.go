@@ -2,7 +2,7 @@ package evaluator
 
 import (
 	"wildscript/internal/ast"
-	"wildscript/internal/enviroment"
+	"wildscript/internal/environment"
 	"wildscript/internal/lib"
 )
 
@@ -30,7 +30,7 @@ var unOps = map[string]string{
 
 func (e *Evaluator) evalInfixExpression(
 	node *ast.InfixExpression,
-) enviroment.Object {
+) environment.Object {
 	left := e.Eval(node.Left)
 	right := e.Eval(node.Right)
 
@@ -64,7 +64,7 @@ func (e *Evaluator) evalInfixExpression(
 
 func (e *Evaluator) evalPrefixExpression(
 	node *ast.PrefixExpression,
-) enviroment.Object {
+) environment.Object {
 	right := e.Eval(node.Right)
 
 	f, err := lookup(right, unOps[node.Operator])
@@ -88,23 +88,23 @@ func (e *Evaluator) evalPrefixExpression(
 
 func (e *Evaluator) evalCallExpression(
 	node *ast.CallExpression,
-) enviroment.Object {
+) environment.Object {
 	left := e.Eval(node.Function)
 
-	var self enviroment.Object
+	var self environment.Object
 	if prop, ok := node.Function.(*ast.AttributeExpression); ok {
 		self = e.Eval(prop.Left)
-	} else if doc, ok := left.(*enviroment.Doc); ok {
+	} else if doc, ok := left.(*environment.Doc); ok {
 		self = doc
 	} else {
-		self = enviroment.GLOBAL_NIL
+		self = environment.GLOBAL_NIL
 	}
 
 	args := e.evalExpressions(node.Arguments)
-	var result enviroment.Object
+	var result environment.Object
 	var err error
 
-	if f, ok := left.(*enviroment.Func); ok {
+	if f, ok := left.(*environment.Func); ok {
 		result, err = f.Call(e, self, args...)
 	} else {
 		f, metaErr := e.attribute(left, "__call")
@@ -114,7 +114,7 @@ func (e *Evaluator) evalCallExpression(
 				metaErr.Error(),
 			)
 		}
-		result, err = f.(*enviroment.Func).Call(e, self, args...)
+		result, err = f.(*environment.Func).Call(e, self, args...)
 	}
 
 	if err != nil {
@@ -129,10 +129,10 @@ func (e *Evaluator) evalCallExpression(
 
 func (e *Evaluator) evalIfExpression(
 	node *ast.IfExpression,
-) enviroment.Object {
+) environment.Object {
 	cond := e.Eval(node.If)
 
-	if cond.Type() != enviroment.BOOL {
+	if cond.Type() != environment.BOOL {
 		lib.Die(
 			node.Token,
 			"non bool condition %s",
@@ -140,7 +140,7 @@ func (e *Evaluator) evalIfExpression(
 		)
 	}
 
-	if cond.(*enviroment.Bool).Value {
+	if cond.(*environment.Bool).Value {
 		return e.Eval(node.Then)
 	} else {
 		return e.Eval(node.Else)

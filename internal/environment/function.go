@@ -1,4 +1,4 @@
-package enviroment
+package environment
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ type Native func(
 type Func struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockExpression
-	Enviroment *Enviroment
+	Enviroment *Environment
 	Native     Native
 	Impl       ast.FunctionImplementation
 }
@@ -31,7 +31,7 @@ func (f *Func) Inspect() string {
 type blockEvaluator interface {
 	EvalBlock(
 		block *ast.BlockExpression,
-		outer *Enviroment,
+		outer *Environment,
 		args map[string]Object,
 	) Object
 }

@@ -1,4 +1,4 @@
-package enviroment
+package environment
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"wildscript/internal/ast"
 )
 
-func (e *Enviroment) loadBuiltin() {
+func (e *Environment) loadBuiltin() {
 	e.Create("__print", &Func{
 		Impl:   ast.FUNCTION,
 		Native: print,

@@ -4,15 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"wildscript/internal/ast"
-	"wildscript/internal/enviroment"
+	"wildscript/internal/environment"
 	"wildscript/internal/lib"
 )
 
 func (e *Evaluator) evalAssignStatement(
 	stmt *ast.AssignStatement,
-) enviroment.Object {
+) environment.Object {
 	var err error
-	var result enviroment.Object
+	var result environment.Object
 
 	right := e.Eval(stmt.Right)
 	switch left := stmt.Left.(type) {
@@ -37,8 +37,8 @@ func (e *Evaluator) evalAssignStatement(
 
 func (e *Evaluator) evalIdentifierAssign(
 	left *ast.Identifier,
-	value enviroment.Object,
-) (enviroment.Object, error) {
+	value environment.Object,
+) (environment.Object, error) {
 	result, ok := e.env.Set(left.Value, value)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -51,10 +51,10 @@ func (e *Evaluator) evalIdentifierAssign(
 
 func (e *Evaluator) evalAttributeAssign(
 	left *ast.AttributeExpression,
-	value enviroment.Object,
-) (enviroment.Object, error) {
+	value environment.Object,
+) (environment.Object, error) {
 	object := e.Eval(left.Left)
-	prop := &enviroment.Str{Value: left.Attribute.Value}
+	prop := &environment.Str{Value: left.Attribute.Value}
 
 	f, err := lookup(object, "__set_attribute")
 	if err != nil {
@@ -77,12 +77,12 @@ func (e *Evaluator) evalAttributeAssign(
 
 func (e *Evaluator) evalIndexAssign(
 	left *ast.IndexExpression,
-	value enviroment.Object,
-) (enviroment.Object, error) {
+	value environment.Object,
+) (environment.Object, error) {
 	object := e.Eval(left.Left)
 	index := e.Eval(left.Index)
 
-	if index.Type() != enviroment.NUM {
+	if index.Type() != environment.NUM {
 		return nil, errors.New("non num index type")
 	}
 
@@ -107,16 +107,16 @@ func (e *Evaluator) evalIndexAssign(
 
 func (e *Evaluator) evalSliceAssign(
 	left *ast.SliceExpression,
-	value enviroment.Object,
-) (enviroment.Object, error) {
+	value environment.Object,
+) (environment.Object, error) {
 	object := e.Eval(left.Left)
 	start := e.Eval(left.Start)
 	end := e.Eval(left.End)
 
-	if (start.Type() != enviroment.NUM &&
-		start.Type() != enviroment.NIL) ||
-		(end.Type() != enviroment.NUM &&
-			end.Type() != enviroment.NIL) {
+	if (start.Type() != environment.NUM &&
+		start.Type() != environment.NIL) ||
+		(end.Type() != environment.NUM &&
+			end.Type() != environment.NIL) {
 		lib.Die(
 			left.Token,
 			"non num index",
@@ -144,12 +144,12 @@ func (e *Evaluator) evalSliceAssign(
 
 func (e *Evaluator) evalKeyAssign(
 	left *ast.KeyExpression,
-	value enviroment.Object,
-) (enviroment.Object, error) {
+	value environment.Object,
+) (environment.Object, error) {
 	object := e.Eval(left.Left)
 	key := e.Eval(left.Key)
 
-	if key.Type() == enviroment.NIL {
+	if key.Type() == environment.NIL {
 		f, err := lookup(object, "__set_dict")
 		if err != nil {
 			lib.Die(
@@ -190,7 +190,7 @@ func (e *Evaluator) evalKeyAssign(
 
 func (e *Evaluator) evalLetStatement(
 	stmt *ast.LetStatement,
-) enviroment.Object {
+) environment.Object {
 	right := e.Eval(stmt.Right)
 
 	result, ok := e.env.Create(stmt.Left.Value, right)

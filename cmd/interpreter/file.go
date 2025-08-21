@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"time"
-	"wildscript/internal/enviroment"
+	"wildscript/internal/environment"
 	"wildscript/internal/evaluator"
 	"wildscript/internal/lexer"
 	"wildscript/internal/logger"
@@ -84,7 +84,7 @@ func RunFile(fileName string) {
 		return
 	}
 
-	var result enviroment.Object
+	var result environment.Object
 	for idx, stmt := range program.Statements {
 		obj := e.Eval(stmt)
 		result = obj
@@ -97,7 +97,7 @@ func RunFile(fileName string) {
 	)
 
 	fmt.Printf(
-		"[wild] program ends in %d us\n",
+		"[sigil] program ends in %d us\n",
 		time.Since(start).Microseconds(),
 	)
 }

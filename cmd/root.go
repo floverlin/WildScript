@@ -11,9 +11,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "wild",
-	Short: "WildScript interpreter",
-	Long:  `WildScript - GO, GO WILD!`,
+	Use:   "sigil",
+	Short: "Sigillum interpreter",
+	Long:  `Sigillum - witchcraft language`,
 	Args:  cobra.ArbitraryArgs,
 
 	Run: func(cmd *cobra.Command, args []string) {
@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 
 		var file string
 		if ext := filepath.Ext(args[0]); ext == "" {
-			file = args[0] + ".ws"
+			file = args[0] + ".sil" // TODO CONST
 		}
 
 		interpreter.RunFile(file)

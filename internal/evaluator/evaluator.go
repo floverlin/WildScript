@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"os"
 	"wildscript/internal/ast"
-	"wildscript/internal/enviroment"
+	"wildscript/internal/environment"
 	"wildscript/internal/lexer"
 	"wildscript/internal/lib"
 	"wildscript/internal/parser"
 )
 
 type Evaluator struct {
-	env *enviroment.Enviroment
+	env *environment.Environment
 }
 
-func New(env *enviroment.Enviroment) *Evaluator {
-	e := &Evaluator{env: enviroment.New(env)}
+func New(env *environment.Environment) *Evaluator {
+	e := &Evaluator{env: environment.New(env)}
 	return e
 }
 
-func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
+func (e *Evaluator) Eval(node ast.Node) environment.Object {
 	switch node := node.(type) {
 	case *ast.Program:
 		return e.evalProgram(node)
@@ -35,7 +35,7 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 	case *ast.ImportStatement:
 		return e.evalImportStatement(node)
 	case *ast.ExportStatement:
-		return &enviroment.Export{Value: e.Eval(node.Value)}
+		return &environment.Export{Value: e.Eval(node.Value)}
 	case *ast.FunctionStatement:
 		return e.evalLetStatement(
 			&ast.LetStatement{
@@ -45,11 +45,11 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 			},
 		)
 	case *ast.ReturnStatement:
-		return &enviroment.Return{Value: e.Eval(node.Value)}
+		return &environment.Return{Value: e.Eval(node.Value)}
 	case *ast.ContinueStatement:
-		return &enviroment.Continue{}
+		return &environment.Continue{}
 	case *ast.BreakStatement:
-		return &enviroment.Break{}
+		return &environment.Break{}
 	case *ast.WhileStatement:
 		return e.evalWhileStatement(node)
 	case *ast.RepeatStatement:
@@ -81,35 +81,35 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalDocumentLiteral(node)
 
 	case *ast.FunctionLiteral:
-		return &enviroment.Func{
+		return &environment.Func{
 			Parameters: node.Parameters,
 			Body:       node.Body,
 			Enviroment: e.env,
 			Impl:       node.Impl,
 		}
 	case *ast.NumberLiteral:
-		return &enviroment.Num{Value: node.Value}
+		return &environment.Num{Value: node.Value}
 	case *ast.StringLiteral:
-		return &enviroment.Str{Value: node.Value}
+		return &environment.Str{Value: node.Value}
 	case *ast.BooleanLiteral:
 		if node.Value {
-			return enviroment.GLOBAL_TRUE
+			return environment.GLOBAL_TRUE
 		} else {
-			return enviroment.GLOBAL_FALSE
+			return environment.GLOBAL_FALSE
 		}
 	case *ast.NilLiteral:
-		return enviroment.GLOBAL_NIL
+		return environment.GLOBAL_NIL
 	default:
 		panic("unknown node type")
 	}
 }
 
-func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
-	var result enviroment.Object
+func (e *Evaluator) evalProgram(program *ast.Program) environment.Object {
+	var result environment.Object
 	for _, stmt := range program.Statements {
 		result = e.Eval(stmt)
-		if result.Type() == enviroment.SIGNAL {
-			if export, ok := result.(*enviroment.Export); ok {
+		if result.Type() == environment.SIGNAL {
+			if export, ok := result.(*environment.Export); ok {
 				return export.Value
 			}
 			lib.Die(
@@ -118,15 +118,15 @@ func (e *Evaluator) evalProgram(program *ast.Program) enviroment.Object {
 			)
 		}
 	}
-	return enviroment.GLOBAL_NIL
+	return environment.GLOBAL_NIL
 }
 
 func (e *Evaluator) EvalBlock(
 	block *ast.BlockExpression,
-	outer *enviroment.Enviroment,
-	args map[string]enviroment.Object,
-) enviroment.Object {
-	var result enviroment.Object
+	outer *environment.Environment,
+	args map[string]environment.Object,
+) environment.Object {
+	var result environment.Object
 
 	blockEval := New(outer)
 	for key, val := range args {
@@ -136,7 +136,7 @@ func (e *Evaluator) EvalBlock(
 	for _, stmt := range block.Statements {
 		result = blockEval.Eval(stmt)
 
-		if result.Type() == enviroment.SIGNAL {
+		if result.Type() == environment.SIGNAL {
 			break
 		}
 	}
@@ -146,8 +146,8 @@ func (e *Evaluator) EvalBlock(
 
 func (e *Evaluator) evalExpressions(
 	exprs []ast.Expression,
-) []enviroment.Object {
-	var result []enviroment.Object
+) []environment.Object {
+	var result []environment.Object
 	for _, expr := range exprs {
 		result = append(result, e.Eval(expr))
 	}
@@ -156,7 +156,7 @@ func (e *Evaluator) evalExpressions(
 
 func (e *Evaluator) evalImportStatement(
 	node *ast.ImportStatement,
-) enviroment.Object {
+) environment.Object {
 	var modulePath string
 	for _, mod := range node.Module {
 		modulePath += mod.Value + "/"
@@ -177,12 +177,12 @@ func (e *Evaluator) evalImportStatement(
 
 	e.env.Create(node.Module[len(node.Module)-1].Value, result)
 
-	return enviroment.GLOBAL_NIL
+	return environment.GLOBAL_NIL
 }
 
 func (e *Evaluator) evalIdentifier(
 	identifier *ast.Identifier,
-) enviroment.Object {
+) environment.Object {
 	val, ok := e.env.Get(identifier.Value)
 
 	if ok {
@@ -198,8 +198,8 @@ func (e *Evaluator) evalIdentifier(
 
 func (e *Evaluator) evalDocumentLiteral(
 	node *ast.DocumentLiteral,
-) enviroment.Object {
-	doc := enviroment.NewDoc()
+) environment.Object {
+	doc := environment.NewDoc()
 	for _, elem := range node.Elements {
 		switch elem.Type {
 		case ast.LIST:
