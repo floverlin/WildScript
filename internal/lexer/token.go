@@ -22,6 +22,7 @@ const (
 	THEN TokenType = "THEN"
 
 	FOR    TokenType = "FOR"
+	IN     TokenType = "IN"
 	WHILE  TokenType = "WHILE"
 	DO     TokenType = "DO"
 	REPEAT TokenType = "REPEAT"
@@ -137,6 +138,7 @@ var specialIdents = map[string]TokenType{
 	"then": THEN,
 
 	"for":    FOR,
+	"in":     IN,
 	"while":  WHILE,
 	"do":     DO,
 	"repeat": REPEAT,

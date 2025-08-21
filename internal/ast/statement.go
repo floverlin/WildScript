@@ -108,11 +108,29 @@ func (es *ExportStatement) String() string {
 }
 
 type ForStatement struct {
-	Token lexer.Token
+	Token    lexer.Token
+	Value    *Identifier
+	Iterable Expression
+	Loop     *BlockExpression
 }
 
 func (fs *ForStatement) statementNode() {}
-func (fs *ForStatement) String() string { return "" }
+func (fs *ForStatement) String() string {
+	if fs.Value != nil {
+		return fmt.Sprintf(
+			"for %s in %s do %s",
+			fs.Value.String(),
+			fs.Iterable.String(),
+			fs.Loop.String(),
+		)
+	} else {
+		return fmt.Sprintf(
+			"for %s do %s",
+			fs.Iterable.String(),
+			fs.Loop.String(),
+		)
+	}
+}
 
 type RepeatStatement struct {
 	Token lexer.Token

@@ -54,6 +54,8 @@ func (e *Evaluator) Eval(node ast.Node) enviroment.Object {
 		return e.evalWhileStatement(node)
 	case *ast.RepeatStatement:
 		return e.evalRepeatStatement(node)
+	case *ast.ForStatement:
+		return e.evalForStatement(node)
 
 	case *ast.InfixExpression:
 		return e.evalInfixExpression(node)

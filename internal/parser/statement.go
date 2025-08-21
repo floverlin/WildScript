@@ -17,6 +17,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case lexer.WHILE:
 		stmt = p.parseWhileStatement()
+	case lexer.FOR:
+		stmt = p.parseForStatement()
 	case lexer.REPEAT:
 		stmt = p.parseRepeatStatement()
 	case lexer.LET:
@@ -175,6 +177,39 @@ func (p *Parser) parseRepeatStatement() *ast.RepeatStatement {
 	p.nextToken() // to until
 	p.nextToken() // to cond
 	stmt.Until = p.parseExpression(LOWEST)
+
+	return stmt
+}
+
+func (p *Parser) parseForStatement() *ast.ForStatement {
+	stmt := &ast.ForStatement{
+		Token: p.curToken,
+	}
+	p.nextToken() // to ident or expr
+	expr := p.parseExpression(LOWEST)
+
+	if p.peekToken.Type == lexer.IN {
+		ident, ok := expr.(*ast.Identifier)
+		if !ok {
+			p.expected("identifier before in")
+		}
+		stmt.Value = ident
+		p.nextToken() // to in
+		p.nextToken() // to iterable
+		expr = p.parseExpression(LOWEST)
+	}
+	stmt.Iterable = expr
+
+	if p.peekToken.Type != lexer.DO {
+		p.expected("do")
+	}
+
+	p.nextToken() // to do
+	if p.peekToken.Type != lexer.LBRACE {
+		p.expected("{")
+	}
+	p.nextToken() // to {
+	stmt.Loop = p.parseBlockExpression()
 
 	return stmt
 }

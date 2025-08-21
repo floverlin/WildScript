@@ -8,7 +8,11 @@ import (
 	"github.com/fatih/color"
 )
 
-type Native func(be blockEvaluator, self Object, args ...Object) (Object, error)
+type Native func(
+	be blockEvaluator,
+	self Object,
+	args ...Object,
+) (Object, error)
 
 type Func struct {
 	Parameters []*ast.Identifier
