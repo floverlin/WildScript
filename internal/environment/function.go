@@ -1,7 +1,6 @@
 package environment
 
 import (
-	"errors"
 	"fmt"
 	"wildscript/internal/ast"
 
@@ -14,18 +13,40 @@ type Native func(
 	args ...Object,
 ) (Object, error)
 
-type Func struct {
-	Parameters []*ast.Identifier
-	Body       *ast.BlockExpression
-	Enviroment *Environment
-	Native     Native
-	Impl       ast.FunctionImplementation
+type function struct {
+	Parameters  []*ast.Identifier
+	Body        *ast.BlockExpression
+	Environment *Environment
+	Native      Native
+	Impl        ast.FunctionImplementation
 }
 
-func (f *Func) Type() ObjectType { return FUNC }
-func (f *Func) Inspect() string {
+func NewNative(f Native) *function {
+	return &function{
+		Native: f,
+	}
+}
+
+func NewFunction(params []*ast.Identifier,
+	body *ast.BlockExpression,
+	env *Environment,
+	Impl ast.FunctionImplementation,
+) *function {
+	return &function{
+		Parameters:  params,
+		Body:        body,
+		Environment: env,
+		Impl:        Impl,
+	}
+}
+
+func (f *function) Type() ObjectType { return FUNCTION }
+func (f *function) Inspect() string {
+	if f.Native != nil {
+		return color.MagentaString("function<native>")
+	}
 	return color.MagentaString(
-		fmt.Sprintf("func<%s>", f.Impl))
+		fmt.Sprintf("function<%s>", f.Impl))
 }
 
 type blockEvaluator interface {
@@ -36,7 +57,7 @@ type blockEvaluator interface {
 	) Object
 }
 
-func (f *Func) Call(
+func (f *function) Call(
 	be blockEvaluator,
 	self Object,
 	args ...Object,
@@ -62,15 +83,15 @@ func (f *Func) Call(
 		fArgs[f.Parameters[idx].Value] = arg
 	}
 
-	result := be.EvalBlock(f.Body, f.Enviroment, fArgs)
+	result := be.EvalBlock(f.Body, f.Environment, fArgs)
 
 	if result.Type() == SIGNAL {
 		if ret, ok := result.(*Return); ok {
 			return ret.Value, nil
 		} else {
-			return nil, errors.New("continue or break in function")
+			return nil, fmt.Errorf("%s in function", result.Inspect())
 		}
 	}
 
-	return GLOBAL_NIL, nil
+	return NewNil(), nil
 }

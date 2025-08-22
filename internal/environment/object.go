@@ -11,76 +11,166 @@ import (
 type ObjectType string
 
 const (
-	NIL  ObjectType = "nil"
-	NUM  ObjectType = "num"
-	STR  ObjectType = "str"
-	BOOL ObjectType = "bool"
-	DOC  ObjectType = "doc"
-	FUNC ObjectType = "func"
+	NIL      ObjectType = "nil"
+	NUMBER   ObjectType = "number"
+	STRING   ObjectType = "string"
+	BOOLEAN  ObjectType = "boolean"
+	DOCUMENT ObjectType = "document"
+	FUNCTION ObjectType = "function"
 
 	SIGNAL ObjectType = "__signal"
 )
+
+var (
+	globalFalse = &boolean{Value: false}
+	globalTrue  = &boolean{Value: true}
+	globalNil   = &nil_{}
+)
+
+func CheckBool(b Object) (bool, error) {
+	if b, ok := b.(*boolean); ok {
+		return b == globalTrue, nil
+	}
+	return false, fmt.Errorf("not bool value %s", b.Type())
+}
+
+func lookupDocMeta(doc *document, metaName string) (Object, bool) {
+	if result, ok := doc.Attrs[metaName]; ok {
+		return result, ok
+	}
+	if doc.Meta != nil {
+		if result, ok := lookupDocMeta(doc.Meta, metaName); ok {
+			return result, ok
+		}
+	}
+	return nil, false
+}
+
+func MetaCall(
+	object Object,
+	metaName string,
+	be blockEvaluator,
+	self Object,
+	args ...Object,
+) (Object, error) {
+	var metaFunc Object
+	if doc, ok := object.(*document); ok {
+		if doc.Meta != nil {
+			metaFunc, _ = lookupDocMeta(doc.Meta, metaName)
+		}
+	}
+
+	if metaFunc == nil {
+		typeMetaFuncs, ok := defaultMeta[object.Type()]
+		if !ok {
+			return nil, fmt.Errorf("type %s default meta not supported", object.Type())
+		}
+		result, ok := typeMetaFuncs[metaName]
+		if !ok {
+			return nil, fmt.Errorf("no %s method in %s", metaName, object.Type())
+		}
+		metaFunc = result
+	}
+
+	var result Object
+	var err error
+	if self != nil {
+		args = append([]Object{self}, args...)
+	}
+	if mf, ok := metaFunc.(*function); ok {
+		result, err = mf.Call(be, object, args...)
+	} else {
+		return nil, fmt.Errorf("%s not a function", metaFunc.Type())
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("%s call: %w", metaFunc.Type(), err)
+	}
+
+	return result, err
+}
 
 type Object interface {
 	Type() ObjectType
 	Inspect() string
 }
 
-type Num struct {
+type number struct {
 	Value float64
 }
 
-func (f *Num) Type() ObjectType { return NUM }
-func (f *Num) Inspect() string {
-	return color.CyanString(
+func NewNumber(value float64) *number {
+	return &number{
+		Value: value,
+	}
+}
+
+func (f *number) Type() ObjectType { return NUMBER }
+func (f *number) Inspect() string {
+	return color.GreenString(
 		strconv.FormatFloat(f.Value, 'g', -1, 64),
 	)
 }
 
-type Str struct {
+type string_ struct {
 	Value string
 }
 
-func (s *Str) Type() ObjectType { return STR }
-func (s *Str) Inspect() string {
+func NewString(value string) *string_ {
+	return &string_{Value: value}
+}
+
+func (s *string_) Type() ObjectType { return STRING }
+func (s *string_) Inspect() string {
 	return s.Value
 }
 
-type Bool struct {
+type boolean struct {
 	Value bool
 }
 
-func (b *Bool) Type() ObjectType { return BOOL }
-func (b *Bool) Inspect() string {
+func NewBoolean(value bool) *boolean {
+	if value {
+		return globalTrue
+	}
+	return globalFalse
+}
+
+func (b *boolean) Type() ObjectType { return BOOLEAN }
+func (b *boolean) Inspect() string {
 	return color.MagentaString(
 		strconv.FormatBool(b.Value),
 	)
 }
 
-type Nil struct{}
+type nil_ struct{}
 
-func (n *Nil) Type() ObjectType { return NIL }
-func (n *Nil) Inspect() string {
+func NewNil() *nil_ {
+	return globalNil
+}
+
+func (n *nil_) Type() ObjectType { return NIL }
+func (n *nil_) Inspect() string {
 	return color.BlueString("nil")
 }
 
-type Doc struct {
+type document struct {
 	List  []Object
 	Dict  *Dict
 	Attrs map[string]Object
-	Meta  *Doc
+	Meta  *document
 }
 
-func NewDoc() *Doc {
-	return &Doc{
+func NewDocument() *document {
+	return &document{
 		Attrs: make(map[string]Object),
 		Dict:  NewDict(),
 		Meta:  nil,
 	}
 }
 
-func (d *Doc) Type() ObjectType { return DOC }
-func (d *Doc) Inspect() string {
+func (d *document) Type() ObjectType { return DOCUMENT }
+func (d *document) Inspect() string {
 	var sb strings.Builder
 	sb.WriteString("{")
 	for key, elem := range d.Attrs {

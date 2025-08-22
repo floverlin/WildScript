@@ -9,30 +9,29 @@ import (
 func (e *Evaluator) evalWhileStatement(
 	node *ast.WhileStatement,
 ) environment.Object {
-	condObject := e.Eval(node.If)
-	cond, ok := condObject.(*environment.Bool)
-	if !ok {
+	cond, err := environment.CheckBool(e.Eval(node.If))
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"non bool condition",
+			err.Error(),
 		)
 	}
+
 	var iters float64
-	for cond.Value {
+	for cond {
 		e.Eval(node.Loop)
 		iters++
 
-		condObject = e.Eval(node.If)
-		cond, ok = condObject.(*environment.Bool)
-		if !ok {
+		cond, err = environment.CheckBool(e.Eval(node.If))
+		if err != nil {
 			lib.Die(
 				node.Token,
-				"non bool condition",
+				err.Error(),
 			)
 		}
 	}
 
-	return &environment.Num{Value: iters}
+	return environment.NewNumber(iters)
 }
 
 func (e *Evaluator) evalRepeatStatement(
@@ -43,20 +42,19 @@ func (e *Evaluator) evalRepeatStatement(
 		e.Eval(node.Loop)
 		iters++
 
-		condObject := e.Eval(node.Until)
-		cond, ok := condObject.(*environment.Bool)
-		if !ok {
+		cond, err := environment.CheckBool(e.Eval(node.Until))
+		if err != nil {
 			lib.Die(
 				node.Token,
-				"non bool condition",
+				err.Error(),
 			)
 		}
-		if !cond.Value {
+		if !cond {
 			break
 		}
 	}
 
-	return &environment.Num{Value: iters}
+	return environment.NewNumber(iters)
 }
 
 func (e *Evaluator) evalForStatement(
@@ -64,15 +62,7 @@ func (e *Evaluator) evalForStatement(
 ) environment.Object {
 	iterable := e.Eval(node.Iterable)
 
-	f, ok := environment.LookupMeta(iterable, "__iter")
-	if !ok {
-		lib.Die(
-			node.Token,
-			"not iterable",
-		)
-	}
-
-	iter, err := f.(*environment.Func).Call(e, iterable)
+	iter, err := environment.MetaCall(iterable, "__iter", e, iterable)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -82,27 +72,30 @@ func (e *Evaluator) evalForStatement(
 
 	var iters float64
 	for {
-		result, err := iter.(*environment.Doc).
-			Attrs["__next"].(*environment.Func).
-			Native(e, iter)
+		next, err := environment.MetaCall(iter, "__next", e, iter)
 		if err != nil {
 			lib.Die(
 				node.Token,
 				err.Error(),
 			)
 		}
-		ok := result.(*environment.Doc).Attrs["ok"]
-		if !ok.(*environment.Bool).Value {
+		value, cont, err := environment.UnpackResult(next)
+		if err != nil {
+			lib.Die(
+				node.Token,
+				err.Error(),
+			)
+		}
+		if !cont {
 			break
 		}
 		args := map[string]environment.Object{}
 		if node.Value != nil {
-			value := result.(*environment.Doc).Attrs["value"]
 			args[node.Value.Value] = value
 		}
 		e.EvalBlock(node.Loop, e.env, args)
 		iters++
 	}
 
-	return &environment.Num{Value: iters}
+	return environment.NewNumber(iters)
 }

@@ -1,58 +1,18 @@
 package evaluator
 
 import (
-	"errors"
 	"wildscript/internal/ast"
 	"wildscript/internal/environment"
 	"wildscript/internal/lib"
 )
 
-func lookup(
-	object environment.Object,
-	metaName string,
-) (environment.Callable, error) {
-	meta, ok := environment.DefaultMeta[object.Type()]
-	if !ok {
-		return nil, errors.New("unsupported type")
-	}
-	f, ok := meta[metaName]
-	if !ok {
-		return nil, errors.New("unsupported operation")
-	}
-	return &environment.Func{Native: f}, nil
-}
-
-func (e *Evaluator) attribute(
-	object environment.Object,
-	attr string,
-) (environment.Object, error) {
-	f, err := lookup(object, "__attribute")
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := f.Call(e, object, &environment.Str{Value: attr})
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
 func (e *Evaluator) evalAttributeExpression(
 	node *ast.AttributeExpression,
 ) environment.Object {
 	object := e.Eval(node.Left)
-	prop := &environment.Str{Value: node.Attribute.Value}
+	prop := environment.NewString(node.Attribute.Value)
 
-	f, err := lookup(object, "__attribute")
-	if err != nil {
-		lib.Die(
-			node.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, object, prop)
+	result, err := environment.MetaCall(object, "__attribute", e, nil, prop)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -68,22 +28,14 @@ func (e *Evaluator) evalIndexExpression(
 	left := e.Eval(node.Left)
 
 	index := e.Eval(node.Index)
-	if index.Type() != environment.NUM {
+	if index.Type() != environment.NUMBER {
 		lib.Die(
 			node.Token,
 			"non num index",
 		)
 	}
 
-	f, err := lookup(left, "__index")
-	if err != nil {
-		lib.Die(
-			node.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, left, index)
+	result, err := environment.MetaCall(left, "__index", e, nil, index)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -101,9 +53,9 @@ func (e *Evaluator) evalSliceExpression(
 	start := e.Eval(node.Start)
 	end := e.Eval(node.End)
 
-	if (start.Type() != environment.NUM &&
+	if (start.Type() != environment.NUMBER &&
 		start.Type() != environment.NIL) ||
-		(end.Type() != environment.NUM &&
+		(end.Type() != environment.NUMBER &&
 			end.Type() != environment.NIL) {
 		lib.Die(
 			node.Token,
@@ -111,15 +63,7 @@ func (e *Evaluator) evalSliceExpression(
 		)
 	}
 
-	f, err := lookup(left, "__slice")
-	if err != nil {
-		lib.Die(
-			node.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, left, start, end)
+	result, err := environment.MetaCall(left, "__slice", e, nil, start, end)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -137,15 +81,7 @@ func (e *Evaluator) evalKeyExpression(
 	key := e.Eval(node.Key)
 
 	if key.Type() == environment.NIL {
-		f, err := lookup(left, "__dict")
-		if err != nil {
-			lib.Die(
-				node.Token,
-				err.Error(),
-			)
-		}
-
-		result, err := f.Call(e, left)
+		result, err := environment.MetaCall(left, "__dict", e, nil)
 		if err != nil {
 			lib.Die(
 				node.Token,
@@ -156,15 +92,7 @@ func (e *Evaluator) evalKeyExpression(
 		return result
 	}
 
-	f, err := lookup(left, "__key")
-	if err != nil {
-		lib.Die(
-			node.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, left, key)
+	result, err := environment.MetaCall(left, "__key", e, nil, key)
 	if err != nil {
 		lib.Die(
 			node.Token,

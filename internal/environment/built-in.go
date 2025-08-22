@@ -1,131 +1,89 @@
 package environment
 
 import (
-	"errors"
 	"fmt"
 	"maps"
-	"wildscript/internal/ast"
 )
 
 func (e *Environment) loadBuiltin() {
-	e.Create("__print", &Func{
-		Impl:   ast.FUNCTION,
-		Native: print,
-	})
-	e.Create("print", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			for idx, arg := range args {
-				print(be, self, arg)
-				if idx != len(args)-1 {
-					fmt.Print(" ")
-				}
+	e.Create("__print", NewNative(print))
+
+	e.Create("print", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		for idx, arg := range args {
+			print(be, self, arg)
+			if idx != len(args)-1 {
+				fmt.Print(" ")
 			}
-			return GLOBAL_NIL, nil
-		},
-	})
-	e.Create("println", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			for idx, arg := range args {
-				print(be, self, arg)
-				if idx != len(args)-1 {
-					fmt.Print(" ")
-				} else {
-					fmt.Print("\n")
-				}
+		}
+		return NewNil(), nil
+	}))
+
+	e.Create("println", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		for idx, arg := range args {
+			print(be, self, arg)
+			if idx != len(args)-1 {
+				fmt.Print(" ")
+			} else {
+				fmt.Print("\n")
 			}
-			return GLOBAL_NIL, nil
-		},
-	})
-	e.Create("input", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			var input string
-			fmt.Scanln(&input)
-			return &Str{Value: input}, nil
-		},
-	})
-	e.Create("set_meta", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			args[0].(*Doc).Meta = args[1].(*Doc)
-			return GLOBAL_NIL, nil
-		},
-	})
-	e.Create("get_meta", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			return args[0].(*Doc).Meta, nil
-		},
-	})
-	e.Create("merge", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			left := args[0].(*Doc)
-			right := args[1].(*Doc)
-			maps.Copy(left.Attrs, right.Attrs)
-			return GLOBAL_NIL, nil
-		},
-	})
-	e.Create("str", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			f, ok := LookupMeta(args[0], "__str")
-			if !ok {
-				fmt.Print(args[0].Type())
-				return nil, errors.New("can't convert to string")
-			}
-			str, err := f.(*Func).Call(be, args[0])
-			if err != nil {
-				return nil, err
-			}
-			return str, nil
-		},
-	})
-	e.Create("num", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			f, ok := LookupMeta(args[0], "__num")
-			if !ok {
-				fmt.Print(args[0].Type())
-				return nil, errors.New("can't convert to number")
-			}
-			num, err := f.(*Func).Call(be, args[0])
-			if err != nil {
-				return nil, err
-			}
-			return num, nil
-		},
-	})
-	e.Create("bool", &Func{
-		Impl: ast.FUNCTION,
-		Native: func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			f, ok := LookupMeta(args[0], "__bool")
-			if !ok {
-				fmt.Print(args[0].Type())
-				return nil, errors.New("can't convert to boolean")
-			}
-			b, err := f.(*Func).Call(be, args[0])
-			if err != nil {
-				return nil, err
-			}
-			return b, nil
-		},
-	})
+		}
+		return NewNil(), nil
+	}))
+
+	e.Create("input", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		var input string
+		fmt.Scanln(&input)
+		return NewString(input), nil
+	}))
+
+	e.Create("set_meta", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		args[0].(*document).Meta = args[1].(*document)
+		return NewNil(), nil
+	}))
+
+	e.Create("get_meta", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		return args[0].(*document).Meta, nil
+	}))
+
+	e.Create("merge", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		left := args[0].(*document)
+		right := args[1].(*document)
+		maps.Copy(left.Attrs, right.Attrs)
+		return NewNil(), nil
+	}))
+
+	e.Create("str", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s, err := MetaCall(args[0], "__str", be, nil)
+		if err != nil {
+			return nil, fmt.Errorf("str: %w", err)
+		}
+		return s, nil
+	}))
+
+	e.Create("num", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		n, err := MetaCall(args[0], "__num", be, nil)
+		if err != nil {
+			return nil, fmt.Errorf("num: %s", err)
+		}
+		return n, nil
+	}))
+
+	e.Create("bool", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		b, err := MetaCall(args[0], "__bool", be, nil)
+		if err != nil {
+			return nil, fmt.Errorf("bool: %s", err)
+		}
+		return b, nil
+	}))
+
 }
 
 func print(be blockEvaluator, self Object, args ...Object) (Object, error) {
-	f, ok := LookupMeta(args[0], "__str")
-	if !ok {
-		fmt.Print(args[0].Type())
-		return GLOBAL_NIL, nil
-	}
-	printable, err := f.(*Func).Call(be, args[0])
+	str, err := MetaCall(args[0], "__str", be, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("print: %w", err)
 	}
-	fmt.Print(printable.Inspect())
+	fmt.Print(str.Inspect())
 
-	return GLOBAL_NIL, nil
+	return NewNil(), nil
 }

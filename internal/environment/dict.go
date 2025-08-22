@@ -42,9 +42,9 @@ func (d *Dict) String() string {
 
 func (d *Dict) Set(k, v Object) {
 	switch k := k.(type) {
-	case *Num:
+	case *number:
 		d.numMap[k.Value] = v
-	case *Str:
+	case *string_:
 		d.strMap[k.Value] = v
 	default:
 		panic("TODO")
@@ -53,10 +53,10 @@ func (d *Dict) Set(k, v Object) {
 
 func (d *Dict) Get(k Object) (Object, bool) {
 	switch k := k.(type) {
-	case *Str:
+	case *string_:
 		v, ok := d.strMap[k.Value]
 		return v, ok
-	case *Num:
+	case *number:
 		v, ok := d.numMap[k.Value]
 		return v, ok
 	default:

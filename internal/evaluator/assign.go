@@ -42,7 +42,7 @@ func (e *Evaluator) evalIdentifierAssign(
 	result, ok := e.env.Set(left.Value, value)
 	if !ok {
 		return nil, fmt.Errorf(
-			"variable %s already exists",
+			"variable %s not exists",
 			left.Value,
 		)
 	}
@@ -54,17 +54,9 @@ func (e *Evaluator) evalAttributeAssign(
 	value environment.Object,
 ) (environment.Object, error) {
 	object := e.Eval(left.Left)
-	prop := &environment.Str{Value: left.Attribute.Value}
+	prop := environment.NewString(left.Attribute.Value)
 
-	f, err := lookup(object, "__set_attribute")
-	if err != nil {
-		lib.Die(
-			left.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, object, prop, value)
+	result, err := environment.MetaCall(object, "__set_attribute", e, nil, prop, value)
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -82,19 +74,11 @@ func (e *Evaluator) evalIndexAssign(
 	object := e.Eval(left.Left)
 	index := e.Eval(left.Index)
 
-	if index.Type() != environment.NUM {
+	if index.Type() != environment.NUMBER {
 		return nil, errors.New("non num index type")
 	}
 
-	f, metaErr := lookup(object, "__set_index")
-	if metaErr != nil {
-		lib.Die(
-			left.Token,
-			metaErr.Error(),
-		)
-	}
-	result, err := f.Call(e, object, index, value)
-
+	result, err := environment.MetaCall(object, "__set_index", e, nil, index, value)
 	if err != nil {
 		lib.Die(
 			left.Token,
@@ -113,9 +97,9 @@ func (e *Evaluator) evalSliceAssign(
 	start := e.Eval(left.Start)
 	end := e.Eval(left.End)
 
-	if (start.Type() != environment.NUM &&
+	if (start.Type() != environment.NUMBER &&
 		start.Type() != environment.NIL) ||
-		(end.Type() != environment.NUM &&
+		(end.Type() != environment.NUMBER &&
 			end.Type() != environment.NIL) {
 		lib.Die(
 			left.Token,
@@ -123,22 +107,13 @@ func (e *Evaluator) evalSliceAssign(
 		)
 	}
 
-	f, metaErr := lookup(object, "__set_slice")
-	if metaErr != nil {
-		lib.Die(
-			left.Token,
-			metaErr.Error(),
-		)
-	}
-	result, err := f.Call(e, object, start, end, value)
-
+	result, err := environment.MetaCall(object, "__set_slice", e, nil, start, end, value)
 	if err != nil {
 		lib.Die(
 			left.Token,
 			err.Error(),
 		)
 	}
-
 	return result, nil
 }
 
@@ -150,15 +125,7 @@ func (e *Evaluator) evalKeyAssign(
 	key := e.Eval(left.Key)
 
 	if key.Type() == environment.NIL {
-		f, err := lookup(object, "__set_dict")
-		if err != nil {
-			lib.Die(
-				left.Token,
-				err.Error(),
-			)
-		}
-
-		result, err := f.Call(e, object, value)
+		result, err := environment.MetaCall(object, "__set_dict", e, nil, value)
 		if err != nil {
 			lib.Die(
 				left.Token,
@@ -169,15 +136,7 @@ func (e *Evaluator) evalKeyAssign(
 		return result, nil
 	}
 
-	f, err := lookup(object, "__set_key")
-	if err != nil {
-		lib.Die(
-			left.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, object, key, value)
+	result, err := environment.MetaCall(object, "__set_key", e, nil, key, value)
 	if err != nil {
 		lib.Die(
 			left.Token,

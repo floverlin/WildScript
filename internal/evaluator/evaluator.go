@@ -81,24 +81,24 @@ func (e *Evaluator) Eval(node ast.Node) environment.Object {
 		return e.evalDocumentLiteral(node)
 
 	case *ast.FunctionLiteral:
-		return &environment.Func{
-			Parameters: node.Parameters,
-			Body:       node.Body,
-			Enviroment: e.env,
-			Impl:       node.Impl,
-		}
+		return environment.NewFunction(
+			node.Parameters,
+			node.Body,
+			e.env,
+			node.Impl,
+		)
 	case *ast.NumberLiteral:
-		return &environment.Num{Value: node.Value}
+		return environment.NewNumber(node.Value)
 	case *ast.StringLiteral:
-		return &environment.Str{Value: node.Value}
+		return environment.NewString(node.Value)
 	case *ast.BooleanLiteral:
 		if node.Value {
-			return environment.GLOBAL_TRUE
+			return environment.NewBoolean(true)
 		} else {
-			return environment.GLOBAL_FALSE
+			return environment.NewBoolean(false)
 		}
 	case *ast.NilLiteral:
-		return environment.GLOBAL_NIL
+		return environment.NewNil()
 	default:
 		panic("unknown node type")
 	}
@@ -118,7 +118,7 @@ func (e *Evaluator) evalProgram(program *ast.Program) environment.Object {
 			)
 		}
 	}
-	return environment.GLOBAL_NIL
+	return environment.NewNil()
 }
 
 func (e *Evaluator) EvalBlock(
@@ -177,7 +177,7 @@ func (e *Evaluator) evalImportStatement(
 
 	e.env.Create(node.Module[len(node.Module)-1].Value, result)
 
-	return environment.GLOBAL_NIL
+	return environment.NewNil()
 }
 
 func (e *Evaluator) evalIdentifier(
@@ -199,7 +199,7 @@ func (e *Evaluator) evalIdentifier(
 func (e *Evaluator) evalDocumentLiteral(
 	node *ast.DocumentLiteral,
 ) environment.Object {
-	doc := environment.NewDoc()
+	doc := environment.NewDocument()
 	for _, elem := range node.Elements {
 		switch elem.Type {
 		case ast.LIST:

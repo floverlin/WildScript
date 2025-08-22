@@ -43,15 +43,7 @@ func (e *Evaluator) evalInfixExpression(
 		)
 	}
 
-	f, err := lookup(left, binOps[node.Operator])
-	if err != nil {
-		lib.Die(
-			node.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, left, right)
+	result, err := environment.MetaCall(left, binOps[node.Operator], e, nil, right)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -67,15 +59,7 @@ func (e *Evaluator) evalPrefixExpression(
 ) environment.Object {
 	right := e.Eval(node.Right)
 
-	f, err := lookup(right, unOps[node.Operator])
-	if err != nil {
-		lib.Die(
-			node.Token,
-			err.Error(),
-		)
-	}
-
-	result, err := f.Call(e, right)
+	result, err := environment.MetaCall(right, unOps[node.Operator], e, nil)
 	if err != nil {
 		lib.Die(
 			node.Token,
@@ -94,28 +78,13 @@ func (e *Evaluator) evalCallExpression(
 	var self environment.Object
 	if prop, ok := node.Function.(*ast.AttributeExpression); ok {
 		self = e.Eval(prop.Left)
-	} else if doc, ok := left.(*environment.Doc); ok {
-		self = doc
 	} else {
-		self = environment.GLOBAL_NIL
+		self = nil
 	}
 
 	args := e.evalExpressions(node.Arguments)
-	var result environment.Object
-	var err error
 
-	if f, ok := left.(*environment.Func); ok {
-		result, err = f.Call(e, self, args...)
-	} else {
-		f, metaErr := e.attribute(left, "__call")
-		if metaErr != nil {
-			lib.Die(
-				node.Token,
-				metaErr.Error(),
-			)
-		}
-		result, err = f.(*environment.Func).Call(e, self, args...)
-	}
+	result, err := environment.MetaCall(left, "__call", e, self, args...)
 
 	if err != nil {
 		lib.Die(
@@ -130,17 +99,15 @@ func (e *Evaluator) evalCallExpression(
 func (e *Evaluator) evalIfExpression(
 	node *ast.IfExpression,
 ) environment.Object {
-	cond := e.Eval(node.If)
-
-	if cond.Type() != environment.BOOL {
+	cond, err := environment.CheckBool(e.Eval(node.If))
+	if err != nil {
 		lib.Die(
 			node.Token,
-			"non bool condition %s",
-			cond.Type(),
+			err.Error(),
 		)
 	}
 
-	if cond.(*environment.Bool).Value {
+	if cond {
 		return e.Eval(node.Then)
 	} else {
 		return e.Eval(node.Else)
