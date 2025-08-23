@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"time"
-	"wildscript/internal/enviroment"
+	"wildscript/internal/environment"
 	"wildscript/internal/evaluator"
 	"wildscript/internal/lexer"
 	"wildscript/internal/logger"
@@ -61,15 +61,10 @@ func RunFile(fileName string) {
 	}
 
 	p := parser.New(c)
-	program := p.ParseProgram()
 
-	if len(p.Errors()) != 0 {
-		fmt.Printf(
-			"[parser] error: %s",
-			p.Errors()[0],
-		)
-		os.Exit(1)
-	}
+	defer wrapPanic()
+
+	program := p.ParseProgram()
 
 	if gs.Debug {
 		fmt.Print(
@@ -82,24 +77,22 @@ func RunFile(fileName string) {
 		)
 	}
 
-	e := evaluator.New(nil, nil, nil)
-
-	defer wrapPanic()
+	e := evaluator.New(nil)
 
 	if !gs.Debug {
 		e.Eval(program)
 		return
 	}
 
-	var result enviroment.Object
+	var result environment.Object
 	for idx, stmt := range program.Statements {
 		obj := e.Eval(stmt)
 		result = obj
 		fmt.Printf("%d >> %s\n", idx+1, obj.Inspect())
 	}
 	fmt.Printf(
-		"%s >> %s\n",
-		color.RedString("program result"),
+		"%s >>> %s\n",
+		color.RedString("[program result]"),
 		result.Inspect(),
 	)
 
@@ -111,7 +104,7 @@ func RunFile(fileName string) {
 
 func wrapPanic() {
 	if p := recover(); p != nil {
-		fmt.Printf("[wild] runtime error: %s\n", p)
+		fmt.Printf("%s\n", p)
 		os.Exit(1)
 	}
 }

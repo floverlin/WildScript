@@ -1,387 +1,381 @@
-# WildScript - минималистичный язык программирования
+# WildScript
 
-- высокого уровня
-- динамической сильной типизации
+## типы
 
-## Типы
+WildScript - язык с динамической типизацией
 
-| WildScript |   Go    |   JavaScript   |     Python     |
-| :--------: | :-----: | :------------: | :------------: |
-|  **num**   | float64 |     number     |     float      |
-|  **str**   | string  |     string     |      str       |
-|  **nil**   |   nil   | null/undefined |      none      |
-|  **bool**  |  bool   |    boolean     |      bool      |
-|  **func**  |  func   |    function    |      def       |
-|  **obj**   |   map   |     object     |      dict      |
-|  **list**  |  slice  |     array      |      list      |
-|  **rune**  |    -    |     symbol     | \_\_method\_\_ |
-
-## Переменные
+функция `type` позволяет получить строковое представление типа
 
 ```wildscript
-age = 21;
-name = "lin";
-job = nil;
-married = false;
-scream = () { print("AAA!\n"); };
-inventory = new {
-    book: "Holy Bible",
-};
-marks = [name, inventory, nil];
-
-a = true;
-a = "another";
-a  # "another"
-
-# b; -> panic: undefined variable b
+type("wild");   # string
+type(1176);         # number
+type(lambda() {});  # function
 ```
 
-## Блоки
+таблица типов и их аналогов в других языках
 
-- возвращают значение последней инструкции
-- инструкции разделяются ;
-- последняя инструкция не содержит после себя ;
-- результат пустой инструкции = nil
-- основная программа - тоже блок кода, но без {}
-- присваивание внешним переменным через &
-- <- value подобно return value
+|  WildScript  |   Go    | JavaScript |  Python  |   Lua    |
+| :----------: | :-----: | :--------: | :------: | :------: |
+|   **nil**    |   nil   |    null    |   none   |   nil    |
+|  **number**  | float64 |   number   |  float   |  number  |
+|  **string**  | string  |   string   |   str    |  string  |
+| **boolean**  |  bool   |  boolean   |   bool   | boolean  |
+| **document** | struct  |   object   |  class   |  table   |
+| **function** |  func   |  function  | function | function |
 
-```
-{ 1 + 2 };  # 3
-{ 1 + 2; };  # nil
+### nil
 
-a = 1;
-b = 1;
-{
-    &a = a + 9;
-    a = a + 1;
-    print(a);  # 2
-    &b = a;
-};
-a;  # 10
-b;  # 2
-```
+тип с единственным значением, обозначающим отсутствие значения
 
-## Функции
-
-- всегда возвращают одно значение
-- состоят из ключевого слова fn, списка параметров и блока
-- поддерживают замыкания
+присваивается переменной при обьявлении без инициализации
 
 ```wildscript
-f = fn(a, b) { a * b };
-fn add(a, b) {
-    type(a) == "num" && type(b) == "num" ? {
-        <- a + b
+let a;
+let b = nil;
+type(a);  # nil
+type(b);  # nil
+```
+
+### number
+
+представляет вещественные числа (с плавающей точкой двойной точности)
+
+```wildscript
+let a = 1;
+let b = 10.76;
+a = a + b;
+a;        # 11.76
+type(a);  # number
+```
+
+### string
+
+представляет последовательность символов произвольной длинны
+
+строки неизменяемы, поддерживают обьединение и срезы
+
+```wildscript
+let a = "hello";
+let b = ", world!";
+let hello = a + b;
+hello;       # hello, world!
+hello[1:5];  # ello
+```
+
+### boolean
+
+представляет два традиционных логических значения `true` и `false`
+
+только этот тип используется в условиях (без автоприведения)
+
+```wildscript
+let a = false;
+let b = 1 < 2;
+if a then {
+    "hello"
+} else {
+    "world"
+};        # world
+b;        # true
+type(b);  # boolean
+```
+
+для условного автоприведения рекомендуется создать отдельную функцию
+
+```wildscript
+function nonempty(object) {
+    if type(object) == "number" then {
+        if object == 0 then {
+            return false
+        } else {
+            return true
+        }
+    } elif type(object) == "string" then {
+        ...
     }
 };
 
-f(2, 2);  # 4
-add(4, 6);  # 10
-add(4, "6");  # nil
-
-fn(a, b) { a * b }(2, 2)  # 4
+if nonempty(my_object) then {
+    ...
+}
 ```
 
-## Объекты
+### function
 
-- доступ к объекту из метода через руну `@self`
+всегда возвращают одно значение (по умолчанию - nil)
+
+подразделяются на 4 типа
+
+1. function - обычная функция
+2. lambda - анонимная функция (обьявляется внутри выражения)
+3. method - автоматически принимает первым аргументом обьект, которому принадлежит
+4. native - функция с нативной реализацией
 
 ```wildscript
-obj = new {
-    a: 1,
-    b: "world!",
-    c: () {
-        self = @self;
-        print("hello, " + self.b + "\n");
+function add(a, b) {
+    return a + b
+};
+
+let sub = lambda(a, b) {
+    return a - b
+};
+
+let object = {
+    name = "WildScript",
+    hello = method(self) {
+        return "Hello! My name is " + self.name
     },
 };
 
-obj.a;  # 1
-obj.b;  # "world!"
-obj.c();  # выведет "hello, world!"
-
-obj.d = "d";
-
-# obj.d; -> panic: undefined property d
-
-print(obj);  # выведет {a: 1, b: "world!", c: func, d: "d"}
+type(type);  # function
 ```
 
-## Списки
+### document
 
-```wildscript
-list = [10, "10", [nil, true]];
+тип для композиции и наследования
 
-l[2][1];  # true
+состоит из списка doc[index], словаря doc{key} и атрибутов doc.attr
 
-list[1] = 20;
+```wildscipt
+let doc = {
+    "a", "b", "c",  # обьявление списка
+    name = "Wild"  # обьявление атрибутов
+    great = method(self) {
+        println("My name is " + self.name + "!")
+    },
+    number = 1176,
+    "string key": "string value",  # обьявление словаря
+    123: "number value",
+}
 
-list.map(
-    fn(elem) {
-        type(elem) == "num" ? {
-            <- elem * 2
-        };
-        elem
+doc[1];
+doc[2] = "d";
+doc[3];  # panic -> index out of range
+
+doc.great();  # My name is Wild!
+doc.hello;  # panic -> attribute doesn't exists
+
+doc{123};
+let key = "string key";
+doc{key};  # или doc{"string key"}
+doc{"wrong key"};  # panic -> key doesn't exists
+```
+
+#### meta
+
+функция `set_meta` позволяет задать документу метадоку (документ, атрибуты которого переопределяют поведение)
+
+функция `get_meta` позволяет получит метадоку документа
+
+```wildscipt
+let md = {
+    __call = method(self) {
+        return self.name
+    },
+    __index = method(self, index) {
+        return "haha, joke!"
+    },
+};
+
+set_meta(doc, md);
+
+doc();  # Wild
+doc[1176];  # haha, joke!
+```
+
+## поток выполнения
+
+### циклы
+
+есть три вида циклов
+
+1. перебор for
+2. с предусловием while
+3. с постусловием repeat
+
+```wildscipt
+for range(10) do {  # range возвращает итератор
+    print("!")
+};
+println();
+
+let list = {1, 2, 3};
+for val in list[] do {  # [] возвращает итерируемый список
+    print(val, " ");
+};
+println();
+
+let i = 0
+while i < 10 do {
+    print(i, " ");
+    i = i + 1
+};
+println();
+
+repeat {
+    print(i, " ");
+    i = i - 1
+} until i < 1;
+println();
+```
+
+### ветвления
+
+могут быть использованы внутри выражения, возвращая результат последней инсnрукции блока (без ; на конце)
+
+```wildscipt
+if 1 < 2 then {
+    println(true)
+} else {
+    println(false)
+};
+
+let name = "Wild";
+let hello = "Hello!" + if type(name) == "string" then {
+    "My name is " + name
+    } else { "" };
+hello;  # Hello! My name is Wild
+```
+
+## panic ? Result
+
+при взятии из документа атрибута/значения списка/значения словаря, которого не существует, произойдет паника
+
+так же панику можно вызвать с помошью оператора panic
+
+после panic передается строка - message, число - code или документ с этими атрибутами
+
+```wildscipt
+function unsafe() {
+    panic "used unsafe function"
+};
+unsafe();  # panic -> {message = "used unsafe function"}
+
+panic 404;  # panic -> {code = 404}
+
+panic {
+    message = "LOL",
+    code = 1337,
+    };  # panic -> {message = "LOL", code = 1337}
+
+panic;  # panic -> {} не nil!
+```
+
+для безопасного взятия значения из документа или вызова функции используется оператор `?`
+
+при его использовании результатом будет Result = `{value_, error_}`, где
+value - возвращаемое значение или nil, если была остановлена паника,
+error - ошибка или nil, если паники не было
+
+Result содержит методы для работы с полученным значением
+
+```wildscipt
+doc.users?[36]?{"address"}?.or(nil);  # адрес 36-го пользователя или nil
+
+let result = num("not a number")?;
+result;  # {
+    value_ = nil,
+    error_ = {
+        message = "could not convert string to number"
+        },
     }
-);
-
-# list[4]; -> panic: index out of range
-
-print(list);  # выведет [20, 40, [nil, true]]
 ```
 
-## Преобразование в логический тип
+## классы
 
-- !true = false
-- false = true
+классы реализуются через цепочку присвоений атрибутов и метадоков
 
-- !!true = true
+### конструктор
 
-- !!0 = false
-- !!(num != 0) = true
+их можно реализовать вручную используя `set_meta` и `merge` функции
+или воспользоваться конструктором
 
-- !!(other object) = !!len(object)
-
-## Ветвления
-
-- состоит из условия, операторов и блоков
-- условие только bool типа
-
-```wildscript
-a > b
-    ? { print("a > b"); }
-    : { print("a <= b"); };
-
-a > b ? {
-    print("a > b");
-} : a > c ? {
-    print("a <= b && a > c");
-} : {
-    print("a <= b && a <= c");
-};
-
-5 + (true ? { 5 })  # 10
-```
-
-## Циклы
-
-- состоит из условия и блока
-- условие любого типа
-- <- value подобно break value
-- -> подобно continue
-
-|   type    | iterations |
-| :-------: | :--------: |
-| **bool**  | until true |
-| **other** | len(other) |
-
-- содержит руны
-
-|  rune   |          value          |
-| :-----: | :---------------------: |
-| **idx** |   number of iteration   |
-| **key** | key of iteration object |
-| **val** |     value under key     |
-
-```wildscript
-true {
-    print("eternity");
-};
-
-i = 1;
-result = i < 10 {
-    print(i);
-    i > 5 { <- i };
-    &i = i + 1;
-};  # 6
-
-i = 0;
-5 + (5 { &i = i + 1; i });  # 10
-5 + ("wild" { &i = i + 1; i });  # 14
-
-5 {
-    [@idx, @key, @val]
-};  # [4, 4, 4]
-```
-
-## Классы
-
-```wildscript
-Prototype = new {
-    jump: fn() {
-        print("jump\n");
+```wildscipt
+define Human {
+    __init = method(self, name) {
+        self.name = name
     }
 };
 
-Hero = new {
-    total: 0,
-    @call: fn(name) {
-        hero = new {
-            @proto: Prototype,
-            name: name,
-            attack: 10,
-            health: 100
-        };
-        @self.total = @self.total + 1;
-        <- hero;
-    }
+define Witch(Human) {
+    __init = method(self, name) {
+        super(name)
+    },
+    cast = method(self) {
+        println(self.name + " is casting spell!")
+    },
 };
 
-Mage = new {
-    @call: fn(name) {
-        hero = Hero(name);
-        mage = new {
-            cast: fn() { print("WOOOW! (", @self.attack, ")\n"); }
-        };
-        hero.merge(mage);
-        <- hero;
-    }
-};
-
-lin = Mage("Lin");
-lin.cast();
-lin.jump();
+let zullie = Witch("Zullie");
+zullie.cast();  # Zullie is casting spell!
 ```
 
-## Модули
+### List Dict slice
 
-```wildscript
-# mod.ws
-my_name = "lin";
-fn println(obj) {
-    print(obj, "\n");
-};
+для обработки данных документа можно взять эти данные в виде поддокумента вида
 
-new {
-    my_name: my_name,
-    print: println
-}  # не добавляйте ;, так как мы экспортируем объект
+1. slice - копия участка исходного списка документа
+2. list - полный список документа (ссылается на исходный документ)
+3. dict - полный словарь исходного документа (ссылается на исходный документ)
 
-# main.ws
-use mod;
+все три подтипа обладают набором методов для работы с данными
 
-mod.print(mod.my_name);  # выведет "lin" с переносом строки
+чтобы вернуть обработанные данные в документ используется присваивание по
+
+1. срезу `doc[start:end] =` - вставляет список внутрь среза
+2. списку `doc[] =` - заменяет список
+3. словарю `doc{} =` - заменяет словарь
+
+```wildscipt
+let doc = {1, 2, 3};
+let slice = doc[:];
+slice.append(4).reverse();
+doc[] = slice;
+
+doc[].append(0, -1).
+    reverse();
 ```
 
+на самом деле slice и list - это экземпляры одного класса List,
+просто slice использует свой собственный список, а list использует `_ref` ссылку
 
-## Математика
+slice.\_ref == nil; # true
 
-### num
+то же самое справедливо и для Dict, но его вариант без `_ref` ссылки создается через метод `copy()`
 
-```wildscript
-2.2 + 4.4;  # 6.6
-4.4 - 2;  # 2.4
+## модули
 
-2.3 * 2;  # 4.6
-10.5 / 5;  # 2.1
-10.5 // 5;  # 2
-10.5 % 5;  # 0.5
+для импорта модуля используется оператор `import`
 
-2^4;  # 16
+после него через точку пишется путь к файлу (путь должен быть в формате синтаксиса переменных)
 
-# 1 / 0 -> panic: division by zero
-# 1 // 0 -> panic: division by zero
-# 1 % 0 -> panic: modulo by zero
+импортированные данные будут помещены в окружение под последним именем в пути
+
+можно задать псевдоним импорта через `as`
+
+```wildscipt
+import mod;
+import utils.mod as utils;
+
+let constant = mod.CONSTANT;
+utils.func(constant);  # 1176
 ```
 
-### str
+в модулях необходимо определить, что они будут экспортировать через опертор `export`
 
-```wildscript
-"abc" + "xyz";  # "abcxyz"
-```
+он **завершает** выполнение модуля подобно `return` функции
 
-## Логика
+после него указывается экспортируемый обьект
 
-- &&
-- ||
+```wildscipt
+# mod.wild
+let constant = 1176;
+export {CONSTANT = constant}
 
-- ==
-- !=
-
-- <
-- \>
-
-- <=
-- \>=
-
-## Стандартные функции
-
-### print
-
-Выводит текстовые представления обьектов в консоль
-
-- return nil
-
-```wildscript
-print(1, "2", true);  выведет 1 "2" true
-```
-
-### input
-
-Считывает текст из консоли
-
-- return str
-
-```wildscript
-i = input();
-```
-
-### len
-
-Возвращает числовое представление обьекта
-
-- return num
-
-|   type   |   value   |       operation       | result |
-| :------: | :-------: | :-------------------: | :----: |
-| **num**  |   12.34   |      math.floor       |   12   |
-| **str**  | "flower"  |        length         |   6    |
-| **nil**  |    nil    |           0           |   0    |
-| **bool** |   true    | true -> 1; false -> 0 |   1    |
-| **func** | (a, b) {} |   number of params    |   2    |
-| **obj**  |  {a: 1}   |    number of keys     |   1    |
-| **list** | [1, 2, 3] |  number of elements   |   3    |
-| **rune** |     -     |           -           |   -    |
-
-```wildscript
-len(3.14);  # 3
-```
-
-### type
-
-Возвращает текстовое представление типа обьекта
-
-- return str
-
-|   type   |   value   | result |
-| :------: | :-------: | :----: |
-| **num**  |   12.34   | "num"  |
-| **str**  | "flower"  | "str"  |
-| **nil**  |    nil    | "nil"  |
-| **bool** |   true    | "bool" |
-| **func** | (a, b) {} | "func" |
-| **obj**  |  {a: 1}   | "obj"  |
-| **list** | [1, 2, 3] | "list" |
-| **rune** |     -     |   -    |
-
-```wildscript
-type(3.14);  # "num"
-```
-
-### sleep
-
-- принимает num секунд
-- return nil
-
-### rune
-
-Создает новую руну
-
-- return nil
-
-```wildscript
-rune("r");
-type(@r);  # "nil"
-# type(@rune); -> panic
+#utils/mod.wild
+export {
+    func = lambda(c) {
+        println(c)
+    },
+}
 ```

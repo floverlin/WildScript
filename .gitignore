@@ -1,3 +1,3 @@
-*.ws
+*.wild
 !cmd/cli/assets/*
 bin

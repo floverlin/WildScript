@@ -4,27 +4,23 @@ import "wildscript/internal/lexer"
 
 const (
 	LOWEST = iota
-
-	TERNARY_LOOP // ? {loop}
-
-	LOGICAL_OR  // ||
-	LOGICAL_AND // &&
-
-	COMPARISON // == != < > <= >=
-
-	SUM     // + -
-	PRODUCT // * / // %
-
-	PREFIX // !
-
-	POW // ^
-
-	CALL // (call) [index] .
+	IF
+	LOGICAL_OR
+	LOGICAL_AND
+	COMPARISON
+	SUM
+	PRODUCT
+	PREFIX
+	POW
+	CALL
+	HIGHEST
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.LBRACE:   TERNARY_LOOP,
-	lexer.QUESTION: TERNARY_LOOP,
+	lexer.IF: IF,
+
+	lexer.OR:  LOGICAL_OR,
+	lexer.AND: LOGICAL_AND,
 
 	lexer.EQUAL:      COMPARISON,
 	lexer.NOT_EQUAL:  COMPARISON,
@@ -41,13 +37,13 @@ var precedences = map[lexer.TokenType]int{
 	lexer.INT_DIVIDE: PRODUCT,
 	lexer.MOD:        PRODUCT,
 
+	lexer.NOT: PREFIX,
+
 	lexer.POW: POW,
 
-	lexer.NOT: PREFIX,
-	lexer.AND: LOGICAL_AND,
-	lexer.OR:  LOGICAL_OR,
-
-	lexer.LPAREN:   CALL,
 	lexer.DOT:      CALL,
+	lexer.LPAREN:   CALL,
 	lexer.LBRACKET: CALL,
+	lexer.LBRACE:   CALL,
+	lexer.QUESTION: CALL,
 }

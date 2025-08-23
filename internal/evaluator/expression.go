@@ -2,201 +2,114 @@ package evaluator
 
 import (
 	"wildscript/internal/ast"
-	"wildscript/internal/enviroment"
-	"wildscript/internal/logger"
+	"wildscript/internal/environment"
+	"wildscript/internal/lib"
 )
+
+var binOps = map[string]string{
+	"+":  "__add",
+	"-":  "__sub",
+	"*":  "__mul",
+	"/":  "__div",
+	"//": "__floor_div",
+	"%":  "__mod",
+	"^":  "__pow",
+
+	"<":  "__lt",
+	"<=": "__le",
+	">":  "__gt",
+	">=": "__ge",
+	"==": "__eq",
+	"!=": "__ne",
+}
+
+var unOps = map[string]string{
+	"-":   "__unm",
+	"not": "__not",
+}
 
 func (e *Evaluator) evalInfixExpression(
 	node *ast.InfixExpression,
-) enviroment.Object {
+) environment.Object {
 	left := e.Eval(node.Left)
 	right := e.Eval(node.Right)
 
 	if left.Type() != right.Type() {
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"wrong operands type: %s %s",
-				left.Type(),
-				right.Type(),
-			),
+		lib.Die(
+			node.Token,
+			"non equal operands type %s and %s",
+			left.Type(),
+			right.Type(),
 		)
 	}
 
-	switch left.Type() {
-	case enviroment.NUM_TYPE:
-		return evalBinary(
-			left.(*enviroment.Num).Value,
-			right.(*enviroment.Num).Value,
-			numOps,
-			node,
+	result, err := environment.MetaCall(left, binOps[node.Operator], e, nil, right)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
 		)
-	case enviroment.BOOL_TYPE:
-		return evalBinary(
-			left.(*enviroment.Bool).Value,
-			right.(*enviroment.Bool).Value,
-			boolOps,
-			node,
-		)
-	case enviroment.STR_TYPE:
-		return evalBinary(
-			left.(*enviroment.Str).Value,
-			right.(*enviroment.Str).Value,
-			strOps,
-			node,
-		)
-	default:
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"wrong operands type %s %s",
-				left.Type(),
-				right.Type(),
-			),
-		)
-	}
-}
-
-func (e *Evaluator) evalPrefixExpression(
-	node *ast.PrefixExpression,
-) enviroment.Object {
-	value := e.Eval(node.Right)
-
-	switch node.Operator {
-	case "!":
-		switch v := value.(type) {
-		case *enviroment.Num:
-			if v.Value == 0 {
-				return enviroment.Global[enviroment.GLOBAL_TRUE]
-			} else {
-				return enviroment.Global[enviroment.GLOBAL_FALSE]
-			}
-		case *enviroment.Str:
-			if v.Value == "" {
-				return enviroment.Global[enviroment.GLOBAL_TRUE]
-			} else {
-				return enviroment.Global[enviroment.GLOBAL_FALSE]
-			}
-		case *enviroment.Bool:
-			if !v.Value {
-				return enviroment.Global[enviroment.GLOBAL_TRUE]
-			} else {
-				return enviroment.Global[enviroment.GLOBAL_FALSE]
-			}
-		case *enviroment.Func:
-			params := v.LenOfParameters()
-			if params == 0 {
-				return enviroment.Global[enviroment.GLOBAL_TRUE]
-			} else {
-				return enviroment.Global[enviroment.GLOBAL_FALSE]
-			}
-		case *enviroment.Nil:
-			return enviroment.Global[enviroment.GLOBAL_TRUE]
-		default:
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"unknown object type",
-				),
-			)
-		}
-	default:
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"unknown prefix operator",
-			),
-		)
-	}
-}
-
-func (e *Evaluator) evalCallExpression(
-	node *ast.CallExpression,
-) enviroment.Object {
-	callable := e.Eval(node.Function)
-
-	if callable.Type() == enviroment.OBJ_TYPE {
-		obj := callable.(*enviroment.Obj)
-		call, ok := obj.Runes[enviroment.CALL_RUNE]
-		if ok && call.Type() == enviroment.FUNC_TYPE {
-			call.(*enviroment.Func).
-				Enviroment.SetRune(enviroment.SELF_RUNE, obj)
-			callable = call
-		}
-	}
-
-	if callable.Type() != enviroment.FUNC_TYPE {
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"not callable %s",
-				callable.Type(),
-			),
-		)
-	}
-
-	args := e.evalExpressions(node.Arguments)
-	function := callable.(*enviroment.Func)
-
-	if function.Builtin != nil {
-		return function.Builtin(e, args...)
-	}
-
-	if len(args) != function.LenOfParameters() {
-		panic(
-			logger.Slog(
-				node.Token.Line,
-				node.Token.Column,
-				"function want %d argument(s) got %d",
-				len(args),
-				function.LenOfParameters(),
-			),
-		)
-	}
-
-	funcArgs := Arguments{} // args
-	for idx, arg := range args {
-		funcArgs[function.Parameters[idx].Value] = arg
-	}
-
-	callEval := New(function.Enviroment, nil, nil) // closure
-
-	result := callEval.EvalBlock(function.Body, funcArgs, nil)
-
-	if result.Type() == enviroment.CONTROL_TYPE {
-		if ret, ok := result.(*enviroment.Return); ok {
-			result = ret.Value
-		} else {
-			panic(
-				logger.Slog(
-					node.Token.Line,
-					node.Token.Column,
-					"continue in non for block",
-				),
-			)
-		}
 	}
 
 	return result
 }
 
-func (e *Evaluator) evalConditionExpression(
-	node *ast.ConditionExpression,
-) enviroment.Object {
-	cond := e.Eval(node.Condition)
+func (e *Evaluator) evalPrefixExpression(
+	node *ast.PrefixExpression,
+) environment.Object {
+	right := e.Eval(node.Right)
 
-	if cond.Type() != enviroment.BOOL_TYPE {
-		panic("TODO")
+	result, err := environment.MetaCall(right, unOps[node.Operator], e, nil)
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
 	}
 
-	if cond.(*enviroment.Bool).Value {
-		return e.Eval(node.Consequence)
+	return result
+}
+
+func (e *Evaluator) evalCallExpression(
+	node *ast.CallExpression,
+) environment.Object {
+	left := e.Eval(node.Function)
+
+	var self environment.Object
+	if prop, ok := node.Function.(*ast.AttributeExpression); ok {
+		self = e.Eval(prop.Left)
 	} else {
-		return e.Eval(node.Alternative)
+		self = nil
+	}
+
+	args := e.evalExpressions(node.Arguments)
+
+	result, err := environment.MetaCall(left, "__call", e, self, args...)
+
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	return result
+}
+
+func (e *Evaluator) evalIfExpression(
+	node *ast.IfExpression,
+) environment.Object {
+	cond, err := environment.CheckBool(e.Eval(node.If))
+	if err != nil {
+		lib.Die(
+			node.Token,
+			err.Error(),
+		)
+	}
+
+	if cond {
+		return e.Eval(node.Then)
+	} else {
+		return e.Eval(node.Else)
 	}
 }

@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 	"wildscript/internal/lexer"
 )
 
@@ -23,19 +24,30 @@ type AssignStatement struct {
 
 func (as *AssignStatement) statementNode() {}
 func (as *AssignStatement) String() string {
-	return joiner(as.Left.String(), "=", as.Right.String())
+	return fmt.Sprintf("%s = %s", as.Left.String(), as.Right.String())
 }
 
-type FuncStatement struct {
+type LetStatement struct {
+	Token lexer.Token
+	Left  *Identifier
+	Right Expression
+}
+
+func (ls *LetStatement) statementNode() {}
+func (ls *LetStatement) String() string {
+	return fmt.Sprintf("let %s = %s", ls.Left.String(), ls.Right.String())
+}
+
+type FunctionStatement struct {
 	Token      lexer.Token
 	Identifier *Identifier
-	Function   *FuncLiteral
+	Function   *FunctionLiteral
 }
 
-func (fs *FuncStatement) statementNode() {}
-func (fs *FuncStatement) String() string {
+func (fs *FunctionStatement) statementNode() {}
+func (fs *FunctionStatement) String() string {
 	return fmt.Sprintf(
-		"%s => %s",
+		"function %s%s",
 		fs.Identifier.String(),
 		fs.Function.String(),
 	)
@@ -48,7 +60,7 @@ type ReturnStatement struct {
 
 func (rs *ReturnStatement) statementNode() {}
 func (rs *ReturnStatement) String() string {
-	return joiner("<-", rs.Value.String())
+	return fmt.Sprintf("return %s", rs.Value.String())
 }
 
 type ContinueStatement struct {
@@ -57,15 +69,95 @@ type ContinueStatement struct {
 
 func (cs *ContinueStatement) statementNode() {}
 func (cs *ContinueStatement) String() string {
-	return "->"
+	return "continue"
 }
 
-type UseStatement struct {
+type BreakStatement struct {
 	Token lexer.Token
-	Name  *Identifier
 }
 
-func (us *UseStatement) statementNode() {}
-func (us *UseStatement) String() string {
-	return fmt.Sprintf("use %s", us.Name.Value)
+func (bs *BreakStatement) statementNode() {}
+func (bs *BreakStatement) String() string {
+	return "break"
+}
+
+type ImportStatement struct {
+	Token  lexer.Token
+	Module []*Identifier
+}
+
+func (is *ImportStatement) statementNode() {}
+func (is *ImportStatement) String() string {
+	var sb strings.Builder
+	sb.WriteString("import ")
+	for _, mod := range is.Module {
+		sb.WriteString(mod.String() + ".")
+	}
+	result := sb.String()
+	return result[:len(result)-1]
+}
+
+type ExportStatement struct {
+	Token lexer.Token
+	Value Expression
+}
+
+func (es *ExportStatement) statementNode() {}
+func (es *ExportStatement) String() string {
+	return fmt.Sprintf("export %s", es.Value.String())
+}
+
+type ForStatement struct {
+	Token    lexer.Token
+	Value    *Identifier
+	Iterable Expression
+	Loop     *BlockExpression
+}
+
+func (fs *ForStatement) statementNode() {}
+func (fs *ForStatement) String() string {
+	if fs.Value != nil {
+		return fmt.Sprintf(
+			"for %s in %s do %s",
+			fs.Value.String(),
+			fs.Iterable.String(),
+			fs.Loop.String(),
+		)
+	} else {
+		return fmt.Sprintf(
+			"for %s do %s",
+			fs.Iterable.String(),
+			fs.Loop.String(),
+		)
+	}
+}
+
+type RepeatStatement struct {
+	Token lexer.Token
+	Until Expression
+	Loop  *BlockExpression
+}
+
+func (rs *RepeatStatement) statementNode() {}
+func (rs *RepeatStatement) String() string {
+	return fmt.Sprintf(
+		"repeat %s until %s",
+		rs.Loop.String(),
+		rs.Until.String(),
+	)
+}
+
+type WhileStatement struct {
+	Token lexer.Token
+	If    Expression
+	Loop  *BlockExpression
+}
+
+func (ws *WhileStatement) statementNode() {}
+func (ws *WhileStatement) String() string {
+	return fmt.Sprintf(
+		"while %s do %s",
+		ws.If.String(),
+		ws.Loop.String(),
+	)
 }
