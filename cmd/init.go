@@ -14,7 +14,7 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("creating wild project...")
 		cli.InitProject()
-		fmt.Println("file main.ws created")
+		fmt.Println("file main.wild created")
 	},
 }
 

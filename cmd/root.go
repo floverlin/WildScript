@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 
 		var file string
 		if ext := filepath.Ext(args[0]); ext == "" {
-			file = args[0] + ".ws" // TODO CONST
+			file = args[0] + ".wild" // TODO CONST
 		}
 
 		interpreter.RunFile(file)

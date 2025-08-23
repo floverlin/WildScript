@@ -368,11 +368,11 @@ utils.func(constant);  # 1176
 после него указывается экспортируемый обьект
 
 ```wildscipt
-# mod.sil
+# mod.wild
 let constant = 1176;
 export {CONSTANT = constant}
 
-#utils/mod.sil
+#utils/mod.wild
 export {
     func = lambda(c) {
         println(c)
