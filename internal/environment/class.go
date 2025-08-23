@@ -45,6 +45,14 @@ func UnpackResult(object Object) (Object, bool, error) {
 	return nil, false, fmt.Errorf("unpack result want document, gor %s", object.Type())
 }
 
+func refSelf(self Object) *document {
+	s := self.(*document)
+	if s.Attrs["ref"] != globalNil {
+		s = s.Attrs["ref"].(*document)
+	}
+	return s
+}
+
 var classList = &document{
 	List: []Object{},
 	Dict: NewDict(),
@@ -54,7 +62,7 @@ var classList = &document{
 			self Object,
 			args ...Object,
 		) (Object, error) {
-			s := self.(*document)
+			s := refSelf(self)
 			s.List = append(s.List, args...)
 			return s, nil
 		}),
@@ -63,7 +71,7 @@ var classList = &document{
 			self Object,
 			args ...Object,
 		) (Object, error) {
-			s := self.(*document)
+			s := refSelf(self)
 			slices.Reverse(s.List)
 			return s, nil
 		}),
@@ -72,8 +80,7 @@ var classList = &document{
 			self Object,
 			args ...Object,
 		) (Object, error) {
-
-			s := self.(*document)
+			s := refSelf(self)
 
 			iter := NewDocument()
 			iter.List = s.List
@@ -89,9 +96,31 @@ var classDict = &document{
 	Dict: NewDict(),
 	Attrs: map[string]Object{
 		"hop": NewNativeMethod(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			s := self.(*document)
+			s := refSelf(self)
 			fmt.Println("HOP!")
 			return s, nil
 		}),
 	},
+}
+
+func newList(ref *document) *document {
+	d := NewDocument()
+	if ref != nil {
+		d.Attrs["ref"] = ref
+	} else {
+		d.Attrs["ref"] = NewNil()
+	}
+	d.Meta = classList
+	return d
+}
+
+func newDict(ref *document) *document {
+	d := NewDocument()
+	if ref != nil {
+		d.Attrs["ref"] = ref
+	} else {
+		d.Attrs["ref"] = NewNil()
+	}
+	d.Meta = classDict
+	return d
 }

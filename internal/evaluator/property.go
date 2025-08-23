@@ -28,11 +28,24 @@ func (e *Evaluator) evalIndexExpression(
 	left := e.Eval(node.Left)
 
 	index := e.Eval(node.Index)
-	if index.Type() != environment.NUMBER {
+	if index.Type() != environment.NUMBER &&
+		index.Type() != environment.NIL {
 		lib.Die(
 			node.Token,
 			"non num index",
 		)
+	}
+
+	if index.Type() == environment.NIL {
+		result, err := environment.MetaCall(left, "__list", e, nil)
+		if err != nil {
+			lib.Die(
+				node.Token,
+				err.Error(),
+			)
+		}
+
+		return result
 	}
 
 	result, err := environment.MetaCall(left, "__index", e, nil, index)

@@ -14,7 +14,7 @@ type(lambda() {});  # function
 
 таблица типов и их аналогов в других языках
 
-|   WildScript   |   Go    | JavaScript |  Python  |   Lua    |
+|  WildScript  |   Go    | JavaScript |  Python  |   Lua    |
 | :----------: | :-----: | :--------: | :------: | :------: |
 |   **nil**    |   nil   |    null    |   none   |   nil    |
 |  **number**  | float64 |   number   |  float   |  number  |

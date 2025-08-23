@@ -74,8 +74,21 @@ func (e *Evaluator) evalIndexAssign(
 	object := e.Eval(left.Left)
 	index := e.Eval(left.Index)
 
-	if index.Type() != environment.NUMBER {
+	if index.Type() != environment.NUMBER &&
+		index.Type() != environment.NIL {
 		return nil, errors.New("non num index type")
+	}
+
+	if index.Type() == environment.NIL {
+		result, err := environment.MetaCall(object, "__set_list", e, nil, value)
+		if err != nil {
+			lib.Die(
+				left.Token,
+				err.Error(),
+			)
+		}
+
+		return result, nil
 	}
 
 	result, err := environment.MetaCall(object, "__set_index", e, nil, index, value)

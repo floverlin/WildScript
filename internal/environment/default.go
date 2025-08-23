@@ -101,6 +101,16 @@ var docMeta = map[string]*function{
 		s.List[idx] = args[1]
 		return self, nil
 	}),
+	"__list": NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*document)
+		list := newList(s)
+		return list, nil
+	}),
+	"__set_list": NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		s := self.(*document)
+		s.List = slices.Clone(args[0].(*document).List)
+		return s, nil
+	}),
 	"__key": NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*document)
 		result, ok := s.Dict.Get(args[0])
@@ -116,9 +126,7 @@ var docMeta = map[string]*function{
 	}),
 	"__dict": NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
 		s := self.(*document)
-		dict := NewDocument()
-		dict.Dict = s.Dict.Clone()
-		dict.Meta = classDict
+		dict := newDict(s)
 		return dict, nil
 	}),
 	"__set_dict": NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
@@ -154,8 +162,7 @@ var docMeta = map[string]*function{
 		} else {
 			end = int(args[1].(*number).Value)
 		}
-		slice := NewDocument()
-		slice.Meta = classList
+		slice := newList(nil)
 		slice.List = slices.Clone(s.List[start:end])
 		return slice, nil
 	}),
