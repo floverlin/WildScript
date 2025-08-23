@@ -76,7 +76,6 @@ func MetaCall(
 	var err error
 	if self != nil {
 		args = append([]Object{self}, args...)
-		// object = self
 	}
 	if mf, ok := metaFunc.(*function); ok {
 		result, err = mf.Call(be, object, args...)

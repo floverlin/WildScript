@@ -12,9 +12,9 @@ var initCmd = &cobra.Command{
 	Short: "Initialize",
 	Long:  `Initialize new project.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("creating sigillum project...")
+		fmt.Println("creating wild project...")
 		cli.InitProject()
-		fmt.Println("file main.sil created")
+		fmt.Println("file main.ws created")
 	},
 }
 

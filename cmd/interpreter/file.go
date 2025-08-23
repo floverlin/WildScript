@@ -97,7 +97,7 @@ func RunFile(fileName string) {
 	)
 
 	fmt.Printf(
-		"[sigil] program ends in %d us\n",
+		"[wild] program ends in %d us\n",
 		time.Since(start).Microseconds(),
 	)
 }

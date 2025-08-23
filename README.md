@@ -1,20 +1,20 @@
-# SIGILLUM
+# WildScript
 
 ## типы
 
-Sigillum - язык с динамической типизацией
+WildScript - язык с динамической типизацией
 
 функция `type` позволяет получить строковое представление типа
 
-```sigillum
-type("sigillum");   # string
+```wildscript
+type("wild");   # string
 type(1176);         # number
 type(lambda() {});  # function
 ```
 
 таблица типов и их аналогов в других языках
 
-|   Sigillum   |   Go    | JavaScript |  Python  |   Lua    |
+|   WildScript   |   Go    | JavaScript |  Python  |   Lua    |
 | :----------: | :-----: | :--------: | :------: | :------: |
 |   **nil**    |   nil   |    null    |   none   |   nil    |
 |  **number**  | float64 |   number   |  float   |  number  |
@@ -29,7 +29,7 @@ type(lambda() {});  # function
 
 присваивается переменной при обьявлении без инициализации
 
-```sigillum
+```wildscript
 let a;
 let b = nil;
 type(a);  # nil
@@ -40,7 +40,7 @@ type(b);  # nil
 
 представляет вещественные числа (с плавающей точкой двойной точности)
 
-```sigillum
+```wildscript
 let a = 1;
 let b = 10.76;
 a = a + b;
@@ -54,7 +54,7 @@ type(a);  # number
 
 строки неизменяемы, поддерживают обьединение и срезы
 
-```sigillum
+```wildscript
 let a = "hello";
 let b = ", world!";
 let hello = a + b;
@@ -68,7 +68,7 @@ hello[1:5];  # ello
 
 только этот тип используется в условиях (без автоприведения)
 
-```sigillum
+```wildscript
 let a = false;
 let b = 1 < 2;
 if a then {
@@ -82,7 +82,7 @@ type(b);  # boolean
 
 для условного автоприведения рекомендуется создать отдельную функцию
 
-```sigillum
+```wildscript
 function nonempty(object) {
     if type(object) == "number" then {
         if object == 0 then {
@@ -111,7 +111,7 @@ if nonempty(my_object) then {
 3. method - автоматически принимает первым аргументом обьект, которому принадлежит
 4. native - функция с нативной реализацией
 
-```sigillum
+```wildscript
 function add(a, b) {
     return a + b
 };
@@ -121,7 +121,7 @@ let sub = lambda(a, b) {
 };
 
 let object = {
-    name = "Nihil",
+    name = "WildScript",
     hello = method(self) {
         return "Hello! My name is " + self.name
     },
@@ -136,10 +136,10 @@ type(type);  # function
 
 состоит из списка doc[index], словаря doc{key} и атрибутов doc.attr
 
-```sigillum
+```wildscipt
 let doc = {
     "a", "b", "c",  # обьявление списка
-    name = "Sigil"  # обьявление атрибутов
+    name = "Wild"  # обьявление атрибутов
     great = method(self) {
         println("My name is " + self.name + "!")
     },
@@ -152,7 +152,7 @@ doc[1];
 doc[2] = "d";
 doc[3];  # panic -> index out of range
 
-doc.great();  # My name is Sigil!
+doc.great();  # My name is Wild!
 doc.hello;  # panic -> attribute doesn't exists
 
 doc{123};
@@ -167,7 +167,7 @@ doc{"wrong key"};  # panic -> key doesn't exists
 
 функция `get_meta` позволяет получит метадоку документа
 
-```sigillum
+```wildscipt
 let md = {
     __call = method(self) {
         return self.name
@@ -179,7 +179,7 @@ let md = {
 
 set_meta(doc, md);
 
-doc();  # Sigil
+doc();  # Wild
 doc[1176];  # haha, joke!
 ```
 
@@ -193,7 +193,7 @@ doc[1176];  # haha, joke!
 2. с предусловием while
 3. с постусловием repeat
 
-```sigillum
+```wildscipt
 for range(10) do {  # range возвращает итератор
     print("!")
 };
@@ -223,18 +223,18 @@ println();
 
 могут быть использованы внутри выражения, возвращая результат последней инсnрукции блока (без ; на конце)
 
-```sigillum
+```wildscipt
 if 1 < 2 then {
     println(true)
 } else {
     println(false)
 };
 
-let name = "Sigil";
+let name = "Wild";
 let hello = "Hello!" + if type(name) == "string" then {
     "My name is " + name
     } else { "" };
-hello;  # Hello! My name is Sigil
+hello;  # Hello! My name is Wild
 ```
 
 ## panic ? Result
@@ -245,7 +245,7 @@ hello;  # Hello! My name is Sigil
 
 после panic передается строка - message, число - code или документ с этими атрибутами
 
-```sigillum
+```wildscipt
 function unsafe() {
     panic "used unsafe function"
 };
@@ -269,7 +269,7 @@ error - ошибка или nil, если паники не было
 
 Result содержит методы для работы с полученным значением
 
-```sigillum
+```wildscipt
 doc.users?[36]?{"address"}?.or(nil);  # адрес 36-го пользователя или nil
 
 let result = num("not a number")?;
@@ -290,7 +290,7 @@ result;  # {
 их можно реализовать вручную используя `set_meta` и `merge` функции
 или воспользоваться конструктором
 
-```sigillum
+```wildscipt
 define Human {
     __init = method(self, name) {
         self.name = name
@@ -326,7 +326,7 @@ zullie.cast();  # Zullie is casting spell!
 2. списку `doc[] =` - заменяет список
 3. словарю `doc{} =` - заменяет словарь
 
-```sigillum
+```wildscipt
 let doc = {1, 2, 3};
 let slice = doc[:];
 slice.append(4).reverse();
@@ -353,7 +353,7 @@ slice.\_ref == nil; # true
 
 можно задать псевдоним импорта через `as`
 
-```sigillum
+```wildscipt
 import mod;
 import utils.mod as utils;
 
@@ -367,7 +367,7 @@ utils.func(constant);  # 1176
 
 после него указывается экспортируемый обьект
 
-```sigillum
+```wildscipt
 # mod.sil
 let constant = 1176;
 export {CONSTANT = constant}

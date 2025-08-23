@@ -1,3 +1,3 @@
 package lib
 
-const EXT = ".sil"
+const EXT = ".ws"
