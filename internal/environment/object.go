@@ -34,16 +34,16 @@ func CheckBool(b Object) (bool, error) {
 	return false, fmt.Errorf("not bool value %s", b.Type())
 }
 
-func lookupDocMeta(doc *document, metaName string) (Object, bool) {
+func lookupDocMeta(doc *document, metaName string) (Object) {
 	if result, ok := doc.Attrs[metaName]; ok {
-		return result, ok
+		return result
 	}
 	if doc.Meta != nil {
-		if result, ok := lookupDocMeta(doc.Meta, metaName); ok {
-			return result, ok
+		if result := lookupDocMeta(doc.Meta, metaName); result != nil {
+			return result
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func MetaCall(
@@ -56,7 +56,7 @@ func MetaCall(
 	var metaFunc Object
 	if doc, ok := object.(*document); ok {
 		if doc.Meta != nil {
-			metaFunc, _ = lookupDocMeta(doc.Meta, metaName)
+			metaFunc = lookupDocMeta(doc.Meta, metaName)
 		}
 	}
 
@@ -76,6 +76,7 @@ func MetaCall(
 	var err error
 	if self != nil {
 		args = append([]Object{self}, args...)
+		// object = self
 	}
 	if mf, ok := metaFunc.(*function); ok {
 		result, err = mf.Call(be, object, args...)

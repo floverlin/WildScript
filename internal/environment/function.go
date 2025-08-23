@@ -27,6 +27,13 @@ func NewNative(f Native) *function {
 	}
 }
 
+func NewNativeMethod(f Native) *function {
+	return &function{
+		Native: f,
+		Impl: ast.METHOD,
+	}
+}
+
 func NewFunction(params []*ast.Identifier,
 	body *ast.BlockExpression,
 	env *Environment,

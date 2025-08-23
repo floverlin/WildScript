@@ -14,12 +14,12 @@ func NewResult(value Object, ok *boolean) *document {
 
 var iterMeta = func() *document {
 	iter := NewDocument()
-	iter.Attrs["__next"] = NewNative(func(
+	iter.Attrs["__next"] = NewNativeMethod(func(
 		be blockEvaluator,
 		self Object,
 		args ...Object,
 	) (Object, error) {
-		s := args[0].(*document)
+		s := self.(*document)
 		idx := int(s.Attrs["index"].(*number).Value)
 		s.Attrs["index"] = NewNumber(float64(idx + 1))
 		if idx >= len(s.List) {
@@ -49,31 +49,31 @@ var classList = &document{
 	List: []Object{},
 	Dict: NewDict(),
 	Attrs: map[string]Object{
-		"append": NewNative(func(
+		"append": NewNativeMethod(func(
 			be blockEvaluator,
 			self Object,
 			args ...Object,
 		) (Object, error) {
-			s := args[0].(*document)
-			s.List = append(s.List, args[1:]...)
+			s := self.(*document)
+			s.List = append(s.List, args...)
 			return s, nil
 		}),
-		"reverse": NewNative(func(
+		"reverse": NewNativeMethod(func(
 			be blockEvaluator,
 			self Object,
 			args ...Object,
 		) (Object, error) {
-			s := args[0].(*document)
+			s := self.(*document)
 			slices.Reverse(s.List)
 			return s, nil
 		}),
-		"__iter": NewNative(func(
+		"__iter": NewNativeMethod(func(
 			be blockEvaluator,
 			self Object,
 			args ...Object,
 		) (Object, error) {
 
-			s := args[0].(*document)
+			s := self.(*document)
 
 			iter := NewDocument()
 			iter.List = s.List
@@ -88,8 +88,8 @@ var classDict = &document{
 	List: []Object{},
 	Dict: NewDict(),
 	Attrs: map[string]Object{
-		"hop": NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
-			s := args[0].(*document)
+		"hop": NewNativeMethod(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+			s := self.(*document)
 			fmt.Println("HOP!")
 			return s, nil
 		}),

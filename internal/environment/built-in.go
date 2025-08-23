@@ -23,10 +23,9 @@ func (e *Environment) loadBuiltin() {
 			print(be, self, arg)
 			if idx != len(args)-1 {
 				fmt.Print(" ")
-			} else {
-				fmt.Print("\n")
 			}
 		}
+		fmt.Println()
 		return NewNil(), nil
 	}))
 
