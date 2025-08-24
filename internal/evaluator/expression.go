@@ -43,6 +43,30 @@ func (e *Evaluator) evalInfixExpression(
 		)
 	}
 
+	if node.Operator == "and" ||
+		node.Operator == "or" {
+		if left.Type() != environment.BOOLEAN {
+			lib.Die(
+				node.Token,
+				"non boolean condition",
+			)
+		}
+		if node.Operator == "and" {
+			if b, _ := environment.CheckBool(left); b {
+				return right
+			} else {
+				return left
+			}
+		}
+		if node.Operator == "or" {
+			if b, _ := environment.CheckBool(left); b {
+				return left
+			} else {
+				return right
+			}
+		}
+	}
+
 	result, err := environment.MetaCall(left, binOps[node.Operator], e, nil, right)
 	if err != nil {
 		lib.Die(
