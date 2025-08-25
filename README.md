@@ -7,7 +7,7 @@ WildScript - язык с динамической типизацией
 функция `type` позволяет получить строковое представление типа
 
 ```wildscript
-type("wild");   # string
+type("wild");       # string
 type(1176);         # number
 type(lambda() {});  # function
 ```

@@ -75,6 +75,18 @@ func (e *Environment) loadBuiltin() {
 		return b, nil
 	}))
 
+	e.Create("type", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		return NewString(string(args[0].Type())), nil
+	}))
+
+	e.Create("len", NewNative(func(be blockEvaluator, self Object, args ...Object) (Object, error) {
+		o, err := MetaCall(args[0], "__len", be, nil)
+		if err != nil {
+			return nil, fmt.Errorf("bool: %s", err)
+		}
+		return o, nil
+	}))
+
 }
 
 func print(be blockEvaluator, self Object, args ...Object) (Object, error) {
